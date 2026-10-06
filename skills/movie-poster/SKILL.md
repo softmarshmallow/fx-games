@@ -1,6 +1,6 @@
 ---
 name: movie-poster
-description: Create original theatrical movie posters from an approved synopsis or precise brief, with story-faithful composition, exact titles, and medium-specific direction for live action, animation, anime, or other chosen film forms. Use for movie one-sheets and their iterations; not for general key art, game covers, or universe generation itself.
+description: Create original theatrical movie posters from an approved synopsis or precise brief, with story-faithful composition, exact titles, and medium-specific direction for live action, animation, anime, or other chosen film forms. Use for movie one-sheets and their iterations; not for general key art, game covers, or world building itself.
 ---
 
 # Movie Poster
@@ -42,7 +42,7 @@ generic Western illustration with superficial anime traits.
 ## Find the truthful visual proposition
 
 Choose one source-supported visual proposition rather than trying to summarize
-the whole universe. Depending on the chosen medium and film, it may be a
+the whole story. Depending on the chosen medium and film, it may be a
 diegetic scene, portrait, ensemble, object-centered image, character
 arrangement, or non-diegetic graphic one-sheet. Let the synopsis and theatrical
 intent determine the form.
@@ -112,5 +112,5 @@ Before presenting an approval candidate, verify:
 - saved image, prompt, and provenance paths in the project workspace.
 
 Show the candidate with the synopsis and ask for explicit approval before using
-it as downstream universe input, promoting it, or publishing it. Until then,
+it as an input anywhere, promoting it, or publishing it. Until then,
 label it exploratory and unapproved.

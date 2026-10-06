@@ -44,7 +44,6 @@ from demo_game_tools.scenario import (
     TrackDeclaration,
     resolve_scenario,
 )
-from gnode import InputProvenance
 from stage_gen.components._secure_fs import read_absolute_regular_file
 from stage_gen.image_prompting import load_image_style_resources
 from stage_gen.media import (
@@ -52,6 +51,7 @@ from stage_gen.media import (
     MAGENTA_EDGE_DECONTAMINATION_VERSION,
     inspect_image,
 )
+from stage_gen.provenance import InputProvenance
 from the_grain_pipeline.dialogue_scene.identity import (
     canonical_json_bytes,
     canonical_sha256,

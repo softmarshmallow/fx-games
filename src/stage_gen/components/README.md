@@ -10,14 +10,13 @@ and it does not need a game package or a particular runtime.
 
 | Component | Public surface | Output or responsibility |
 |---|---|---|
-| Repeating images | `image_repeat.ImageRepeatService` | Explicit repeat admission or repair, with validation and lineage |
+| Repeating images | `image_repeat.validate_image_repeat`, `image_repeat.build_three_repeat_preview` | Deterministic single-axis seam validation and the three-repeat preview |
 | Layered scenery | `sideview_layers.models.LayerRequest`, `sideview_layers.publish` | Repeat construction, the painted layer's gate, trimming and placement |
 | Supplied-layer parallax | `sideview_layers.parallax`, `workflows.looping_parallax` | Repeating PNGs, portable composition metadata, and a scrolling preview |
 | Fixed portrait motion | `portrait_motion` | Local eye/mouth patches, registration, review, and diagnostic playback |
 | Rigged characters | `character_3d` | Profiles, partitions, quality bars, studios and the Blender worker |
 | Sound effects | `sound_effect.SoundEffectRequest` | One effect asset or pinned take; gameplay response is separate |
 | Speech | `speech.SpeechRequest` | One line and admission budget with a caller-owned voice binding |
-| Audio processing | `audio_normalization.FfmpegAudioNormalizer` | Measured and validated loudness normalization |
 | Video inspection | `video_clip` | Caller-specified size, codec, duration, and optional aspect constraints |
 
 The kits only the games use (actors, terrain, UI, effects, screens, music, voices, world

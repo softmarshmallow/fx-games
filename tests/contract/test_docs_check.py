@@ -91,6 +91,34 @@ def test_retired_terms_are_read_in_site_strings_but_not_comments(tmp_path: Path)
     ]
 
 
+def test_a_user_skill_names_nothing_in_this_repository(tmp_path: Path) -> None:
+    skill = tmp_path / "skills/example"
+    (skill / "agents").mkdir(parents=True)
+    (skill / "SKILL.md").write_text(
+        "---\nname: game-concept-studio\n---\n"
+        "Draw with `grida-fx run workflows/concept-image.yaml`.\n"
+        "Read `docs/models/providers.md`, then run `stage-gen-concept check`.\n"
+        "Import stage_gen.media, or use the gnode guide.\n",
+        encoding="utf-8",
+    )
+    (skill / "agents/openai.yaml").write_text(
+        'default_prompt: "Follow `.agents/skills/asset-pipeline/SKILL.md`"\n', encoding="utf-8"
+    )
+
+    failures = _load_docs_checker().check_user_skills(tmp_path)
+
+    # The skill's own name and the folder it writes in the user's project are not repository names.
+    assert failures == [
+        "skills/example/SKILL.md:5: a user skill names this repository "
+        "(`docs/models/providers.md`)",
+        "skills/example/SKILL.md:5: a user skill names this repository (stage-gen)",
+        "skills/example/SKILL.md:6: a user skill names this repository (stage_gen)",
+        "skills/example/SKILL.md:6: a user skill names this repository (gnode)",
+        "skills/example/agents/openai.yaml:1: a user skill names this repository "
+        "(`.agents/skills/asset-pipeline/SKILL.md`)",
+    ]
+
+
 def test_web_text_walk_reads_git_files_and_the_viewer_shell_may_not_spawn(
     tmp_path: Path,
 ) -> None:
@@ -229,10 +257,7 @@ def test_image_repeat_contract_and_preview_fallback_are_scoped() -> None:
     image_repeat = (repository_root / "docs/image-repeat.md").read_text(encoding="utf-8")
     for required in (
         "one image in, one image proven to repeat on a declared axis out",
-        "await service.admit(ImageRepeatAdmissionRequest(...))",
-        "await service.repair(ImageRepeatRepairRequest(...))",
         "exactly three unmarked, pixel-identical copies",
-        "Legacy preview fallbacks are ineligible",
         "Two-axis tileability is a non-goal",
     ):
         assert required in image_repeat

@@ -19,9 +19,9 @@ from typing import Literal
 from PIL import Image, ImageOps
 from pydantic import Field, field_validator, model_validator
 
-from gnode import PersistedContractModel
 from stage_gen.components._game_input import portable_relative_path, unique_values
 from stage_gen.components.sideview_layers.contract import loop_method_identity
+from stage_gen.contracts import PersistedContractModel
 from stage_gen.media.codec import decode_rgba, encode_png
 
 PARALLAX_KIND = "parallax-background-v2"

@@ -14,7 +14,6 @@ members = [
     "ember-hollow-pipeline",
     "iron-petal-unit-pipeline",
     "stage-gen",
-    "stage-gen-concept",
     "stagegen-scenario",
     "the-grain-pipeline",
 ]
@@ -1043,9 +1042,6 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
-apps = [
-    { name = "stage-gen-concept" },
-]
 dev = [
     { name = "build" },
     { name = "hatchling" },
@@ -1075,7 +1071,6 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-apps = [{ name = "stage-gen-concept", editable = "apps/concept_studio" }]
 dev = [
     { name = "build", specifier = ">=1.2,<2" },
     { name = "hatchling", specifier = ">=1.27,<2" },
@@ -1088,17 +1083,6 @@ dev = [
     { name = "types-pyyaml", specifier = ">=6.0.12,<7" },
 ]
 games = [{ name = "demo-game-collection", editable = "godot/tools/python" }]
-
-[[package]]
-name = "stage-gen-concept"
-version = "0.0.0"
-source = { editable = "apps/concept_studio" }
-dependencies = [
-    { name = "stage-gen" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "stage-gen", editable = "." }]
 
 [[package]]
 name = "stagegen-scenario"

@@ -6,12 +6,12 @@ from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from gnode import PersistedContractModel
 from stage_gen.components._game_input import (
     SNAKE_ID_PATTERN,
     normalized_text,
     unique_values,
 )
+from stage_gen.contracts import PersistedContractModel
 
 _LANGUAGE_CODE = r"^[a-z]{2,3}(?:-[A-Za-z]{2,4})?$"
 _ISO_DATE = r"^\d{4}-\d{2}-\d{2}$"

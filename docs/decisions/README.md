@@ -23,6 +23,8 @@ supersedes [0069](0069-the-platformer-is-retired-and-web-is-only-the-viewer.md) 
 viewer being launched by the CLI, multi-root and workflow-aware.
 [0072](0072-gnode-is-one-engine-behind-text-contracts.md) removes the storefront workflow
 that 0071 listed and replaces the execution substrates 0071 left in place.
+[0073](0073-concept-studio-is-a-skill-not-an-application.md) overturns 0072's M8f: Concept
+Studio is no longer an application but a skill users install.
 
 | # | Title | In one line |
 | --- | --- | --- |
@@ -98,3 +100,4 @@ that 0071 listed and replaces the execution substrates 0071 left in place.
 | [0070](0070-the-game-invokes-scenario.md) | The game invokes Scenario | One Godot-owned sequence executor, data-only content and versioned game capabilities; supported v2 inputs remain |
 | [0071](0071-workflows-are-the-product-unit-and-the-web-splits-into-site-and-viewer.md) | Workflows are the product unit, and the web splits into a site and a viewer | One folder per deliverable describes itself; the site is built from the catalog and pinned examples, the viewer is the CLI's local client |
 | [0072](0072-gnode-is-one-engine-behind-text-contracts.md) | gnode is one engine behind text contracts | Four substrates become one runner; workflows become YAML over standard node types, bodies one callback, runs one event log, ported milestone by milestone with honest re-keys |
+| [0073](0073-concept-studio-is-a-skill-not-an-application.md) | Concept Studio is a skill, not an application | The `stage-gen-concept` distribution goes; concept work is an installable skill that stands alone in any folder and draws through Grida FX |

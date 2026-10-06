@@ -19,13 +19,12 @@ stage-gen/
 │   ├── templates/                     # Copyable application starting points
 │   ├── games/                         # Named games and their private shared support
 │   └── tools/                         # Godot workspace/package operations
-├── apps/
-│   └── concept_studio/                # Optional concept-authoring Python application
-├── concept-studio/                    # Existing concept docs, gallery and local drafts
+├── concept-studio/                    # Existing concept docs, gallery and style dictionary
+├── skills/                            # Skills users install (`npx skills add`); standalone
 ├── scripts/                           # Product/repository maintenance and verification
 ├── tests/                             # Tests selected by product or consumer ownership
 ├── docs/                              # Cross-cutting guides, SDK, policy, specs and history
-├── .agents/skills/                    # Asset authoring and consumer-specific workflows
+├── .agents/skills/                    # Skills for working on this repository
 ├── .github/workflows/                # Separate product and consumer gates
 ├── pyproject.toml                     # Core distribution and local workspace metadata
 └── uv.lock                            # Repository development workspace lock
@@ -38,8 +37,12 @@ Users supply external input, output and cache directories rather than registerin
 projects inside this checkout.
 
 `concept-studio/` remains the existing concept-content workspace, with its ignored
-drafts and curated media rights records. Its executable application is separately
-packaged under `apps/`; the core distribution does not require either workspace.
+drafts and curated media rights records. The concept work itself is the
+`skills/game-concept-studio` skill, which stands alone in a user's own folder.
+
+`skills/` holds skills users install, for example with `npx skills add`. Each one stands
+alone: it names no path in this repository and no command of it. `.agents/skills/`
+(`.claude/skills` links to it) holds the skills for working on this repository.
 
 ## Product implementation
 
@@ -81,7 +84,7 @@ workflow file or Python builder, planned and run by gnode.
 Provider construction stays at the application boundary; workflows can receive
 services without taking ownership of credentials or provider selection.
 
-The wheel contains `gnode` and `stage_gen`. Optional demo and concept packages have
+The wheel contains `gnode` and `stage_gen`. Optional demo packages have
 their own project metadata. The core source distribution removes workspace-only
 metadata, so installing it does not require absent demo directories.
 
@@ -93,10 +96,9 @@ src/stage_gen/components/
 ├── portrait_motion/                   # Portrait prompts, schemas, validators and pixel work
 ├── movie_sprite/                      # Transparent body-loop finishing and spatial controls
 ├── sideview_layers/                   # Layer processing and parallax parameters
-├── image_repeat/                      # Repeat admission and conditioned repair
+├── image_repeat/                      # Deterministic repeat validation and preview
 ├── sound_effect/                      # Individual sound-effect requests
 ├── speech/                            # Individual speech requests
-├── audio_normalization/               # Explicit audio transforms
 └── video_clip/                        # Video processing with explicit frame constraints
 
 godot/games/_shared/python/src/demo_game_tools/kits/   # The games' own kits; no product import

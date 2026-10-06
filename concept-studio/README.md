@@ -1,65 +1,60 @@
 # Game Concept Studio
 
-Game Concept Studio is the inexpensive pre-production side of Stage Gen. Start here with a short
-game idea, talk it through with an agent, and leave with a readable concept plus cover art before
-deciding whether to run the full generation pipeline.
+Game Concept Studio is the inexpensive pre-production side of Stage Gen. Start with a short game
+idea, talk it through with an agent, and leave with a readable concept plus cover art before
+deciding whether to build anything.
 
-It is deliberately not a recipe authoring surface. A concept workspace never contains
-`game.toml`, maps, manifests, runtime assets, or implementation code.
+A concept is never an asset-pipeline input: a concept folder never contains game configuration,
+maps, manifests, runtime assets, or implementation code.
 
-The tracked [2D game style dictionary](style-dictionary/README.md) is the studio's shared
-prompt-writing and research reference. It is separate from ignored concept workspaces and from the
-publication-only gallery.
+This directory keeps the tracked [2D game style dictionary](style-dictionary/README.md) and the
+publication-only [gallery](gallery/README.md). Local drafts live under the ignored `workspaces/`.
 
-## Start an agent here
+## Make a concept
+
+Concept work is the installable agent skill
+[game-concept-studio](../skills/game-concept-studio/SKILL.md). It runs in any folder and draws its
+images with [Grida FX](https://github.com/gridaco/fx) on the user's own provider key, under a
+`--max-usd` ceiling, after the user explicitly authorizes each live run.
+
+Install it globally:
 
 ```sh
-cd concept-studio
+npx skills add softmarshmallow/stage-gen --skill game-concept-studio -g
 ```
 
-The canonical `game-concept-studio` skill lives at the repository root under
-`../.agents/skills/`. The repository's `../.claude/skills/` entry and the entries under this
-project's `.agents/skills/` and `.claude/skills/` are discovery symlinks to that one root-owned
-skill. Ask for the skill explicitly or give the agent a short game description, for example:
+Inside this checkout, a project install would land in the repository's own `.agents/skills`
+(`.claude/skills` is a symlink to it), so install with `-g`, or point an agent at the skill's
+`SKILL.md`. Then ask for it with a short game description, for example:
 
 ```text
 Use game-concept-studio to imagine a 2D adventure about a rooftop courier in a flooded city.
 ```
 
-The agent creates ignored work under `workspaces/`. The stable human-facing handoff is:
+In this checkout, put a concept folder at `workspaces/<concept_id>/`. The whole tree is ignored, so
+its `fx.yaml`, `workflows/`, `inputs/`, `runs/`, `.fx/` and any `.env` stay out of git. The stable
+handoff is:
 
 ```text
 workspaces/<concept_id>/concept.md
 workspaces/<concept_id>/images/cover.png
 ```
 
-This is currently a human handoff, not an accepted `sideview-platformer` input. The planned
-digest-bound concept-package import is labelled `TARGET` in the
-[canonical game-generation pipeline](../godot/games/bellweather/docs/generation-pipeline.md); until it ships,
-the generation recipe still starts from its normal prompt-driven concept stage.
-
-From the repository root, the deterministic workspace and image commands are:
-
-```sh
-uv run stage-gen-concept init --slug <concept_id> --title "<title>" "<short brief>"
-uv run stage-gen-concept image --workspace <concept_id> --name candidate-01 \
-  --model x-ai/grok-imagine-image-2.0 --quality low --resolution 1K \
-  --aspect-ratio 16:9 --prompt-file <prompt.txt>
-uv run stage-gen-concept select --workspace <concept_id> --candidate candidate-01
-uv run stage-gen-concept check --workspace <concept_id>
-```
-
-The CLI reads only allowlisted provider credentials from the repository-root `.env`; it never
-copies credentials into this project. Live image calls are billable and require explicit intent.
+The FX run folder of the selected candidate is the cover's record.
 
 ## Style dictionary
 
 [`style-dictionary/README.md`](style-dictionary/README.md) is the canonical tracked guide to
 illustration vocabulary, reviewed model-pair prompts, exact verdicts, and concept-to-asset research.
-Durable concept handoffs may use its neutral visual facets, but must not depend on ignored `out/`
-artifacts or send its game-anchor names across the provider boundary.
+The skill carries its neutral visual facets with it. Durable concept handoffs must not depend on
+ignored `out/` artifacts or send its game-anchor names across the provider boundary.
 
 ## Gallery
 
 `gallery/` contains only explicitly promoted, independently reviewed, provenance-complete concept
 packages. A successful local image is not automatically gallery-ready.
+
+The existing cover was published under the `game_concept_cover_v1` lineage of
+[generated-media publication](../docs/generated-media-publication.md). A cover the skill makes
+carries an FX run record, which that lineage does not read yet, so promoting one needs a new
+lineage contract first.

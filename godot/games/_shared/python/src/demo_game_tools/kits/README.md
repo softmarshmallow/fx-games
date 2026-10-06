@@ -12,7 +12,7 @@ these kits; the games under `godot/games/` and their shared preparation code do.
 | Structural terrain painting | `painted_terrain.structural_ground` | Occupancy-preserving paintings and compatible segment seams |
 | Interface art | `ui_art.UiArt`, `ui_art.nodes` | Individually selected nine-slice, icon, cursor, or panel presets |
 | Effects art | `effects_art.EffectsArt`, `effects_art.nodes` | Cut-in plates, masks, placement, and dust atlases; no event bindings |
-| Screen pictures | `screen_art.ScreenPlateRequest` | One image with explicit geometry and optional reserved regions |
+| Screen pictures | `screen_art.ScreenLayout`, `screen_art.validate_plate` | One image with explicit geometry and optional reserved regions |
 | Music | `music.MusicTrack`, `music.nodes` | One generated track or a caller-selected collection; no playlist policy |
 | Voice identity | `voice_profile.VoiceProfile` | Casting, rights, and explicit provider voice binding |
 | Spatial generation | `worldgen` | Caller-defined fields, point processes, masks, and placements |

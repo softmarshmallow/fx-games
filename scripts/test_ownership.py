@@ -14,9 +14,9 @@ from importlib.util import resolve_name
 from pathlib import Path
 from typing import Literal, cast
 
-TestOwner = Literal["product", "games", "godot", "web", "apps"]
-_OWNERS: tuple[TestOwner, ...] = ("product", "games", "web", "godot", "apps")
-_MARKER = re.compile(r"^# test-owner: (product|games|godot|web|apps)$", re.MULTILINE)
+TestOwner = Literal["product", "games", "godot", "web"]
+_OWNERS: tuple[TestOwner, ...] = ("product", "games", "web", "godot")
+_MARKER = re.compile(r"^# test-owner: (product|games|godot|web)$", re.MULTILINE)
 GAME_MODULES = frozenset(
     {
         "demo_game_tools",
@@ -78,15 +78,10 @@ def _declared_owner(path: Path, root: Path, source: str, modules: set[str]) -> T
     if any(path.is_relative_to(root / folder) for folder in CONSUMER_TEST_ROOTS):
         owners.add("games")
     # An explicit marker cannot hide imports that require an optional distribution.
-    if any(module.split(".")[0] == "concept_studio" for module in modules):
-        owners.add("apps")
     if any(module.split(".")[0] in GAME_MODULES for module in modules):
         owners.add("games")
     if explicit is None:
-        relative = path.relative_to(root).as_posix()
-        if "concept_studio" in relative:
-            owners.add("apps")
-        elif path.name.startswith("test_godot_"):
+        if path.name.startswith("test_godot_"):
             owners.add("godot")
         elif path.name == "test_web_node_boundary.py":
             owners.add("web")

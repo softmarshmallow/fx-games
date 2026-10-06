@@ -35,7 +35,7 @@ both phases and their graphs.
 - [Scenario](../godot/packages/scenario_runtime/README.md): Godot-owned narrative framework, compiler and game-owned invocation.
 - [Scenario directory preview](../godot/packages/scenario_runtime/docs/layout.md): execution, authoring, bindings, content and game responsibilities.
 - [Asset consumer template](../godot/templates/asset_consumer/README.md): explicit file import and GDScript display.
-- [Concept Studio](../apps/concept_studio/README.md): optional concept application.
+- [Game concept studio](../skills/game-concept-studio/SKILL.md) and [movie poster](../skills/movie-poster/SKILL.md): agent skills users install into any folder (`npx skills add softmarshmallow/stage-gen --skill <name>`).
 - [Verification](../VERIFICATION.md): owned gates and aggregate checks.
 
 Sample inputs belong next to the workflow, SDK or component they demonstrate. The directory

@@ -295,7 +295,6 @@ def test_built_distributions_are_small_clean_and_resource_complete(tmp_path: Pat
                 (
                     "godot/",
                     "stage_gen_legacy/",
-                    "concept_studio/",
                     *(f"{module}/" for module in GAME_MODULES),
                 )
             )
@@ -418,7 +417,6 @@ class NoConsumerImports(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path=None, target=None):
         if fullname.split(".")[0] in {
             "stage_gen_legacy",
-            "concept_studio",
             "demo_game_tools",
             "demo_game_collection",
             "bellweather_pipeline",

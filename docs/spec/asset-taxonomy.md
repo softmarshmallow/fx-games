@@ -82,7 +82,7 @@ the old names.
 | `components/game_shell` | new in the shell pass | `2d/shell` | b — screen-space, and the screens *around* the game: the opening cinematic, the title screen and the loading screen. Genre-blind by construction; which screens a genre can enter is checked where that genre resolves |
 | `components/game_soundtrack` | unchanged | `soundtrack` | b |
 | `components/character_profile` | unchanged | `character_profile` | a/b |
-| `components/image_repeat` | unchanged | `2d/image_repeat` | a by declaration, c in practice — repair prompts assume a gravity-bearing horizon; documented, ungated |
+| `components/image_repeat` | unchanged | `2d/image_repeat` | a — a deterministic single-axis seam validator and preview; the repair path whose prompts assumed a horizon is deleted |
 | `recipes/scrolling_preview` | `recipes/sideview_platformer` | `2d/sideview/platformer` (the recipe is the genre package) | c/d |
 | `recipes/dialogue_scene` | unchanged | `2d/frontview/vn/scene` | c |
 | `recipes/pointclick_room` | new in the ABI pass | `2d/roomview/pointclick` | c/d — fixed-room stage, cursor-only interaction |

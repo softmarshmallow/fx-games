@@ -12,7 +12,6 @@ uv run python scripts/check.py                    # product: Python SDK, tests, 
 uv run python scripts/check.py --scope web        # Bun workspace, the site build, web contract tests
 uv run python scripts/check.py --scope docs       # links, paths, checkers, vocabulary, media inventory
 uv run --group games python scripts/check.py --scope games
-uv run --group apps python scripts/check.py --scope apps
 uv run --group games python scripts/check.py --scope godot
 ```
 
@@ -70,9 +69,9 @@ uv run --all-groups python scripts/check.py --scope all
 ```
 
 `all` retains full offline Python collection, formatting, type checking, packaging,
-web, Godot, docs, game input plans and optional application checks. Tests are
-assigned before collection so a product-only environment need not import the
-optional demo or concept distributions. The partition is tested for completeness.
+web, Godot, docs and game input plans. Tests are assigned before collection so a
+product-only environment need not import the optional game distributions. The
+partition is tested for completeness.
 
 ## Scenario and consumer ownership
 

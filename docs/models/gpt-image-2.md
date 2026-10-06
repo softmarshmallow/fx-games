@@ -57,7 +57,7 @@ recipe image nodes. At the time this predecessor record was written, Stage Gen
 therefore had no fal image-generation adapter or binding, direct OpenAI was the
 native route, and separate background removal remained available. That status
 is historical: the current GPT Image 2.5 route catalog includes explicit fal
-generation, edit, and conditioned-repair routes. No provider is an automatic
+generation and edit routes. No provider is an automatic
 fallback.
 
 Primary sources:

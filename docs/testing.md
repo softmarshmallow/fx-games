@@ -32,8 +32,8 @@ offline state check does not prove a picture or listening quality. See [Godot ho
 The product gate is `uv run python scripts/check.py`. It needs no Bun or Godot.
 Use the owning optional scope or `--scope all` for the complete repository gate,
 after `uv sync --all-groups --frozen`. See [VERIFICATION.md](../VERIFICATION.md).
-The retained game and Concept Studio tests require their optional workspace groups;
-use those groups when selecting old test directories directly.
+The retained game tests require the optional `games` workspace group; use it when
+selecting old test directories directly.
 
 The pre-push hook checks each pushed commit in a temporary worktree, preserving the
 working checkout. It installs all groups, then runs the format and lint checks, the web tests,
@@ -102,8 +102,8 @@ reader can act on rather than a pointer that rotted.
 
 ## System tools and packaged resources
 
-`ffmpeg` and `ffprobe` must be on `PATH` for generated-music normalization and
-audio inspection. Component tests inject process runners where possible, but a
+`ffmpeg` and `ffprobe` must be on `PATH` for audio inspection (probing, level and
+duration measurement). Component tests inject process runners where possible, but a
 real music pipeline should fail clearly when those tools are unavailable.
 
 The core wheel includes immutable layout templates under `stage_gen.resources`.

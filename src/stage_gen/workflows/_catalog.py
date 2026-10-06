@@ -19,7 +19,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from gnode import atomic_write_bytes
 from stage_gen.examples import (
     EXAMPLE_FILE,
     FIGURES_FILE,
@@ -40,6 +39,7 @@ from stage_gen.examples import (
     verify,
     verify_game_example,
 )
+from stage_gen.fs import atomic_write_bytes
 
 from ._checks import CheckContext, LoadedExample, LoadedWorkflow, drift, game_example
 from ._reference import CLI_REFERENCE_FILE, command_reference

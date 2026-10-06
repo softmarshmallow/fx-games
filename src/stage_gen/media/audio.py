@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from gnode import redact_secrets
+from stage_gen.fs import redact_secrets
 
 DEFAULT_AUDIO_PROCESS_TIMEOUT_SECONDS = 120.0
 MAX_DIAGNOSTIC_BYTES = 4 * 1024 * 1024
@@ -26,15 +26,6 @@ class AudioProcessResult:
 
 
 AudioProcessRunner = Callable[[str, Sequence[str], float], Awaitable[AudioProcessResult]]
-
-
-@dataclass(frozen=True, slots=True)
-class LoudnessMeasurement:
-    integrated_lufs: float
-    true_peak_dbtp: float
-    lra: float
-    threshold: float
-    target_offset: float
 
 
 @dataclass(frozen=True, slots=True)
@@ -197,26 +188,6 @@ async def _kill_and_reap(
     await asyncio.gather(wait_task, *pump_tasks, return_exceptions=True)
     if process.returncode is None:  # pragma: no cover - defensive subprocess fallback
         await process.wait()
-
-
-def parse_loudnorm_json(stderr: str) -> LoudnessMeasurement:
-    end = stderr.rfind("}")
-    start = stderr.rfind("{", 0, end + 1)
-    if start < 0 or end < start:
-        raise ValueError("ffmpeg loudnorm returned no measurement JSON")
-    try:
-        value = json.loads(stderr[start : end + 1])
-    except json.JSONDecodeError as exc:
-        raise ValueError("ffmpeg loudnorm returned invalid measurement JSON") from exc
-    if not isinstance(value, dict):
-        raise ValueError("ffmpeg loudnorm measurement is not an object")
-    return LoudnessMeasurement(
-        integrated_lufs=_finite(value.get("input_i"), "loudnorm input_i"),
-        true_peak_dbtp=_finite(value.get("input_tp"), "loudnorm input_tp"),
-        lra=_finite(value.get("input_lra"), "loudnorm input_lra"),
-        threshold=_finite(value.get("input_thresh"), "loudnorm input_thresh"),
-        target_offset=_finite(value.get("target_offset"), "loudnorm target_offset"),
-    )
 
 
 async def probe_audio(

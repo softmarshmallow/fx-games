@@ -16,15 +16,11 @@ declares rather than a copy that can drift.
         --map crowncrag-road --example --out /tmp/road.png
     uv run python godot/games/bellweather/tools/design_map.py compile \
         --map crowncrag-road --example --run-dir out/<run>
-    STAGE_GEN_RUN_LIVE=1 uv run python godot/games/bellweather/tools/design_map.py design \
-        --map crowncrag-road --live --out design.json
 """
 
 from __future__ import annotations
 
 import argparse
-import asyncio
-import os
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -44,12 +40,10 @@ from bellweather_pipeline.terrain_design import (
     terrain_profile,
 )
 from demo_game_tools.kits.sideview_map_design import (
-    DesignBrief,
     DesignedMap,
     PlatformerChunkMapDesign,
     PlatformerProfile,
     check,
-    design_chunks,
     expand_chunks,
     load_platformer_chunk_map_design_bytes,
     translate,
@@ -226,45 +220,6 @@ def run_compile(args: argparse.Namespace) -> int:
     return 0
 
 
-async def _compose(args: argparse.Namespace, game_map: PreparedGameMap) -> int:
-    from stage_gen.config import load_config
-    from stage_gen.orchestration.runtime import create_structured_service
-
-    config = load_config()
-    service = create_structured_service(
-        api_key=config.open_router_api_key or "",
-        model=config.text_model,
-        base_url=config.open_router_base_url or "https://openrouter.ai/api/v1",
-    )
-    profile = terrain_profile(game_map)
-    try:
-        attempts = await design_chunks(
-            service,
-            profile,
-            DesignBrief(intent=game_map.terrain.brief),
-            artifact_dir=args.out.parent / f"{args.map_id}-design",
-        )
-    finally:
-        await service.aclose()
-    final = attempts[-1]
-    if final.problems or final.designed is None:
-        print(listed(f"REJECTED after {len(attempts)} attempt(s):", final.problems))
-        return 1
-    print(describe(final.designed, profile))
-    print(f"\ncomposed in {len(attempts)} attempt(s); wrote {args.out}")
-    return 0
-
-
-def run_design(args: argparse.Namespace) -> int:
-    if not args.live or os.environ.get("STAGE_GEN_RUN_LIVE") != "1":
-        print(
-            "composing terrain calls a provider. Re-run with --live and STAGE_GEN_RUN_LIVE=1 "
-            "when that is intended."
-        )
-        return 1
-    return asyncio.run(_compose(args, load_map(args.input_root, args.map_id)))
-
-
 def _add_common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--map", dest="map_id", required=True)
     parser.add_argument("--input", dest="input_root", type=Path, default=DEFAULT_INPUT_ROOT)
@@ -298,12 +253,6 @@ def build_parser() -> argparse.ArgumentParser:
     _add_source(compiler)
     compiler.add_argument("--run-dir", type=Path, required=True)
     compiler.set_defaults(handler=run_compile)
-
-    designer = subparsers.add_parser("design", help="LIVE: compose a design from the map's brief")
-    _add_common(designer)
-    designer.add_argument("--out", type=Path, required=True)
-    designer.add_argument("--live", action="store_true")
-    designer.set_defaults(handler=run_design)
     return parser
 
 

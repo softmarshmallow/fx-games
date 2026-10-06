@@ -1,7 +1,6 @@
 """The provider services Stage Gen composes: each concrete backend behind its retry owner.
 
-The gnode plugin builds its capability handlers from these, and an application such as
-concept studio calls one directly.
+The gnode plugin builds its capability handlers from these.
 """
 
 from __future__ import annotations

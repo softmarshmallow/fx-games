@@ -67,7 +67,7 @@ import rules below are what the tests enforce; this ordering is not tested.
    by `stage_gen.viewer`) reads run folders. The [site](docs/site.md) (`web/site`) is built from the catalog
    export and the example store. `web/` is one Bun workspace and the only Node boundary;
    the viewer and the site share only `web/ui` and the versioned data contracts.
-8. **Consumers.** The Godot example project and the optional applications under `apps/`.
+8. **Consumers.** The Godot example project.
 
 Provider configuration, credentials and concrete service construction belong to the
 composition root, `src/stage_gen/orchestration/`: the provider services, image routing, and
@@ -166,14 +166,16 @@ may change through review within the Godot project. Reuse between games alone do
 a mechanism an asset SDK capability. Moving functionality to Stage Gen requires a separate,
 game-independent asset-pipeline responsibility.
 
-`apps/concept_studio/` is a separately installable concept-authoring application.
+`skills/` holds agent skills users install into their own folders (`npx skills add`). Each
+stands alone and names no path in this repository; one that calls a provider itself does so
+through Grida FX.
 
 ## Enforcing the boundary
 
 Import tests enforce GNode rings and the absence of product-to-game dependencies. Package
 tests verify installed use outside the checkout. Product verification runs without optional
-consumers; the aggregate gate additionally verifies game readers, Godot, the web workspace
-and applications. Each workflow's graph contract lives in its `contract.md`, and each game's
+consumers; the aggregate gate additionally verifies game readers, Godot and the web
+workspace. Each workflow's graph contract lives in its `contract.md`, and each game's
 in that game's docs. There is no repository-wide canonical game graph.
 
 Cache identity, route preflight, retry ownership, atomic persistence, provenance, path

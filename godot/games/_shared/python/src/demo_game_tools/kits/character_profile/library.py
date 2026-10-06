@@ -11,7 +11,7 @@ import hashlib
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
-from gnode import InputProvenance
+from stage_gen.provenance import InputProvenance
 
 from ._filesystem import (
     SecureCharacterProfilePathError,

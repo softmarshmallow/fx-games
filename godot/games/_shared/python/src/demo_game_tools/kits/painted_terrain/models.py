@@ -19,8 +19,8 @@ from demo_game_tools.kits.painted_terrain.silhouette import (
     PAINTED_TERRAIN_ERODE_PX,
     PAINTED_TERRAIN_SURFACE_DILATE_PX,
 )
-from gnode import PersistedContractModel
 from stage_gen.components._game_input import normalized_text, unique_values
+from stage_gen.contracts import PersistedContractModel
 
 
 class PaintedSilhouetteTolerance(PersistedContractModel):

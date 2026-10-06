@@ -11,8 +11,8 @@ from typing import Literal
 
 from PIL import Image, ImageChops
 
-from gnode import inspect_image
 from stage_gen.media.codec import decode_rgba, encode_png
+from stage_gen.media.inspection import inspect_image
 
 ALPHA_COMPONENT_REPACK_VERSION = "alpha-component-repack-v3"
 ALPHA_GROUND_CONTACT_VERSION = "alpha-ground-contact-v1"

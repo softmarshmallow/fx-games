@@ -41,8 +41,6 @@ from .image_product import (
 SUNBURST_PRODUCT_ID = QUALITY_IMAGE_PRODUCT.product_id
 IMAGE_OPERATION = "image_generation"
 IMAGE_MODALITY_SPEC_VERSION = "image-generation-v1"
-IMAGE_CONDITIONED_REPAIR_OPERATION = "image_conditioned_repair"
-IMAGE_CONDITIONED_REPAIR_MODALITY_SPEC_VERSION = "image-conditioned-repair-v1"
 IMAGE_POLICY_VERSION = "1"
 
 OPENAI_SUNBURST_MODEL = QUALITY_IMAGE_PRODUCT.openai_model
@@ -57,16 +55,12 @@ FAL_IMAGE_GENERATION_ROUTE_ID = "image.sunburst.fal.text-to-image"
 FAL_IMAGE_EDIT_ROUTE_ID = "image.sunburst.fal.edit"
 OPENROUTER_IMAGE_GENERATION_ROUTE_ID = "image.sunburst.openrouter.images.generation"
 OPENROUTER_IMAGE_REFERENCE_ROUTE_ID = "image.sunburst.openrouter.images.reference"
-OPENAI_IMAGE_CONDITIONED_REPAIR_ROUTE_ID = "image.sunburst.openai.images.conditioned_repair"
-FAL_IMAGE_CONDITIONED_REPAIR_ROUTE_ID = "image.sunburst.fal.conditioned_repair"
-OPENROUTER_IMAGE_CONDITIONED_REPAIR_ROUTE_ID = "image.sunburst.openrouter.images.conditioned_repair"
 
 type ImageWorkloadResolver = Callable[[ImageRouteRequirementsV1], WorkloadRequestV1]
 
 IMAGE_NATIVE_GENERATION_POLICY_ID = "image.native.generation"
 IMAGE_NATIVE_EDIT_POLICY_ID = "image.native.edit"
 IMAGE_MASKED_EDIT_POLICY_ID = "image.masked.edit"
-IMAGE_CONDITIONED_REPAIR_POLICY_ID = "image.conditioned.repair"
 IMAGE_TRANSPARENT_GENERATION_POLICY_ID = "image.transparent.generation"
 IMAGE_TRANSPARENT_EDIT_POLICY_ID = "image.transparent.edit"
 IMAGE_OPAQUE_GENERATION_POLICY_ID = "image.opaque.generation"
@@ -134,18 +128,6 @@ _NATIVE_IMAGE_FEATURES = frozenset(
         "png_output",
         "transparent_background",
         "webp_output",
-    }
-)
-_CONDITIONED_REPAIR_COMMON_FEATURES = frozenset(
-    {
-        "authored_prompt_passthrough",
-        "conditioned_repair",
-        "data_url_reference_input",
-        "flexible_size",
-        "local_alpha_reconstruction",
-        "local_immutable_restoration",
-        "maximum_quality",
-        "png_output",
     }
 )
 _OPENROUTER_IMAGE_FEATURES = frozenset(
@@ -375,76 +357,6 @@ def image_route_catalog(
                 verified_on=_VERIFIED_ON,
                 evidence_ref=_EVIDENCE_REF,
             ),
-            RouteContractV1(
-                route_id=OPENAI_IMAGE_CONDITIONED_REPAIR_ROUTE_ID,
-                product_id=SUNBURST_PRODUCT_ID,
-                operation=IMAGE_CONDITIONED_REPAIR_OPERATION,
-                operation_variant="native_mask_edit",
-                model=ModelRef(OPENAI_SUNBURST_MODEL, ImageProvider.OPENAI.value),
-                modality_spec_version=IMAGE_CONDITIONED_REPAIR_MODALITY_SPEC_VERSION,
-                surface="openai-images",
-                endpoint=f"{openai_base}/images/edits",
-                adapter_id="stage-gen-image-repeat-repair-v1",
-                adapter_behavior_version="1",
-                features=_CONDITIONED_REPAIR_COMMON_FEATURES
-                | {"native_mask_input", "transparent_background"},
-                limits=(("reference_count_max", 1.0),),
-                exact_size_constraints=_SUNBURST_CUSTOM_EXACT_SIZE_CONSTRAINTS,
-                resource_id="openai-image",
-                estimated_duration_seconds=120.0,
-                estimated_cost_low_usd=0.18,
-                estimated_cost_high_usd=0.25,
-                requests_per_minute=openai_requests_per_minute,
-                rate_limit_owner="provider_adapter",
-                verified_on=_VERIFIED_ON,
-                evidence_ref=_EVIDENCE_REF,
-            ),
-            RouteContractV1(
-                route_id=FAL_IMAGE_CONDITIONED_REPAIR_ROUTE_ID,
-                product_id=SUNBURST_PRODUCT_ID,
-                operation=IMAGE_CONDITIONED_REPAIR_OPERATION,
-                operation_variant="native_mask_edit",
-                model=ModelRef(FAL_SUNBURST_MODEL, ImageProvider.FAL.value),
-                modality_spec_version=IMAGE_CONDITIONED_REPAIR_MODALITY_SPEC_VERSION,
-                surface="fal-run",
-                endpoint=f"{fal_base}/{FAL_SUNBURST_EDIT_ENDPOINT}",
-                adapter_id="stage-gen-image-repeat-repair-v1",
-                adapter_behavior_version="1",
-                features=_CONDITIONED_REPAIR_COMMON_FEATURES
-                | {"native_mask_input", "transparent_background"},
-                limits=(("reference_count_max", 1.0),),
-                exact_size_constraints=_SUNBURST_CUSTOM_EXACT_SIZE_CONSTRAINTS,
-                resource_id="fal-image",
-                estimated_duration_seconds=120.0,
-                estimated_cost_low_usd=0.16464,
-                estimated_cost_high_usd=0.50,
-                rate_limit_owner="none",
-                verified_on=_VERIFIED_ON,
-                evidence_ref=_EVIDENCE_REF,
-            ),
-            RouteContractV1(
-                route_id=OPENROUTER_IMAGE_CONDITIONED_REPAIR_ROUTE_ID,
-                product_id=SUNBURST_PRODUCT_ID,
-                operation=IMAGE_CONDITIONED_REPAIR_OPERATION,
-                operation_variant="reference_conditioned_edit",
-                model=ModelRef(OPENROUTER_SUNBURST_MODEL, ImageProvider.OPENROUTER.value),
-                modality_spec_version=IMAGE_CONDITIONED_REPAIR_MODALITY_SPEC_VERSION,
-                surface="openrouter-images",
-                endpoint=f"{openrouter_base}/images",
-                adapter_id="stage-gen-image-repeat-repair-v1",
-                adapter_behavior_version="1",
-                features=_CONDITIONED_REPAIR_COMMON_FEATURES | {"reference_guidance"},
-                limits=(("reference_count_max", 2.0),),
-                exact_size_constraints=_OPENROUTER_VERIFIED_EXACT_SIZE_CONSTRAINTS,
-                resource_id="openrouter-image",
-                estimated_duration_seconds=120.0,
-                estimated_cost_low_usd=0.14,
-                estimated_cost_high_usd=0.30,
-                requests_per_minute=openrouter_requests_per_minute,
-                rate_limit_owner="provider_adapter",
-                verified_on=_VERIFIED_ON,
-                evidence_ref=_EVIDENCE_REF,
-            ),
         )
     )
 
@@ -506,11 +418,6 @@ _IMAGE_POLICY_RULES = MappingProxyType(
             "edit",
             frozenset({"auto", "opaque", "transparent"}),
         ),
-        IMAGE_CONDITIONED_REPAIR_POLICY_ID: _ImagePolicyRule(
-            ImageProvider.OPENROUTER,
-            "edit",
-            frozenset({"auto"}),
-        ),
         IMAGE_TRANSPARENT_GENERATION_POLICY_ID: _ImagePolicyRule(
             ImageProvider.OPENAI,
             "generation",
@@ -544,18 +451,9 @@ _ROUTE_ID_BY_PROVIDER_AND_VARIANT = MappingProxyType(
         (ImageProvider.OPENROUTER, "edit"): OPENROUTER_IMAGE_REFERENCE_ROUTE_ID,
     }
 )
-_CONDITIONED_REPAIR_ROUTE_ID_BY_PROVIDER = MappingProxyType(
-    {
-        ImageProvider.OPENAI: OPENAI_IMAGE_CONDITIONED_REPAIR_ROUTE_ID,
-        ImageProvider.FAL: FAL_IMAGE_CONDITIONED_REPAIR_ROUTE_ID,
-        ImageProvider.OPENROUTER: OPENROUTER_IMAGE_CONDITIONED_REPAIR_ROUTE_ID,
-    }
-)
 
 
 def _route_id_for_policy(policy_id: str, provider: ImageProvider) -> str:
-    if policy_id == IMAGE_CONDITIONED_REPAIR_POLICY_ID:
-        return _CONDITIONED_REPAIR_ROUTE_ID_BY_PROVIDER[provider]
     return _ROUTE_ID_BY_PROVIDER_AND_VARIANT[
         (provider, _IMAGE_POLICY_RULES[policy_id].operation_variant)
     ]
@@ -609,11 +507,6 @@ def resolve_image_route(
     catalog: RouteCatalog = IMAGE_ROUTE_CATALOG,
 ) -> ResolvedBindingV1:
     """Resolve one exact checked-in image route, without discovery or fallback."""
-
-    if policy_id == IMAGE_CONDITIONED_REPAIR_POLICY_ID:
-        raise RouteResolutionError(
-            "image.conditioned.repair uses its dedicated provider-neutral resolver"
-        )
 
     try:
         rule = _IMAGE_POLICY_RULES[policy_id]
@@ -742,109 +635,6 @@ def resolve_configured_image_route(
     )
 
 
-def _configured_conditioned_repair_selection(
-    config: StageGenConfig,
-    *,
-    catalog: RouteCatalog | None = None,
-) -> tuple[RouteCatalog, ImageProvider, WorkloadPolicyV1, RouteContractV1]:
-    selected_catalog = configured_image_route_catalog(config) if catalog is None else catalog
-    provider = config.image_provider_override or ImageProvider.OPENROUTER
-    if not isinstance(provider, ImageProvider):
-        raise RouteResolutionError("image provider override must be openai, fal, or openrouter")
-    policy = image_workload_policies(config.image_provider_override)[
-        IMAGE_CONDITIONED_REPAIR_POLICY_ID
-    ]
-    try:
-        route = selected_catalog.route(policy.route_id)
-    except (KeyError, RouteResolutionError) as error:
-        raise RouteResolutionError(
-            f"policy {policy.policy_id} selects unregistered route {policy.route_id}"
-        ) from error
-    if route.model.provider != provider.value:
-        raise RouteResolutionError(
-            f"selected route {route.route_id} does not belong to provider {provider.value}"
-        )
-    _require_registered_model_override(
-        selected_catalog,
-        selected=route,
-        model_override={
-            ImageProvider.OPENAI: config.openai_image_model,
-            ImageProvider.FAL: FAL_SUNBURST_MODEL,
-            ImageProvider.OPENROUTER: config.image_model,
-        }[provider],
-    )
-    return selected_catalog, provider, policy, route
-
-
-def configured_conditioned_repair_route_contract(
-    config: StageGenConfig,
-    *,
-    catalog: RouteCatalog | None = None,
-) -> RouteContractV1:
-    """Return the exact configured repair route before request-size admission."""
-
-    return _configured_conditioned_repair_selection(config, catalog=catalog)[3]
-
-
-def resolve_configured_conditioned_repair_route(
-    config: StageGenConfig,
-    *,
-    width: int,
-    height: int,
-    catalog: RouteCatalog | None = None,
-) -> ResolvedBindingV1:
-    """Resolve one exact-size image-repeat repair provider operation.
-
-    OpenAI Images and Fal receive one conditioning image plus a real mask. OpenRouter
-    has no mask field, so its admitted request carries the conditioning canvas and mask
-    as two ordinary references. In both cases the component, not the provider, restores
-    immutable pixels and accepts the repaired seam.
-    """
-
-    selected_catalog, provider, policy, _route = _configured_conditioned_repair_selection(
-        config,
-        catalog=catalog,
-    )
-    native_mask = provider in {ImageProvider.OPENAI, ImageProvider.FAL}
-    reference_count = 1 if native_mask else 2
-    repair_transport = "native_mask_edit" if native_mask else "reference_conditioned_edit"
-    required_features = set(_CONDITIONED_REPAIR_COMMON_FEATURES)
-    required_features.add("data_url_reference_input")
-    required_features.add("native_mask_input" if native_mask else "reference_guidance")
-    output_options: dict[str, object] = {
-        "alpha_policy": "local_reconstruction",
-        "aspect_ratio": "auto",
-        "background": "auto",
-        "guide_delivery": "mask_field" if native_mask else "image_reference",
-        "immutable_region_policy": "local_reimposition",
-        "input_fidelity": "omitted",
-        "mask_present": native_mask,
-        "mask_semantics": "white_edit_black_preserve",
-        "operation_variant": repair_transport,
-        "output_format": "png",
-        "prompt_policy": "authored_verbatim",
-        "quality": "max",
-        "quality_goal": "maximum_verified",
-        "reference_count": reference_count,
-        "reference_delivery": "data_url",
-        "repair_transport": repair_transport,
-        "size": f"{width}x{height}",
-    }
-    if provider in {ImageProvider.OPENAI, ImageProvider.OPENROUTER}:
-        output_options["moderation"] = "low"
-        output_options["moderation_goal"] = "low_when_supported"
-    request = WorkloadRequestV1(
-        policy_id=IMAGE_CONDITIONED_REPAIR_POLICY_ID,
-        operation=IMAGE_CONDITIONED_REPAIR_OPERATION,
-        modality_spec_version=IMAGE_CONDITIONED_REPAIR_MODALITY_SPEC_VERSION,
-        required_features=frozenset(required_features),
-        required_limits=(("reference_count_max", float(reference_count)),),
-        exact_size=ExactSize2DV1(width=width, height=height),
-        output_options=output_options,
-    )
-    return selected_catalog.resolve(request, policy)
-
-
 def image_policy_id_for(requirements: ImageRouteRequirementsV1) -> str:
     """Map provider-neutral image intent to its checked-in policy family."""
 
@@ -932,15 +722,11 @@ def _require_registered_model_override(
 
 __all__ = [
     "FAL_IMAGE_EDIT_ROUTE_ID",
-    "FAL_IMAGE_CONDITIONED_REPAIR_ROUTE_ID",
     "FAL_IMAGE_GENERATION_ROUTE_ID",
     "FAL_SUNBURST_MODEL",
     "FAL_SUNBURST_EDIT_ENDPOINT",
     "FAL_SUNBURST_TEXT_TO_IMAGE_ENDPOINT",
-    "IMAGE_CONDITIONED_REPAIR_MODALITY_SPEC_VERSION",
-    "IMAGE_CONDITIONED_REPAIR_OPERATION",
     "IMAGE_MODALITY_SPEC_VERSION",
-    "IMAGE_CONDITIONED_REPAIR_POLICY_ID",
     "IMAGE_MASKED_EDIT_POLICY_ID",
     "IMAGE_NATIVE_EDIT_POLICY_ID",
     "IMAGE_NATIVE_GENERATION_POLICY_ID",
@@ -954,23 +740,19 @@ __all__ = [
     "IMAGE_WORKLOAD_POLICIES",
     "ImageWorkloadResolver",
     "OPENAI_IMAGE_EDIT_ROUTE_ID",
-    "OPENAI_IMAGE_CONDITIONED_REPAIR_ROUTE_ID",
     "OPENAI_IMAGE_GENERATION_ROUTE_ID",
     "OPENAI_SUNBURST_MODEL",
     "OPENROUTER_IMAGE_GENERATION_ROUTE_ID",
-    "OPENROUTER_IMAGE_CONDITIONED_REPAIR_ROUTE_ID",
     "OPENROUTER_IMAGE_REFERENCE_ROUTE_ID",
     "OPENROUTER_SUNBURST_MODEL",
     "SUNBURST_PRODUCT_ID",
     "SUNBURST_EXACT_SIZE_BY_ASPECT_RATIO",
     "configured_image_route_catalog",
-    "configured_conditioned_repair_route_contract",
     "configured_image_workload_resolver",
     "image_policy_id_for",
     "image_route_catalog",
     "image_workload_policies",
     "resolve_configured_image_route",
-    "resolve_configured_conditioned_repair_route",
     "resolve_image_route",
     "sunburst_exact_size_for_aspect_ratio",
 ]

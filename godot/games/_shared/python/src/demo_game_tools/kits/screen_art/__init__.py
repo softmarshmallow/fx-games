@@ -6,7 +6,6 @@ from .models import ImagePlate, ImageReferenceBinding, Typeface, VideoPlate
 from .plates import canonicalize_shell_plate as canonicalize_plate
 from .plates import shell_plate_evidence as plate_evidence
 from .plates import validate_shell_plate as validate_plate
-from .service import ScreenPlateRequest
 
 __all__ = [
     "Rect",
@@ -18,7 +17,6 @@ __all__ = [
     "VideoPlate",
     "ImageReferenceBinding",
     "Typeface",
-    "ScreenPlateRequest",
     "canonicalize_plate",
     "validate_plate",
     "plate_evidence",

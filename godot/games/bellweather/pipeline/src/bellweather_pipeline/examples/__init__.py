@@ -24,7 +24,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from gnode import atomic_write_bytes
 from stage_gen.examples import (
     ENTRY_FILE,
     EXAMPLE_FILE,
@@ -45,6 +44,7 @@ from stage_gen.examples import (
     store_directory,
     verify,
 )
+from stage_gen.fs import atomic_write_bytes
 
 from . import parallax_layers, sprite_set, terrain_atlas, ui_kit
 from ._common import Imported, ImporterOptions

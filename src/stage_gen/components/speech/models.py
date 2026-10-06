@@ -29,9 +29,9 @@ from typing import Literal
 
 from pydantic import Field, model_validator
 
-from gnode import PersistedContractModel
 from stage_gen.components._game_input import SNAKE_ID_PATTERN, normalized_text
 from stage_gen.components.sound_effect.models import FIRST_TAKE, MAX_TAKE, PinnedTake
+from stage_gen.contracts import PersistedContractModel
 
 SPOKEN_LINE_REALIZATION_KIND = "spoken_line_v1"
 SPOKEN_LINE_OUTPUT_FORMAT = "mp3"

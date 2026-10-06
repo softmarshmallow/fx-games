@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from gnode import PersistedContractModel
+from stage_gen.contracts import PersistedContractModel
 
 GroundProjectionMode = Literal["orthographic_v1"]
 DEFAULT_GROUND_PROJECTION: GroundProjectionMode = "orthographic_v1"

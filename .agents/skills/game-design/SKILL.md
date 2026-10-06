@@ -14,7 +14,7 @@ Read the repository [`AGENTS.md`](../../../AGENTS.md), the
 [game ownership instructions](../../../godot/games/AGENTS.md), and the selected
 game's README. Existing prepared games keep inputs under their own `inputs/` directory;
 Bellweather has separate `default/` and `waves/` closures. For idea exploration
-or cover selection, use [game-concept-studio](../game-concept-studio/SKILL.md).
+or cover selection, use [game-concept-studio](../../../skills/game-concept-studio/SKILL.md).
 
 ## Read the contract
 

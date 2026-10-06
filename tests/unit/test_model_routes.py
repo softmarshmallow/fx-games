@@ -16,13 +16,9 @@ from gnode import (
 from stage_gen.config import StageGenConfig
 from stage_gen.image_product import ImageProvider
 from stage_gen.model_routes import (
-    FAL_IMAGE_CONDITIONED_REPAIR_ROUTE_ID,
     FAL_IMAGE_EDIT_ROUTE_ID,
     FAL_IMAGE_GENERATION_ROUTE_ID,
     FAL_SUNBURST_MODEL,
-    IMAGE_CONDITIONED_REPAIR_MODALITY_SPEC_VERSION,
-    IMAGE_CONDITIONED_REPAIR_OPERATION,
-    IMAGE_CONDITIONED_REPAIR_POLICY_ID,
     IMAGE_MASKED_EDIT_POLICY_ID,
     IMAGE_MODALITY_SPEC_VERSION,
     IMAGE_NATIVE_EDIT_POLICY_ID,
@@ -34,11 +30,9 @@ from stage_gen.model_routes import (
     IMAGE_TRANSPARENT_EDIT_POLICY_ID,
     IMAGE_TRANSPARENT_GENERATION_POLICY_ID,
     IMAGE_WORKLOAD_POLICIES,
-    OPENAI_IMAGE_CONDITIONED_REPAIR_ROUTE_ID,
     OPENAI_IMAGE_EDIT_ROUTE_ID,
     OPENAI_IMAGE_GENERATION_ROUTE_ID,
     OPENAI_SUNBURST_MODEL,
-    OPENROUTER_IMAGE_CONDITIONED_REPAIR_ROUTE_ID,
     OPENROUTER_IMAGE_GENERATION_ROUTE_ID,
     OPENROUTER_IMAGE_REFERENCE_ROUTE_ID,
     OPENROUTER_SUNBURST_MODEL,
@@ -48,77 +42,10 @@ from stage_gen.model_routes import (
     image_policy_id_for,
     image_route_catalog,
     image_workload_policies,
-    resolve_configured_conditioned_repair_route,
     resolve_configured_image_route,
     resolve_image_route,
     sunburst_exact_size_for_aspect_ratio,
 )
-
-
-@pytest.mark.parametrize(
-    ("provider", "expected_route", "expected_references", "expected_mask"),
-    [
-        (None, OPENROUTER_IMAGE_CONDITIONED_REPAIR_ROUTE_ID, 2, False),
-        (ImageProvider.OPENAI, OPENAI_IMAGE_CONDITIONED_REPAIR_ROUTE_ID, 1, True),
-        (ImageProvider.FAL, FAL_IMAGE_CONDITIONED_REPAIR_ROUTE_ID, 1, True),
-        (
-            ImageProvider.OPENROUTER,
-            OPENROUTER_IMAGE_CONDITIONED_REPAIR_ROUTE_ID,
-            2,
-            False,
-        ),
-    ],
-)
-def test_conditioned_repair_policy_seals_truthful_provider_transport(
-    provider: ImageProvider | None,
-    expected_route: str,
-    expected_references: int,
-    expected_mask: bool,
-) -> None:
-    resolved = resolve_configured_conditioned_repair_route(
-        StageGenConfig(image_provider_override=provider),
-        width=1024,
-        height=1024,
-    )
-
-    assert resolved.policy.policy_id == IMAGE_CONDITIONED_REPAIR_POLICY_ID
-    assert resolved.route.route_id == expected_route
-    assert resolved.route.operation == IMAGE_CONDITIONED_REPAIR_OPERATION
-    assert "conditioned_repair" in resolved.request.required_features
-    assert "data_url_reference_input" in resolved.route.features
-    assert "data_url_reference_input" in resolved.request.required_features
-    assert resolved.request.output_options["quality"] == "max"
-    assert resolved.request.output_options["background"] == "auto"
-    assert resolved.request.output_options["output_format"] == "png"
-    assert resolved.request.output_options["reference_count"] == expected_references
-    assert resolved.request.output_options["reference_delivery"] == "data_url"
-    assert resolved.request.output_options["mask_present"] is expected_mask
-    assert resolved.request.output_options["size"] == "1024x1024"
-    assert resolved.request.exact_size == ExactSize2DV1(width=1024, height=1024)
-    if expected_mask:
-        assert resolved.route.operation_variant == "native_mask_edit"
-        assert "native_mask_input" in resolved.request.required_features
-    else:
-        assert resolved.route.operation_variant == "reference_conditioned_edit"
-        assert "reference_guidance" in resolved.request.required_features
-
-
-def test_conditioned_repair_never_falls_back_from_a_missing_selected_route() -> None:
-    catalog = RouteCatalog(
-        tuple(
-            route
-            for route in IMAGE_ROUTE_CATALOG.routes
-            if route.route_id != FAL_IMAGE_CONDITIONED_REPAIR_ROUTE_ID
-        )
-    )
-
-    with pytest.raises(RouteResolutionError, match="selects unregistered route"):
-        resolve_configured_conditioned_repair_route(
-            StageGenConfig(image_provider_override=ImageProvider.FAL),
-            width=1024,
-            height=1024,
-            catalog=catalog,
-        )
 
 
 def _requirements(
@@ -160,23 +87,12 @@ def test_catalog_contains_only_explicit_sunburst_routes() -> None:
         FAL_IMAGE_EDIT_ROUTE_ID,
         OPENROUTER_IMAGE_GENERATION_ROUTE_ID,
         OPENROUTER_IMAGE_REFERENCE_ROUTE_ID,
-        OPENAI_IMAGE_CONDITIONED_REPAIR_ROUTE_ID,
-        FAL_IMAGE_CONDITIONED_REPAIR_ROUTE_ID,
-        OPENROUTER_IMAGE_CONDITIONED_REPAIR_ROUTE_ID,
     }
     assert {route.product_id for route in routes} == {SUNBURST_PRODUCT_ID}
-    assert {route.operation for route in routes} == {
-        IMAGE_OPERATION,
-        IMAGE_CONDITIONED_REPAIR_OPERATION,
-    }
+    assert {route.operation for route in routes} == {IMAGE_OPERATION}
     assert {
         route.modality_spec_version for route in routes if route.operation == IMAGE_OPERATION
     } == {IMAGE_MODALITY_SPEC_VERSION}
-    assert {
-        route.modality_spec_version
-        for route in routes
-        if route.operation == IMAGE_CONDITIONED_REPAIR_OPERATION
-    } == {IMAGE_CONDITIONED_REPAIR_MODALITY_SPEC_VERSION}
     assert all("flare" not in route.route_id for route in routes)
     assert all("responses" not in route.surface for route in routes)
     assert {
@@ -216,29 +132,6 @@ def test_catalog_contains_only_explicit_sunburst_routes() -> None:
         "openrouter-images",
         "https://openrouter.ai/api/v1/images",
     )
-    assert exact[OPENAI_IMAGE_CONDITIONED_REPAIR_ROUTE_ID] == (
-        ModelRef(OPENAI_SUNBURST_MODEL, "openai"),
-        "openai-images",
-        "https://api.openai.com/v1/images/edits",
-    )
-    assert exact[FAL_IMAGE_CONDITIONED_REPAIR_ROUTE_ID] == (
-        ModelRef(FAL_SUNBURST_MODEL, "fal"),
-        "fal-run",
-        "https://fal.run/openai/gpt-image-2.5/sunburst/edit",
-    )
-    assert exact[OPENROUTER_IMAGE_CONDITIONED_REPAIR_ROUTE_ID] == (
-        ModelRef(OPENROUTER_SUNBURST_MODEL, "openrouter"),
-        "openrouter-images",
-        "https://openrouter.ai/api/v1/images",
-    )
-    repair_routes = [
-        route for route in routes if route.operation == IMAGE_CONDITIONED_REPAIR_OPERATION
-    ]
-    assert {route.adapter_id for route in repair_routes} == {"stage-gen-image-repeat-repair-v1"}
-    assert {route.operation_variant for route in repair_routes} == {
-        "native_mask_edit",
-        "reference_conditioned_edit",
-    }
 
     native_routes = [
         route
@@ -612,23 +505,6 @@ def test_unverified_openrouter_custom_size_refuses_without_fallback() -> None:
         )
 
 
-def test_conditioned_repair_refuses_unverified_openrouter_exact_size() -> None:
-    for provider in (ImageProvider.OPENAI, ImageProvider.FAL):
-        resolved = resolve_configured_conditioned_repair_route(
-            StageGenConfig(image_provider_override=provider),
-            width=1536,
-            height=1024,
-        )
-        assert resolved.request.exact_size == ExactSize2DV1(width=1536, height=1024)
-
-    with pytest.raises(RouteResolutionError, match=r"openrouter.*unsupported.*exact size"):
-        resolve_configured_conditioned_repair_route(
-            StageGenConfig(image_provider_override=ImageProvider.OPENROUTER),
-            width=1536,
-            height=1024,
-        )
-
-
 def test_shipped_custom_canvas_passes_native_provider_admission() -> None:
     requirements = _requirements(background="opaque", size="1280x720")
     policy_id = image_policy_id_for(requirements)
@@ -669,9 +545,7 @@ def test_public_policy_map_rewrites_every_action_with_one_scalar_override() -> N
     assert set(fal) == set(IMAGE_WORKLOAD_POLICIES)
     for policy_id, policy in fal.items():
         expected = (
-            FAL_IMAGE_CONDITIONED_REPAIR_ROUTE_ID
-            if policy_id == IMAGE_CONDITIONED_REPAIR_POLICY_ID
-            else FAL_IMAGE_EDIT_ROUTE_ID
+            FAL_IMAGE_EDIT_ROUTE_ID
             if policy_id.endswith(".edit")
             else FAL_IMAGE_GENERATION_ROUTE_ID
         )

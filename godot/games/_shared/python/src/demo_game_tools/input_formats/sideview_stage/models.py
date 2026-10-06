@@ -17,7 +17,6 @@ from typing import Literal
 
 from pydantic import Field, field_validator
 
-from gnode import PersistedContractModel
 from stage_gen.components._game_input import (
     normalized_text,
     unique_values,
@@ -34,6 +33,7 @@ from stage_gen.components.sideview_layers.models import (
 from stage_gen.components.sideview_layers.models import (
     LayerRequest as PreparedMapLayer,
 )
+from stage_gen.contracts import PersistedContractModel
 
 
 class PreparedMapView(PersistedContractModel):

@@ -14,7 +14,7 @@ from pathlib import Path
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from gnode import atomic_write_text
+from stage_gen.fs import atomic_write_text
 from stage_gen.image_product import ImageProvider
 from stage_gen.model_policy_maintenance import (
     ACTIVE_MODEL_POLICY_SNAPSHOT,

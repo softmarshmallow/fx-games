@@ -13,8 +13,8 @@ from typing import Literal
 from pydantic import Field, ValidationError
 
 from demo_game_tools.kits.sideview_map_design.capabilities import PlatformerProfile
-from gnode import PersistedContractModel
 from stage_gen.components._game_input import canonical_contract_json
+from stage_gen.contracts import PersistedContractModel
 
 PLATFORMER_MAP_DESIGN_SCHEMA_VERSION = 1
 PLATFORMER_MAP_DESIGN_KIND = "platformer-chunk-map-v1"

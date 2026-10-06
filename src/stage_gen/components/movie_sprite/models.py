@@ -7,7 +7,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
 
-from gnode import PersistedContractModel
+from stage_gen.contracts import PersistedContractModel
 
 MAX_FRAMES = 360
 MAX_FRAME_PIXELS = 2160 * 3840

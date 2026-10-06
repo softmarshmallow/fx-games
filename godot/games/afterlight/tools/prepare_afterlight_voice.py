@@ -19,17 +19,17 @@ from typing import Any
 
 from gnode import (
     AbortError,
-    ArtifactProvenance,
     ArtifactRights,
     CancellationToken,
     SpeechGenerationRequest,
     SpeechGenerationService,
-    atomic_write_json,
 )
 from gnode.providers.elevenlabs import ElevenLabsSpeechBackend
 from stage_gen.components.speech import admit_speech_bytes, admit_speech_bytes_sync
 from stage_gen.config import CapabilityName, load_config
+from stage_gen.fs import atomic_write_json
 from stage_gen.identity import SPEECH_GENERATION_COMPONENT, STAGE_GEN_TOOL
+from stage_gen.provenance import ArtifactProvenance
 
 PROJECT = Path(__file__).resolve().parents[1]
 MAX_ATTEMPTS = 6

@@ -11,8 +11,8 @@ from typing import Any
 from PIL import Image, ImageChops, ImageFilter, ImageStat
 from PIL import __version__ as pillow_version
 
-from gnode import inspect_image
 from stage_gen.media.codec import decode_image, decode_rgba, encode_png
+from stage_gen.media.inspection import inspect_image
 
 CHROMA_DISTANCE_THRESHOLD = 36
 # Distance at or above which a pixel is wholly foreground. Between this and

@@ -290,7 +290,6 @@ def steps(
             *_gnode_game_typechecks(),
             *_game_steps(python, scratch=scratch),
         ),
-        "apps": (Step(("pytest", "-m", "not live", *paths_for(REPOSITORY_ROOT, "apps"))),),
         "docs": (Step((python, "scripts/check_docs.py")),),
     }
     if scope == "all":
@@ -307,7 +306,6 @@ def steps(
                     *GAME_PYTHON_ROOTS,
                     *GAME_TYPED_TOOLS,
                     "godot/templates/asset_consumer/prepare.py",
-                    "apps/concept_studio/src",
                 )
             ),
             Step(("pytest", "-m", "not live")),
@@ -317,7 +315,6 @@ def steps(
             *groups["games"][1:],
             *_asset_steps(python, scratch=scratch),
             Step((python, "-m", "build", "--no-isolation")),
-            Step(("stage-gen-concept", "models")),
         )
     if scope not in groups:
         raise ValueError(f"unknown verification scope: {scope}")
@@ -357,7 +354,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run credential-free checks for an owned surface")
     parser.add_argument(
         "--scope",
-        choices=("product", "web", "godot", "games", "apps", "docs", "all"),
+        choices=("product", "web", "godot", "games", "docs", "all"),
         default="product",
     )
     args = parser.parse_args()

@@ -24,7 +24,7 @@ from demo_game_tools.scenario import (
     StageDeclaration,
     TrackDeclaration,
 )
-from gnode import resolve_relative_path_within_root
+from stage_gen.fs import resolve_relative_path_within_root
 from stage_gen.image_style import CanonicalStyleAnchor, canonical_style_anchor_digest
 from stage_gen.media import inspect_image, probe_audio
 from the_grain_pipeline.dialogue_scene.identity import (

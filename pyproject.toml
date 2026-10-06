@@ -46,7 +46,6 @@ dev = [
   "types-pyyaml>=6.0.12,<7",
 ]
 games = ["demo-game-collection"]
-apps = ["stage-gen-concept"]
 
 [tool.uv.workspace]
 members = [
@@ -57,12 +56,10 @@ members = [
   "godot/games/ember_hollow/pipeline",
   "godot/games/the_grain/pipeline",
   "godot/tools/python",
-  "apps/concept_studio",
 ]
 
 [tool.uv.sources]
 demo-game-collection = { workspace = true }
-stage-gen-concept = { workspace = true }
 grida = { path = "third_party/fx/python", editable = true }
 
 [tool.hatch.build]
@@ -149,7 +146,7 @@ ignore = ["RUF022"]
 "docs/guide/examples/**/*.py" = ["F821"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["gnode", "gnode_std", "stage_gen", "scenario_authoring", "demo_game_tools", "demo_game_collection", "bellweather_pipeline", "iron_petal_unit_pipeline", "ember_hollow_pipeline", "the_grain_pipeline", "concept_studio"]
+known-first-party = ["gnode", "gnode_std", "stage_gen", "scenario_authoring", "demo_game_tools", "demo_game_collection", "bellweather_pipeline", "iron_petal_unit_pipeline", "ember_hollow_pipeline", "the_grain_pipeline"]
 
 [tool.mypy]
 python_version = "3.12"

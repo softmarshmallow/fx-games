@@ -8,7 +8,6 @@ from typing import Literal
 
 from pydantic import Field, ValidationInfo, field_validator, model_validator
 
-from gnode import PersistedContractModel
 from stage_gen.components._game_input import (
     SHA256_PATTERN,
     SNAKE_ID_PATTERN,
@@ -16,6 +15,7 @@ from stage_gen.components._game_input import (
     portable_relative_path,
     unique_values,
 )
+from stage_gen.contracts import PersistedContractModel
 
 #: Licences whose terms permit redistributing the font file itself, which is what
 #: publishing a run does. A face under any other licence is refused offline rather than

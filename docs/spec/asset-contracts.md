@@ -325,26 +325,14 @@ agent designs IS the skybox.
 ### Looping — verified single-axis image repeat
 
 The model is not expected to infer a repeatable edge from prompt wording. The
-provider-neutral `image_repeat` component instead exposes two distinct
-operations. Admission preserves the source bytes and proves the declared `x`
-or `y` wrap. Explicit repair supplies the source's ending and starting contexts
-around a masked editable span and reimposes both immutable contexts. The provider
-owns the bridge's RGB appearance. The component owns alpha topology: it
-reconstructs alpha from the exact source endpoint profiles, anchors the repair's
-short endpoint bands to exact source RGBA in premultiplied space, and appends the
-accepted repair span. The exact provider candidate is retained for deterministic
-reconstruction. Neither operation claims the other axis.
+provider-neutral `image_repeat` component exposes one deterministic validator
+for the declared `x` or `y` wrap, plus every stitch a construction cut into the
+unit, and a three-repeat preview. It claims nothing about the other axis.
 
-Every successful repeat unit passes multi-scale deterministic continuity checks
-and an independent intended-loop review over exactly three repeats. The
-lower-snake-case v2 artifact records the declared axis, period, construction,
-validation policy and reports, provenance, rights, and complete lineage. The
-scrolling manifest projects verified records under `image_repeat.artifacts`.
-
-See [verified single-axis image repeat](../image-repeat.md) for the typed
-manifest, admission, repair, validation, provenance, rights, and runtime
-contracts. When no verified repeat artifact exists, the browser preview may use
-the explicitly temporary legacy `repeat-x-seam-overlap` fallback for an
+See [verified single-axis image repeat](../image-repeat.md) for the
+validator and preview contracts. When no verified repeat artifact exists, the
+browser preview may use the explicitly temporary legacy
+`repeat-x-seam-overlap` fallback for an
 alpha-bearing source layer. It tapers the source alpha across both
 256-source-pixel edge bands and
 composites a second copy at a phase of `sourceWidthPx - 256`; complementary

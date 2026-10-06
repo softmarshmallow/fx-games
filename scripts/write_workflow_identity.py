@@ -51,11 +51,11 @@ from gnode import (
     RunView,
     SoftwareIdentity,
     WorkflowRun,
-    atomic_write_text,
     plan_async,
     project_run,
 )
 from gnode import run as gnode_run
+from stage_gen.fs import atomic_write_text
 from stage_gen.workflows._gnode import GnodeWorkflow
 from stage_gen.workflows._registry import discover
 

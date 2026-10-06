@@ -73,6 +73,9 @@ shows how to write one.
 - [Verification](VERIFICATION.md): `uv run python scripts/check.py` is the product gate and
   needs neither Bun nor Godot. Source licensing is distinct from asset rights; see
   [media publication](docs/generated-media-publication.md).
+- Agent skills: [game concept studio](skills/game-concept-studio/SKILL.md) and
+  [movie poster](skills/movie-poster/SKILL.md), installed with
+  `npx skills add softmarshmallow/stage-gen --skill <name>`.
 
 ## Godot example project
 

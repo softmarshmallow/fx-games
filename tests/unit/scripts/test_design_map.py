@@ -253,18 +253,6 @@ def test_compile_never_writes_into_the_authored_library(tmp_path: Path) -> None:
     assert after == before
 
 
-def test_design_without_the_live_opt_in_makes_no_provider_call(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
-) -> None:
-    monkeypatch.delenv("STAGE_GEN_RUN_LIVE", raising=False)
-    assert (
-        SCRIPT.main(["design", "--map", "crowncrag-road", "--out", str(tmp_path / "design.json")])
-        == 1
-    )
-    assert "provider" in capsys.readouterr().out
-    assert not (tmp_path / "design.json").exists()
-
-
 def test_the_example_sentence_stays_valid_for_the_shipped_road() -> None:
     # A canned example that silently stopped satisfying the map would make every other test here
     # vacuous, so it is asserted rather than assumed.

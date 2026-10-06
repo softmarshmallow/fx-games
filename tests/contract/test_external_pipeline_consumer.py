@@ -35,7 +35,6 @@ def _install_wheel(repository: Path, tmp_path: Path, environment: dict[str, str]
         "the_grain_pipeline",
     ):
         assert not (installed / module).exists()
-    assert not (installed / "concept_studio").exists()
     return installed
 
 
@@ -104,7 +103,6 @@ sys.path.insert(0, sys.argv.pop(1))
 class NoOptionalConsumers(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path=None, target=None):
         if fullname.split('.')[0] in {
-            'concept_studio',
             'demo_game_collection',
             'demo_game_tools',
             'iron_petal_unit_pipeline',
@@ -170,7 +168,6 @@ import sys
 class NoConsumers(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path=None, target=None):
         if fullname.split('.')[0] in {
-            'concept_studio',
             'demo_game_collection',
             'demo_game_tools',
             'iron_petal_unit_pipeline',
@@ -192,7 +189,7 @@ for module in pkgutil.iter_modules(stage_gen.components.__path__):
         importlib.import_module('stage_gen.components.' + module.name)
 assert not any(
     name.split('.')[0] in {
-        'stage_gen_legacy', 'concept_studio', 'demo_game_tools', 'demo_game_collection',
+        'stage_gen_legacy', 'demo_game_tools', 'demo_game_collection',
         'bellweather_pipeline', 'iron_petal_unit_pipeline',
         'ember_hollow_pipeline', 'the_grain_pipeline',
     }
@@ -229,7 +226,6 @@ attempted = set()
 class NoConsumers(importlib.abc.MetaPathFinder):
     def find_spec(self, fullname, path=None, target=None):
         if fullname.split('.')[0] in {
-            'concept_studio',
             'demo_game_collection',
             'demo_game_tools',
             'iron_petal_unit_pipeline',

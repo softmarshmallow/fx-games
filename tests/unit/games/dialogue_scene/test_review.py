@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from demo_game_collection.cli import main
-from gnode import ArtifactProvenance
+from stage_gen.provenance import ArtifactProvenance
 from the_grain_pipeline.dialogue_scene.identity import content_sha256
 from the_grain_pipeline.dialogue_scene.models import DialogueBundle, IndependentReview
 from the_grain_pipeline.dialogue_scene.review import (

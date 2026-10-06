@@ -475,5 +475,5 @@ business, and its `looping_continuity` check is the gate that speaks to them.
   layer placement contract that runs after construction.
 - [Canonical game-generation pipeline](../../../../godot/games/bellweather/docs/generation-pipeline.md) — the executable graph the
   loop node belongs to.
-- [Verified single-axis image repeat](../../../../docs/image-repeat.md) — the provider-neutral admission, repair,
-  and review component whose deterministic validator this contract uses.
+- [Verified single-axis image repeat](../../../../docs/image-repeat.md) — the provider-neutral deterministic repeat
+  validator this contract uses.

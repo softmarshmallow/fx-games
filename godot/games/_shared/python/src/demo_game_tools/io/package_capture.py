@@ -25,7 +25,6 @@ from typing import Literal, Protocol
 from PIL import Image, UnidentifiedImageError
 
 from demo_game_tools.input_formats.game_contract import PreparedGameContract
-from gnode import ArtifactProvenance, assert_audio_signature
 from stage_gen.components._game_input import (
     AuthoredContractLoadError,
     portable_relative_path,
@@ -37,6 +36,8 @@ from stage_gen.components._secure_fs import (
     read_absolute_regular_file,
     read_relative_regular_file,
 )
+from stage_gen.media import assert_audio_signature
+from stage_gen.provenance import ArtifactProvenance
 
 GAME_PACKAGE_VALIDATION_SCHEMA_VERSION = 6
 #: The resolved package document and its validation report carry the same schema

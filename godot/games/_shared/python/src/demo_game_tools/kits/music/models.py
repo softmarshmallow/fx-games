@@ -8,7 +8,7 @@ from typing import Literal
 
 from pydantic import Field, ValidationInfo, field_validator
 
-from gnode import PersistedContractModel
+from stage_gen.contracts import PersistedContractModel
 
 _JS_SAFE_INTEGER_MAX = 9_007_199_254_740_991
 

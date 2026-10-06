@@ -35,13 +35,13 @@ from demo_game_tools.kits.effects_art.models import (
     SpriteDirection,
 )
 from demo_game_tools.kits.effects_art.sprite import DUST_ALPHA_POLICY, DUST_ATLAS_LAYOUT
-from gnode import PersistedContractModel
 from stage_gen.components._game_input import (
     PACKAGE_ID_PATTERN,
     SNAKE_ID_PATTERN,
     parse_toml_contract,
     unique_values,
 )
+from stage_gen.contracts import PersistedContractModel
 
 GAME_FX_SCHEMA_VERSION = 2
 GAME_FX_KIND = "game-fx-v2"

@@ -1,7 +1,5 @@
 """Capability contracts work without declaring a game or adopting playback rules."""
 
-from pathlib import Path
-
 import pytest
 from PIL import Image
 from pydantic import ValidationError
@@ -9,7 +7,7 @@ from pydantic import ValidationError
 from demo_game_tools.kits.effects_art import EffectsArt
 from demo_game_tools.kits.effects_art.models import DustAtlasDirection, SpriteDirection
 from demo_game_tools.kits.music import MusicTrack, TrackGenerationIntent, music_track_prompt
-from demo_game_tools.kits.screen_art import ImagePlate, Rect, ScreenLayout, ScreenPlateRequest
+from demo_game_tools.kits.screen_art import Rect, ScreenLayout, validate_plate
 from demo_game_tools.kits.sideview_actor import AssetScale, ResolvedMagnitude, calibrate_subject
 from demo_game_tools.kits.ui_art import (
     PANEL_FRAME_LAYOUT,
@@ -18,7 +16,6 @@ from demo_game_tools.kits.ui_art import (
     UiReference,
 )
 from demo_game_tools.kits.ui_art.nodes import document_roles
-from gnode import ImageReference
 from stage_gen.components.sound_effect import SoundEffectRequest
 from stage_gen.components.speech import SpeechRequest
 from stage_gen.media.codec import encode_png
@@ -82,31 +79,19 @@ def test_single_music_track_needs_no_playlist_or_game_identity() -> None:
 
 
 def test_screen_plate_has_geometry_without_screen_flow() -> None:
-    request = ScreenPlateRequest(
-        plate=ImagePlate(
-            mode="still",
-            alpha_policy="fully_opaque_v1",
-            reference_ids=["style"],
-            prompt="A quiet painted blue horizon",
-        ),
-        layout=ScreenLayout(
-            layout="quiet_plate_v1",
-            canvas=(64, 32),
-            reserved=(("caption", Rect(8, 20, 48, 8)),),
-        ),
-        measured_regions=("caption",),
+    layout = ScreenLayout(
+        layout="quiet_plate_v1",
+        canvas=(64, 32),
+        reserved=(("caption", Rect(8, 20, 48, 8)),),
     )
-    facts = request.validate(encode_png(Image.new("RGBA", (64, 32), "#26384a")))
+    data = encode_png(Image.new("RGBA", (64, 32), "#26384a"))
+    facts = validate_plate(
+        data, layout=layout, alpha_policy="fully_opaque_v1", measured_regions=("caption",)
+    )
     assert facts["canvas"] == {"width": 64, "height": 32}
-    with pytest.raises(ValueError, match="bound image"):
-        request.image_request(artifact_path=Path("plate.png"), references=())
-    bound = ImageReference(url="data:image/png;base64,aW1hZ2U=")
-    assert (
-        request.image_request(artifact_path=Path("plate.png"), references=(bound,)).size == "64x32"
-    )
-    with pytest.raises(ValueError, match="unknown reserved"):
-        ScreenPlateRequest(
-            plate=request.plate, layout=request.layout, measured_regions=("missing",)
+    with pytest.raises(ValueError, match="reserves no region"):
+        validate_plate(
+            data, layout=layout, alpha_policy="fully_opaque_v1", measured_regions=("missing",)
         )
 
 

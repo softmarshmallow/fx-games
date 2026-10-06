@@ -3,8 +3,8 @@
 WHAT THIS IS. A description of what a 2D side-scrolling game can express (:mod:`capabilities`),
 a grammar that composes a map as a left-to-right sentence of named set-pieces (:mod:`grammar`),
 a deterministic expander plus the validator that judges the result against those capabilities
-(:mod:`design`), and a structured-generation loop that composes a map and re-composes it from
-the validator's own complaints (:mod:`designer`).
+(:mod:`design`), and the feedback that quotes the validator's own complaints back to a composer
+(:mod:`designer`).
 
 WHAT THIS IS NOT. It is not a generator: it produces no images, audio, or packaged artifacts,
 and it schedules no work. It is not a renderer: it never sees a pixel, a camera, a viewport, or
@@ -40,11 +40,7 @@ from .design import (
     unreachable,
 )
 from .designer import (
-    DESIGN_TIMEOUT_SECONDS,
     MAX_QUOTED_PROBLEMS,
-    DesignAttempt,
-    DesignBrief,
-    design_chunks,
     expand_design,
     rejection_feedback,
 )
@@ -58,7 +54,6 @@ from .grammar import (
 )
 
 __all__ = [
-    "DESIGN_TIMEOUT_SECONDS",
     "EMPTY_TILE_ROLE",
     "GROUND_TILE_ROLE",
     "MAX_QUOTED_PROBLEMS",
@@ -69,8 +64,6 @@ __all__ = [
     "ChunkSpan",
     "Climbable",
     "ClimbableFooting",
-    "DesignAttempt",
-    "DesignBrief",
     "DesignedMap",
     "GeometryProfile",
     "MovementProfile",
@@ -83,7 +76,6 @@ __all__ = [
     "build_chunk_schema",
     "canonical_platformer_chunk_map_design_json",
     "check",
-    "design_chunks",
     "expand_design",
     "expand_chunks",
     "load_platformer_chunk_map_design_bytes",

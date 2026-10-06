@@ -57,7 +57,7 @@ from demo_game_tools.manifest_blocks import (
     present_blocks,
 )
 from demo_game_tools.media.ui import inventory_panel_layout_contract
-from gnode import atomic_write_json
+from stage_gen.fs import atomic_write_json
 from stage_gen.media import measure_alpha_ground_contact
 from stage_gen.media.sprite_sheets import split_atlas_columns
 

@@ -26,7 +26,6 @@ from demo_game_tools.kits.actor_content import (
     validate_reference_closure,
 )
 from demo_game_tools.kits.sideview_actor.motion_geometry import DEFAULT_MOTION_ATLAS_GEOMETRY
-from gnode import PersistedContractModel
 from stage_gen.components._game_input import (
     GAME_ID_PATTERN,
     SNAKE_ID_PATTERN,
@@ -36,6 +35,7 @@ from stage_gen.components._game_input import (
     sha256_bytes,
     unique_values,
 )
+from stage_gen.contracts import PersistedContractModel
 
 RUNNER_AVATAR_SCHEMA_VERSION = 3
 

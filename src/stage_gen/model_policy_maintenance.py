@@ -17,12 +17,8 @@ from urllib.parse import urlsplit
 
 from pydantic import Field, field_validator, model_validator
 
-from gnode import (
-    SHA256_PATTERN,
-    PersistedContractModel,
-    RouteCatalog,
-    WorkloadPolicyV1,
-)
+from gnode import RouteCatalog, WorkloadPolicyV1
+from stage_gen.contracts import SHA256_PATTERN, PersistedContractModel
 
 MODEL_POLICY_SNAPSHOT_KIND = "stage-gen-model-policy-snapshot-v2"
 ACTIVE_MODEL_POLICY_SNAPSHOT = "model_policy_snapshot.json"

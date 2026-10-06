@@ -28,12 +28,12 @@ def test_relative_helper_imports_and_cycles_propagate_optional_ownership(tmp_pat
 
 
 def test_package_initializer_and_script_helper_dependencies_are_followed(tmp_path: Path) -> None:
-    _write(tmp_path, "tests/feature/__init__.py", "import concept_studio\n")
+    _write(tmp_path, "tests/feature/__init__.py", "import demo_game_tools\n")
     _write(tmp_path, "tests/feature/test_indirect.py", "value = 1\n")
     _write(tmp_path, "scripts/helper.py", "import bellweather_pipeline\n")
     _write(tmp_path, "tests/test_script.py", "from scripts.helper import value\n")
     assert collect_owners(tmp_path) == {
-        "tests/feature/test_indirect.py": "apps",
+        "tests/feature/test_indirect.py": "games",
         "tests/test_script.py": "games",
     }
 
@@ -54,9 +54,9 @@ def test_named_import_from_package_follows_submodule_and_live_tests_are_excluded
     tmp_path: Path,
 ) -> None:
     _write(tmp_path, "tests/test_indirect.py", "from tests.helpers import optional\n")
-    _write(tmp_path, "tests/helpers/optional.py", "import concept_studio\n")
+    _write(tmp_path, "tests/helpers/optional.py", "import the_grain_pipeline\n")
     _write(tmp_path, "tests/live/test_provider.py", "import bellweather_pipeline\n")
-    assert collect_owners(tmp_path) == {"tests/test_indirect.py": "apps"}
+    assert collect_owners(tmp_path) == {"tests/test_indirect.py": "games"}
 
 
 def test_literal_dynamic_imports_follow_the_same_dependency_graph(tmp_path: Path) -> None:

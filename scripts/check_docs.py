@@ -295,6 +295,33 @@ def check_retired_terms(repo: Path) -> list[str]:
     return failures
 
 
+# A user skill is installed into somebody else's folder (`npx skills add`), where nothing of this
+# repository exists: a path into it, one of its commands or one of its package names would be an
+# instruction that cannot work there.
+_USER_SKILL_REPOSITORY_PATH = re.compile(
+    r"`((?:src|web|scripts|tests|apps|concept-studio|godot|library|docs|third_party|\.agents"
+    r"|\.claude)/[^`]*)`"
+)
+_USER_SKILL_REPOSITORY_NAME = re.compile(
+    r"stage[-_ ]gen|\bgnode\b|(?<![\w-])concept[-_]studio(?![\w-])", re.IGNORECASE
+)
+
+
+def check_user_skills(repo: Path) -> list[str]:
+    """Each skill under ``skills/`` stands alone in any folder of a user's."""
+    failures: list[str] = []
+    for path in _walk_files(repo / "skills", frozenset({".md", ".yaml", ".yml"})):
+        relative = path.relative_to(repo).as_posix()
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            for pattern in (_USER_SKILL_REPOSITORY_PATH, _USER_SKILL_REPOSITORY_NAME):
+                for match in pattern.finditer(line):
+                    failures.append(
+                        f"{relative}:{number}: a user skill names this repository "
+                        f"({match.group(0)})"
+                    )
+    return failures
+
+
 def run_docs_check(repo: Path = REPOSITORY_ROOT) -> DocsCheckResult:
     doctrine = [
         repo / "README.md",
@@ -336,6 +363,8 @@ def run_docs_check(repo: Path = REPOSITORY_ROOT) -> DocsCheckResult:
             )
         ],
         *concept_markdown,
+        # The skills users install link only to their own references.
+        *_walk_files(repo / "skills", frozenset({".md"})),
         # Workflow prose lives beside its code, and a game's example pages beside the game.
         *_walk_files(repo / WORKFLOWS_SOURCE, frozenset({".md", ".mdx"})),
         *_walk_files(repo / "src/stage_gen/components", frozenset({".md"})),
@@ -600,6 +629,7 @@ def run_docs_check(repo: Path = REPOSITORY_ROOT) -> DocsCheckResult:
             "viewer and `gnode view`)"
         )
     failures.extend(check_retired_terms(repo))
+    failures.extend(check_user_skills(repo))
 
     media_policy = (repo / "docs/generated-media-publication.md").read_text(encoding="utf-8")
     policy_requirements = (

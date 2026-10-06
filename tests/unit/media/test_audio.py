@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import os
 import shutil
 import sys
@@ -14,7 +13,6 @@ from stage_gen.media import (
     AudioProcessResult,
     assert_audio_signature,
     normalize_audio_media_type,
-    parse_loudnorm_json,
     run_process,
 )
 
@@ -26,21 +24,6 @@ def test_audio_media_aliases_and_signatures_are_strict() -> None:
     assert_audio_signature(b"RIFF\x00\x00\x00\x00WAVE", "audio/wav")
     with pytest.raises(ValueError, match="do not match"):
         assert_audio_signature(b"RIFF\x00\x00\x00\x00WAVE", "audio/mpeg")
-
-
-def test_loudnorm_parser_uses_last_measurement_and_rejects_nonfinite_values() -> None:
-    measurement = {
-        "input_i": "-16.10",
-        "input_tp": "-1.40",
-        "input_lra": "4.10",
-        "input_thresh": "-26.00",
-        "target_offset": "0.00",
-    }
-    parsed = parse_loudnorm_json(f'diagnostic\n{{"old": true}}\n{json.dumps(measurement)}')
-    assert parsed.integrated_lufs == -16.1
-    assert parsed.true_peak_dbtp == -1.4
-    with pytest.raises(ValueError, match="finite"):
-        parse_loudnorm_json(json.dumps({**measurement, "input_i": "NaN"}))
 
 
 @pytest.mark.asyncio

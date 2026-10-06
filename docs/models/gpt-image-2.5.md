@@ -215,21 +215,16 @@ The checked-in route catalog contains exactly these material routes:
 | `image.sunburst.fal.edit` | `openai/gpt-image-2.5/sunburst` at fal `/edit` | reference or masked edit | native auto, opaque, or transparent output; up to 16 references |
 | `image.sunburst.openrouter.images.generation` | `openai/gpt-image-2.5-sunburst` at OpenRouter `/images` | generation | `auto` or opaque output; no native-alpha claim |
 | `image.sunburst.openrouter.images.reference` | `openai/gpt-image-2.5-sunburst` at OpenRouter `/images` | reference edit | `auto` or opaque output; up to 16 references, no mask, and no native-alpha claim |
-| `image.sunburst.openai.images.conditioned_repair` | `gpt-image-2.5-sunburst` at `/v1/images/edits` | conditioned repair | one reference plus native mask; local immutable-region and alpha restoration |
-| `image.sunburst.fal.conditioned_repair` | `openai/gpt-image-2.5/sunburst` at fal `/edit` | conditioned repair | one reference plus native mask; local immutable-region and alpha restoration |
-| `image.sunburst.openrouter.images.conditioned_repair` | `openai/gpt-image-2.5-sunburst` at OpenRouter `/images` | conditioned repair | two ordinary references, no native-mask claim; local immutable-region and alpha restoration |
 
 Node instances declare their actual operation, background, format, size,
 references, and mask instead of inheriting all features of a node type. The
 default capability policies select OpenAI Images for transparent output,
 masked edits, automatic backgrounds, and opaque exact sizes outside the
 OpenRouter allowlist. They select OpenRouter only for opaque generation or
-reference work at a size its route has actually verified; automatic-background
-conditioned repair is a separate policy that preserves its established
-OpenRouter route by default. Setting the one
+reference work at a size its route has actually verified. Setting the one
 optional scalar `STAGE_GEN_IMAGE_PROVIDER` to `openai`, `fal`, or `openrouter`
 replans every image workload onto that provider's corresponding registered
-generation, reference/edit, or conditioned-repair route. This is an explicit
+generation or reference/edit route. This is an explicit
 switch, not discovery: an OpenRouter selection still refuses transparent
 output, masks, and unsupported exact sizes during planning.
 

@@ -32,7 +32,7 @@ from typing import Final
 
 from PIL import Image, ImageDraw, ImageFont
 
-from gnode import sha256_hex
+from stage_gen.canonical import content_sha256
 
 COMPARISON_PLATE_SCHEMA_NAME: Final = "comparison_plate_v1"
 COMPARISON_PLATE_ERROR_CODE: Final = "comparison-plate-v1"
@@ -327,7 +327,7 @@ def compose_comparison_plate(groups: Sequence[PlateGroup]) -> ComparisonPlate:
                 PlateFrameRecord(
                     group_key=group.key,
                     frame_index=index,
-                    sha256=sha256_hex(group.frames[index]),
+                    sha256=content_sha256(group.frames[index]),
                     trimmed_width=frame.width,
                     trimmed_height=frame.height,
                     drawn_height=frame_height,
@@ -340,7 +340,7 @@ def compose_comparison_plate(groups: Sequence[PlateGroup]) -> ComparisonPlate:
     png = stream.getvalue()
     return ComparisonPlate(
         png=png,
-        sha256=sha256_hex(png),
+        sha256=content_sha256(png),
         width=width,
         height=height,
         uniform_scale=uniform_scale,
@@ -458,7 +458,7 @@ def compose_banded_comparison_plate(
     png = stream.getvalue()
     return BandedComparisonPlate(
         png=png,
-        sha256=sha256_hex(png),
+        sha256=content_sha256(png),
         width=width,
         height=height,
         bands=tuple(bands),

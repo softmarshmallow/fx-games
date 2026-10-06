@@ -50,6 +50,13 @@ and [IP](docs/oss-ip.md). This file controls applicability; focused docs control
   (`push.recurseSubmodules=check` refuses a push that would pin an unpushed FX commit). Stage Gen's own linters
   skip `third_party/`.
 
+## Skills
+
+- `skills/<name>/` holds skills users install (`npx skills add`). Each stands alone in any folder: no path into this
+  repository and no Stage Gen command. A skill that calls a provider itself does so through the public Grida FX
+  command. `.agents/skills/`
+  (`.claude/skills` links to it) holds only the skills for working on this repository.
+
 ## Schema naming
 
 - Schema definitions and persisted/public contract fields use `lower_snake_case`; do not add camelCase aliases for

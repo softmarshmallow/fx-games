@@ -72,14 +72,11 @@ established keys.
 Without `STAGE_GEN_IMAGE_PROVIDER`, checked-in capability policies select
 OpenAI Images for transparency, masks, automatic backgrounds, and custom exact
 sizes, and select OpenRouter only for `auto` or opaque work at its verified exact
-sizes; OpenRouter never satisfies a native-alpha requirement. The conditioned
-image-repeat repair policy separately preserves its established OpenRouter
-route by default; an explicit provider override moves it with the other image
-workloads. Set the scalar to `openai`, `fal`, or `openrouter` to replan every
-image workload onto that provider's corresponding registered generation,
-reference/edit, or conditioned-repair route. The switch never relaxes a
-capability requirement: an OpenRouter override refuses transparency, masks,
-and unverified exact sizes offline. It also does not change the separate
+sizes; OpenRouter never satisfies a native-alpha requirement. Set the scalar
+to `openai`, `fal`, or `openrouter` to replan every image workload onto that
+provider's corresponding registered generation or reference/edit route. The
+switch never relaxes a capability requirement: an OpenRouter override refuses
+transparency, masks, and unverified exact sizes offline. It also does not change the separate
 `native`, `ai`, or `chroma` transparency strategy. Missing credentials or a
 failed route never cause an automatic provider or strategy change.
 
@@ -150,8 +147,8 @@ turns it already paid for. Its worst case is USD 1.50 a turn.
 
 ## Binding-driven image selection and dispatch
 
-Stage Gen registers GPT Image 2.5 Sunburst as one product with six base image
-routes and three conditioned-repair routes:
+Stage Gen registers GPT Image 2.5 Sunburst as one product with six image
+routes:
 
 | Route ID | Provider | Surface and operation |
 | --- | --- | --- |
@@ -161,9 +158,6 @@ routes and three conditioned-repair routes:
 | `image.sunburst.fal.edit` | fal | `/openai/gpt-image-2.5/sunburst/edit`, including `mask_url` |
 | `image.sunburst.openrouter.images.generation` | OpenRouter | `/images`, text-only `auto` or opaque generation |
 | `image.sunburst.openrouter.images.reference` | OpenRouter | `/images`, reference-conditioned `auto` or opaque generation |
-| `image.sunburst.openai.images.conditioned_repair` | OpenAI | Images `/images/edits`, one reference plus native mask |
-| `image.sunburst.fal.conditioned_repair` | fal | `/openai/gpt-image-2.5/sunburst/edit`, one reference plus native mask |
-| `image.sunburst.openrouter.images.conditioned_repair` | OpenRouter | `/images`, two ordinary references without a native-mask claim |
 
 Every image-producing node declares its instance requirements with
 `ImageRouteRequirementsV1`: generation or edit, background, format, exact or
@@ -182,9 +176,8 @@ another provider.
 
 Within one generic routed-image service, base generation and edit routes that
 share one declared resource also share one adapter instance and request-start
-pacer. Conditioned repair remains a separately composed component service. This
-keeps each service's ownership explicit instead of implying that a shared
-resource ID alone merges adapter instances.
+pacer. This keeps each service's ownership explicit instead of implying that a
+shared resource ID alone merges adapter instances.
 
 Review every node type with its settings and the routes that serve it, without loading
 provider credentials; `gnode doctor <workflow>` names the keys, tools and routes one workflow

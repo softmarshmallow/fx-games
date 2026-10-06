@@ -27,13 +27,13 @@ from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from gnode import PersistedContractModel
 from stage_gen.components._game_input import (
     SHA256_PATTERN,
     normalized_text,
     portable_relative_path,
     unique_values,
 )
+from stage_gen.contracts import PersistedContractModel
 
 GENERATED_CLIP_REALIZATION_KIND = "generated_clip_v1"
 GENERATED_CLIP_OUTPUT_FORMAT = "mp3"

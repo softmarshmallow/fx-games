@@ -1,15 +1,5 @@
 """Deterministic media inspection and post-processing helpers."""
 
-from gnode import (
-    ImageFacts,
-    assert_audio_signature,
-    assert_image_signature,
-    decode_base64_strict,
-    inspect_image,
-    normalize_audio_media_type,
-    normalize_media_type,
-)
-
 from .audio import (
     DEFAULT_AUDIO_PROCESS_TIMEOUT_SECONDS,
     MINIMUM_MUSIC_PAYLOAD_BYTES,
@@ -18,13 +8,11 @@ from .audio import (
     AudioProcessResult,
     AudioProcessRunner,
     LevelAndDuration,
-    LoudnessMeasurement,
     measure_level_and_duration,
     measure_level_and_duration_sync,
     measure_peak_dbfs,
     measure_peak_dbfs_sync,
     parse_decoded_duration_seconds,
-    parse_loudnorm_json,
     parse_peak_dbfs,
     peak_measurement_args,
     probe_audio,
@@ -61,6 +49,7 @@ from .images import (
     normalize_png_cover,
     region_contrast_stats,
 )
+from .inspection import ImageFacts, inspect_image
 from .layer_rasters import (
     LAYER_RASTER_BOUNDS_VERSION,
     LAYER_VERTICAL_TRIM_VERSION,
@@ -94,6 +83,12 @@ from .loop_construction import (
     measure_registration,
     mirror_repeat,
     tile_to_width,
+)
+from .signatures import (
+    assert_audio_signature,
+    assert_image_signature,
+    normalize_audio_media_type,
+    normalize_media_type,
 )
 from .sprite_sheets import (
     ALPHA_COMPONENT_REPACK_VERSION,
@@ -146,7 +141,6 @@ __all__ = [
     "content_bottom_offset_fraction",
     "CYAN_GUIDES",
     "data_url",
-    "decode_base64_strict",
     "decontaminate_magenta_edges",
     "DEFAULT_AUDIO_PROCESS_TIMEOUT_SECONDS",
     "DEFAULT_VIDEO_PROCESS_TIMEOUT_SECONDS",
@@ -170,7 +164,6 @@ __all__ = [
     "LoopConstruction",
     "LoopGuarantee",
     "LoopMethod",
-    "LoudnessMeasurement",
     "LumaMeasurement",
     "magenta_chroma_alpha",
     "MAGENTA_EDGE_DECONTAMINATION_VERSION",
@@ -196,7 +189,6 @@ __all__ = [
     "normalize_png",
     "normalize_png_cover",
     "parse_decoded_duration_seconds",
-    "parse_loudnorm_json",
     "parse_peak_dbfs",
     "peak_measurement_args",
     "probe_audio",

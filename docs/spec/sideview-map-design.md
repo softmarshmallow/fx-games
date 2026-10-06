@@ -40,8 +40,9 @@ compiler owns arithmetic.
 
 Three parts are fixed and one is interchangeable. The **capability profile** states everything
 one game can express, as data. The **expander plus validator** is the single judge, and every
-threshold it applies is read out of the profile it was handed. The **retry loop** feeds the
-validator's own messages back, translated into the vocabulary the model actually wrote. Only
+threshold it applies is read out of the profile it was handed. The caller's **retry loop**
+(Bellweather's `check_terrain` judge step) feeds the validator's own messages back through
+`rejection_feedback`, translated into the vocabulary the model actually wrote. Only
 the front-end — the words — is a design choice, and it is the one the study measured.
 
 | Boundary | Owns | Does not own |

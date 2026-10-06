@@ -211,10 +211,10 @@ The calibration pair: the **47-cell terrain atlas** is exactly the *shape* of
 a good built-in node — a locked deterministic topology table, one clear
 contract, no hidden channels — and it still fails the bar, because a 47-mask
 platformer terrain vocabulary is genre furniture. The **seamless tile**
-discipline (verified single-axis repeat admission and repair) is the standing
-first candidate — and even it is not promotable today: its repair prompt
-encodes a gravity-bearing horizon, a side-view assumption that would ride into
-the engine unlabeled. That is what the bar is for.
+discipline (a deterministic single-axis seam validator and repeat preview) is
+the standing first candidate — and even it is not promotable today: one domain
+uses it, so nothing yet shows its contract is the general one. That is what the
+bar is for.
 
 Everything that does not clear the bar lives in the application under its
 [asset-taxonomy name](asset-taxonomy.md), so a later promotion is a namespace
@@ -223,8 +223,7 @@ move, not a rename.
 ## What stays out of every ring
 
 Application residue that looks modality-shaped but is not: the closed style
-vocabulary and its anchor compiler (art direction), ffmpeg loudness
-normalization (local post-processing with its own component identity), the
-image-repeat admission system (single-axis today, side-view in practice), the
-allowlisted credential loader, and every capability/feature vocabulary — the
-engine defines the binding *shapes*; consumers name the capabilities.
+vocabulary and its anchor compiler (art direction), the single-axis
+image-repeat validator, the allowlisted credential loader, and every
+capability/feature vocabulary — the engine defines the binding *shapes*;
+consumers name the capabilities.

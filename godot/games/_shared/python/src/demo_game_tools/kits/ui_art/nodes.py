@@ -61,8 +61,8 @@ from demo_game_tools.kits.ui_art.models import (
     IconSetDirection,
     UiArtwork,
 )
-from gnode import PersistedContractModel
 from stage_gen.components._game_input import SNAKE_ID_PATTERN
+from stage_gen.contracts import PersistedContractModel
 
 IMAGE_FEATURES = ("transparent_background", "reference_images")
 STRUCTURED_FEATURES = ("structured_output", "image_input")

@@ -166,7 +166,7 @@ def test_product_gate_does_not_require_optional_consumers() -> None:
     assert ("mypy", "--strict", "src") in commands
     tests = next(command for command in commands if command[0] == "pytest")
     assert len(tests) > 3
-    assert not any("concept_studio" in item or "test_godot_" in item for item in tests)
+    assert not any("test_godot_" in item for item in tests)
 
 
 def test_product_gate_runs_the_workflows_through_their_command_lines() -> None:
@@ -189,8 +189,7 @@ def test_product_gate_runs_the_workflows_through_their_command_lines() -> None:
     assert any(command[1:3] == ("scripts/catalog.py", "--check") for command in commands)
     assert all("--live" not in command for command in commands)
     assert not any(
-        command[0].startswith("stage-gen-") and command[0] != "stage-gen-concept"
-        for command in check.commands("python", scope="all")
+        command[0].startswith("stage-gen-") for command in check.commands("python", scope="all")
     )
 
 
@@ -208,7 +207,7 @@ def test_owned_test_gates_partition_every_offline_test() -> None:
         if not path.is_relative_to(root / "tests/live")
     }
     assert set(owned) == expected
-    scopes: tuple[TestOwner, ...] = ("product", "games", "godot", "web", "apps")
+    scopes: tuple[TestOwner, ...] = ("product", "games", "godot", "web")
     groups = [set(paths_for(root, scope)) for scope in scopes]
     assert set.union(*groups) == expected
     assert sum(map(len, groups)) == len(expected)

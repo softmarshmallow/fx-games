@@ -220,7 +220,6 @@ def _import_violations(path: Path, forbidden: tuple[str, ...]) -> list[str]:
 GENERIC_ORCHESTRATION_MODULES = (
     "runtime.py",
     "image_routing.py",
-    "image_repeat.py",
 )
 
 
@@ -269,6 +268,21 @@ def test_engine_does_not_import_the_application() -> None:
                     relative = path.relative_to(SOURCE_ROOT.parent)
                     violations.append(f"{relative}:{node.lineno} imports {imported}")
     assert not violations, "engine import boundary violations:\n" + "\n".join(violations)
+
+
+APPLICATION_UTILITY_MODULES = ("contracts", "fs", "provenance", "canonical", "media")
+
+
+def test_application_utilities_import_no_engine() -> None:
+    """Stage Gen's own utilities outlive gnode, so none of them may import it."""
+
+    root = SOURCE_ROOT / "stage_gen"
+    violations: list[str] = []
+    for name in APPLICATION_UTILITY_MODULES:
+        module = root / f"{name}.py"
+        for path in [module] if module.is_file() else _python_sources(root / name):
+            violations.extend(_import_violations(path, ("gnode",)))
+    assert not violations, "an application utility imports gnode:\n" + "\n".join(violations)
 
 
 ENGINE_RINGS = {
@@ -490,7 +504,7 @@ def test_retired_modules_are_gone_and_imported_by_nothing() -> None:
     ]
     assert not present, f"retired modules are back: {present}"
     violations: list[str] = []
-    for root in (*CONSUMER_ROOTS, SOURCE_ROOT.parent / "apps"):
+    for root in CONSUMER_ROOTS:
         for path in _python_sources(root):
             violations.extend(_import_violations(path, RETIRED_MODULES))
     assert not violations, "imports of retired modules:\n" + "\n".join(violations)

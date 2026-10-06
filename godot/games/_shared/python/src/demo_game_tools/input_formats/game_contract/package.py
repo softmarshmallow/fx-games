@@ -23,7 +23,6 @@ from typing import Annotated, Literal
 
 from pydantic import Field, ValidationInfo, field_validator, model_validator
 
-from gnode import PersistedContractModel
 from stage_gen.components._game_input import (
     GAME_ID_PATTERN,
     KEBAB_ID_PATTERN,
@@ -36,6 +35,7 @@ from stage_gen.components._game_input import (
     sha256_bytes,
     unique_values,
 )
+from stage_gen.contracts import PersistedContractModel
 
 PREPARED_GAME_CONTRACT_SCHEMA_VERSION = 9
 

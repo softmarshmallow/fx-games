@@ -7,7 +7,6 @@ from typing import Annotated, Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from gnode import PersistedContractModel
 from stage_gen.components._game_input import (
     GAME_ID_PATTERN,
     KEBAB_ID_PATTERN,
@@ -17,6 +16,7 @@ from stage_gen.components._game_input import (
     parse_toml_contract,
     unique_values,
 )
+from stage_gen.contracts import PersistedContractModel
 
 GAMEPLAY_CONTRACT_SCHEMA_VERSION = 1
 NavigationMovement = Literal["move_left", "move_right", "jump", "crouch", "climb"]

@@ -1,26 +1,14 @@
 from __future__ import annotations
 
-import json
-from pathlib import Path
-from typing import ClassVar, Literal
-
 import pytest
 from pydantic import ValidationError
 
-from gnode import (
-    ImageGenerationRequest,
-    ImageGenerationService,
-    ProviderImage,
-    ProviderResponseMetadata,
-)
-from stage_gen.identity import IMAGE_GENERATION_COMPONENT, STAGE_GEN_TOOL
 from stage_gen.image_prompting import load_image_style_resources, materialize_style_anchor
 from stage_gen.image_style import (
     CanonicalStyleAnchor,
     StyleModeSelection,
     append_style_anchor_once,
     canonical_style_anchor_digest,
-    compile_style_prompt_anchor,
     render_style_anchor,
 )
 
@@ -83,84 +71,3 @@ def test_renderer_rejects_missing_or_conflicting_treatment() -> None:
             anchor,
             "character_sprite",
         )
-
-
-def test_compiled_anchor_carries_marker_key_and_ordered_provenance() -> None:
-    anchor = _anchor()
-    compiled = compile_style_prompt_anchor(anchor, "character_sprite")
-    assert compiled.marker == "Canonical style anchor — "
-    assert compiled.clause == render_style_anchor(anchor, "character_sprite")
-    assert compiled.provenance_key == "style_anchor"
-    assert list(compiled.provenance) == [
-        "anchor_sha256",
-        "asset_kind",
-        "compiler_sha256",
-        "compiler_version",
-        "renderer_version",
-        "resource_sha256",
-        "skill_sha256",
-        "style_mode",
-        "vocabulary_sha256",
-    ]
-
-
-class _RecordingBackend:
-    spec_version: ClassVar[Literal[1]] = 1
-    provider = "test"
-    model = "test-image"
-    adapter_id = "test-image-adapter"
-    adapter_behavior_version = "1"
-    supports_native_alpha = False
-    secrets: tuple[str, ...] = ()
-
-    def __init__(self) -> None:
-        self.requests: list[ImageGenerationRequest] = []
-
-    def endpoint_for(self, _request: ImageGenerationRequest) -> str:
-        return "https://example.test/images"
-
-    async def generate_once(self, request: ImageGenerationRequest) -> ProviderImage:
-        self.requests.append(request)
-        return ProviderImage(
-            data=b"\x89PNG\r\n\x1a\nsynthetic",
-            media_type="image/png",
-            response_metadata=ProviderResponseMetadata(),
-        )
-
-    async def aclose(self) -> None:
-        return None
-
-
-@pytest.mark.asyncio
-async def test_service_preserves_legacy_request_and_binds_styled_provenance(
-    tmp_path: Path,
-) -> None:
-    backend = _RecordingBackend()
-    service = ImageGenerationService(
-        backend, component=IMAGE_GENERATION_COMPONENT, tool=STAGE_GEN_TOOL
-    )
-    legacy = ImageGenerationRequest(prompt="legacy prompt", artifact_path=tmp_path / "legacy.png")
-    await service.generate(legacy)
-    assert backend.requests[0] is legacy
-    assert backend.requests[0].prompt == "legacy prompt"
-
-    anchor = _anchor("gouache_illustration_2d")
-    styled = ImageGenerationRequest(
-        prompt="painted forest",
-        artifact_path=tmp_path / "styled.png",
-        prompt_anchor=compile_style_prompt_anchor(anchor, "environment_background"),
-        provenance_schema_version=2,
-    )
-    await service.generate(styled)
-    final_prompt = backend.requests[1].prompt
-    assert final_prompt.count("Canonical style anchor — ") == 1
-    assert "editorial gouache illustration" in final_prompt
-    sidecar = json.loads((tmp_path / "styled.png.meta.json").read_text())
-    binding = sidecar["params"]["style_anchor"]
-    assert sidecar["prompt"] == final_prompt
-    assert binding["anchor_sha256"] == canonical_style_anchor_digest(anchor)
-    assert binding["asset_kind"] == "environment_background"
-    assert binding["compiler_sha256"] == anchor.compiler_sha256
-    assert binding["resource_sha256"] == anchor.resource_sha256
-    assert binding["skill_sha256"] == anchor.skill_sha256
-    assert binding["vocabulary_sha256"] == anchor.vocabulary_sha256

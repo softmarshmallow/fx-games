@@ -129,7 +129,7 @@ def prepare(request: Dashboard, env: Mapping[str, str]) -> Launch:
 def export_catalog(path: Path) -> list[str]:
     """Write the catalog the viewer groups runs by and draws plans from; the drift problems
     a full export would refuse on are returned, not raised, since the viewer only reads."""
-    from gnode import atomic_write_bytes
+    from stage_gen.fs import atomic_write_bytes
     from stage_gen.workflows._catalog import build
 
     catalog, problems = build(examples_dir=None, allow_missing_examples=True)

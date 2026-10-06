@@ -34,13 +34,13 @@ from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from gnode import PersistedContractModel
 from stage_gen.components._game_input import (
     SNAKE_ID_PATTERN,
     normalized_text,
     portable_relative_path,
     unique_values,
 )
+from stage_gen.contracts import PersistedContractModel
 
 CASE_SCHEMA_VERSION = 1
 CASE_KIND = "case-v1"

@@ -14,15 +14,14 @@ from demo_game_tools.kits.character_profile import (
     CharacterProfile,
     canonical_character_profile_json,
 )
-from gnode import (
+from stage_gen.contracts import BinaryArtifact
+from stage_gen.fs import atomic_write_bytes, resolve_relative_path_within_root
+from stage_gen.provenance import (
     ArtifactRights,
-    BinaryArtifact,
     InputProvenance,
     ProvenanceInput,
     SoftwareIdentity,
-    atomic_write_bytes,
     build_artifact_provenance,
-    resolve_relative_path_within_root,
     serialize_provenance,
     write_artifact_with_provenance,
 )

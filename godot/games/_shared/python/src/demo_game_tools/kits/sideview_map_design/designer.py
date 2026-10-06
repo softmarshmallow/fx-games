@@ -1,79 +1,22 @@
-"""The structured-generation designer loop that drives the chunk grammar.
+"""The judge-and-feedback half of a composition loop over the chunk grammar.
 
-The prompt is BUILT FROM THE PROFILE. There is no game constant in this file: no tile size, no
-camera, no fixed climbable rise, no unassisted step height. Everything the model is told is read
-out of the :class:`PlatformerProfile` it was handed, which is the only reason one designer can
-serve two games.
-
-The service is injected. Building it is the caller's job, because a component may not reach into
-orchestration to construct a provider.
+:func:`expand_design` expands one composition and checks it against the
+:class:`PlatformerProfile` it was handed; :func:`rejection_feedback` quotes the validator's
+complaints back to the next composition. Both are pure: there is no service and no provider here.
+The caller owns the loop (Bellweather's terrain steps compose, judge and re-compose).
 """
 
 from __future__ import annotations
 
-import json
 from collections.abc import Mapping
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any
 
 from demo_game_tools.kits.sideview_map_design.capabilities import PlatformerProfile
 from demo_game_tools.kits.sideview_map_design.design import DesignedMap, check
-from demo_game_tools.kits.sideview_map_design.grammar import (
-    build_chunk_prompt,
-    build_chunk_schema,
-    expand_chunks,
-    translate,
-)
-from gnode import (
-    StructuredGenerationRequest,
-    StructuredGenerationService,
-)
+from demo_game_tools.kits.sideview_map_design.grammar import expand_chunks, translate
 
-#: Composition is a long single call; the transport timeout is generous on purpose.
-DESIGN_TIMEOUT_SECONDS = 900.0
 #: How many validator problems are quoted back to the model. More than this and the feedback
 #: stops reading as a fix list.
 MAX_QUOTED_PROBLEMS = 6
-
-
-@dataclass(frozen=True)
-class DesignBrief:
-    """What the caller wants, as intent rather than instruction.
-
-    Naming a reference beat every mechanical description this was measured against: prescribing
-    cluster counts and platform lengths produced levels that executed the recipe, while naming a
-    reference produced platform lengths varying 5..24 instead of a uniform 7. Say what the level
-    should feel like and leave composition to the model; the profile already fences correctness.
-    """
-
-    intent: str
-    #: Optional per-level shape, e.g. "a valley" or "two peaks".
-    shape: str = ""
-    columns: int | None = None
-
-
-@dataclass
-class DesignAttempt:
-    designed: DesignedMap | None
-    problems: list[str]
-    attempt: int
-    payload_chars: int
-
-
-def _require_mapping(decoded: object) -> Mapping[str, object]:
-    """Reject a payload that is not a JSON object, INSIDE the single retry owner.
-
-    ``StructuredGenerationService`` calls ``parse`` within its retry budget and persists the
-    artifact and its provenance only once ``parse`` has returned. Checking the payload shape
-    after ``generate`` returns would therefore leave a successful artifact claiming
-    ``schema: caller-validated`` on disk and burn one of the six permitted attempts instead of
-    retrying, which is exactly what the repository's single-retry-owner rule forbids.
-    """
-
-    if not isinstance(decoded, Mapping):
-        raise ValueError("a composed map payload must decode to a JSON object")
-    return decoded
 
 
 def expand_design(
@@ -99,82 +42,4 @@ def rejection_feedback(problems: list[str]) -> str:
     )
 
 
-async def design_chunks(
-    service: StructuredGenerationService[Any],
-    profile: PlatformerProfile,
-    brief: DesignBrief,
-    *,
-    artifact_dir: Path,
-    seed: int = 1,
-    max_attempts: int = 3,
-) -> list[DesignAttempt]:
-    """Design one map, re-composing with the validator's own complaints as feedback.
-
-    Each iteration here is a SEMANTIC REGENERATION: the previous composition was decoded and
-    schema-valid but the game's own validator rejected the level it described, so the model is
-    asked to compose again. These are not provider retries. Transport, decoding, and schema
-    failures are owned entirely by ``StructuredGenerationService``, which is the single retry
-    owner for one provider operation; this loop never nests inside that budget.
-
-    ``artifact_dir`` is required and is the ONLY directory written: the caller owns it, and every
-    composition artifact and provenance sidecar lands directly below it.
-
-    Returns every attempt, so a caller can see what the map cost rather than only the winner.
-    """
-
-    columns = brief.columns or profile.geometry.columns
-    system = build_chunk_prompt(profile, columns)
-    schema = build_chunk_schema(profile)
-    attempts: list[DesignAttempt] = []
-    feedback = ""
-
-    def facts(value: Mapping[str, object]) -> Mapping[str, object]:
-        """What the provenance sidecar may honestly claim about this artifact.
-
-        A level the validator rejects is NOT a failure here: raising on a semantic problem would
-        re-roll the same request inside the provider's retry budget, and semantic regeneration is
-        the loop below's job. Only a payload with no chunks at all is a malformed composition.
-        """
-
-        chunks = value.get("chunks")
-        if not isinstance(chunks, list) or not chunks:
-            raise ValueError("a composed map payload must carry a non-empty 'chunks' array")
-        _, problems = expand_design(value, profile, columns)
-        return {"chunks": len(chunks), "problems": len(problems)}
-
-    for attempt in range(1, max_attempts + 1):
-        task = brief.intent
-        if brief.shape:
-            task += f"\n\nTHIS MAP'S SHAPE: {brief.shape}."
-        task += feedback + "\n\nCompose the map."
-        request: StructuredGenerationRequest[Mapping[str, object]] = StructuredGenerationRequest(
-            prompt=task,
-            system=system,
-            artifact_path=artifact_dir / f"attempt-{attempt:02d}.json",
-            schema=schema,
-            parse=_require_mapping,
-            validate=facts,
-            seed=seed * 100 + attempt,
-            timeout_seconds=DESIGN_TIMEOUT_SECONDS,
-            metadata={"component": "platformer-map-design", "profile": profile.profile_id},
-        )
-        result = await service.generate(request)
-        value: Mapping[str, object] = result.value
-        designed, problems = expand_design(value, profile, columns)
-        payload_chars = len(json.dumps(value.get("chunks", [])))
-        attempts.append(DesignAttempt(designed, problems, attempt, payload_chars))
-        if not problems:
-            return attempts
-        feedback = rejection_feedback(problems)
-    return attempts
-
-
-__all__ = [
-    "DESIGN_TIMEOUT_SECONDS",
-    "MAX_QUOTED_PROBLEMS",
-    "DesignAttempt",
-    "DesignBrief",
-    "design_chunks",
-    "expand_design",
-    "rejection_feedback",
-]
+__all__ = ["MAX_QUOTED_PROBLEMS", "expand_design", "rejection_feedback"]

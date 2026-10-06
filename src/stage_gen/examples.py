@@ -39,7 +39,8 @@ from typing import Any, Literal, NotRequired, TypedDict
 from PIL import Image, ImageChops
 from pydantic import BaseModel, ConfigDict, Field, JsonValue
 
-from gnode import Project, atomic_write_bytes, project_run, read_plan
+from gnode import Project, project_run, read_plan
+from stage_gen.fs import atomic_write_bytes
 
 EXAMPLE_KIND: Literal["workflow-example-v1"] = "workflow-example-v1"
 GAME_ENTRY_KIND: Literal["game-example-entry-v1"] = "game-example-entry-v1"
