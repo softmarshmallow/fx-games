@@ -20,16 +20,13 @@ which of them the user's keys can serve. Re-check both after updating FX.
 ## Built-in routes
 
 All three serve the same model. Each sends one image per call at the model's highest quality,
-sends the prompt verbatim (`authored_prompt_passthrough`), and gets one PNG back. Prices are
-planning allowances in US dollars per call, not quotes: what a call costs is settled from what the
-provider reports, else at the route's high allowance. OpenAI reports none, so FX books each OpenAI
-call at $0.25.
+sends the prompt verbatim (`authored_prompt_passthrough`), and gets one PNG back.
 
-| Route | Key | Allowance | Notes |
-|---|---|---|---|
-| `openai/gpt-image-2.5-sunburst@openrouter` | `OPENROUTER_API_KEY` | 0.14–0.30 | opaque or auto only; no mask; `auto` or the seven sizes below; with the user's own provider key on OpenRouter, the upstream cost counts too |
-| `gpt-image-2.5-sunburst@openai` | `OPENAI_API_KEY` | 0.18–0.25 | transparency; mask; any size in the envelope |
-| `openai/gpt-image-2.5/sunburst@fal` | `FAL_KEY` | 0.16–0.50 | transparency; mask; any size in the envelope; prompt at most 32,000 characters |
+| Route | Key | Notes |
+|---|---|---|
+| `openai/gpt-image-2.5-sunburst@openrouter` | `OPENROUTER_API_KEY` | opaque or auto only; no mask; `auto` or the seven sizes below; with the user's own provider key on OpenRouter, the upstream cost counts too |
+| `gpt-image-2.5-sunburst@openai` | `OPENAI_API_KEY` | transparency; mask; any size in the envelope |
+| `openai/gpt-image-2.5/sunburst@fal` | `FAL_KEY` | transparency; mask; any size in the envelope; prompt at most 32,000 characters |
 
 - Choose by the key the user holds. A cover is opaque, so any route serves it. Transparency or a
   mask needs the OpenAI or fal route.
@@ -37,6 +34,34 @@ call at $0.25.
   user, and record the change in `concept.md`.
 - A step's `requires:` names the features it needs. The plan refuses a route that lacks one,
   offline, before anything is spent.
+
+### Prices
+
+Prices are planning allowances in US dollars per call, not quotes, in tiers by exact size. A low is
+the image output, measured or derived from a measured bill; a high leaves room for a long prompt
+and, on an edit, 16 input pictures. What a call costs is settled from what the provider reports,
+else at the high of its size's row below. OpenAI reports no cost, so FX books each OpenAI call at
+that high. OpenRouter reports a cost, but has billed twice the measured output, so its highs cover
+twice the output.
+
+| Size | Low | OpenAI, fal high: generate / edit | OpenRouter high: generate / edit |
+|---|---|---|---|
+| `2064x1008` | 0.13 | 0.21 / 0.35 | 0.34 / 0.48 |
+| `2496x1152`, `1152x2496` | 0.14 | 0.22 / 0.36 | 0.37 / 0.51 |
+| `1024x1024` | 0.21 | 0.29 / 0.43 | 0.50 / 0.64 |
+| `2560x1440` | 0.22 | 0.30 / 0.44 | 0.52 / 0.66 |
+| `2560x1712`, `1712x2560` | 0.28 | 0.36 / 0.50 | 0.65 / 0.79 |
+| any other size, `auto`, or none | 0.09 (OpenRouter 0.13) | 0.70 / 0.85 | 0.70 / 0.85 |
+
+The OpenAI and fal routes also have tiers for sizes in the envelope below:
+
+| Size | Low | High: generate / edit |
+|---|---|---|
+| `2880x960` | 0.10 | 0.18 / 0.32 |
+| `1024x1536`, `1536x1024` | 0.16 | 0.24 / 0.38 |
+| `1152x1024` | 0.19 | 0.27 / 0.41 |
+| `1536x1536` | 0.30 | 0.38 / 0.52 |
+| `2464x3328` | 0.52 | 0.60 / 0.74 |
 
 ## Sizes
 

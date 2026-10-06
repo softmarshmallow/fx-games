@@ -671,7 +671,7 @@ group of steps per asset. Planning never spends; a live run needs `--live` and a
 ```sh
 cd godot/games/iron_petal_unit
 uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs
-uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs --live --max-usd 80 \
+uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs --live --max-usd 115 \
   --deliver package=../../../out/iron-petal/{key}
 ```
 

@@ -2,7 +2,7 @@
 
     uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs
     uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs \\
-        --live --max-usd 80 --deliver package=../../../out/iron-petal/{key}
+        --live --max-usd 115 --deliver package=../../../out/iron-petal/{key}
 
 The game's reader resolves its own TOML package, unchanged, and this builder writes one group
 of steps per asset: the ground chunks and their shared seam, the scrolling layers, the avatar
@@ -87,7 +87,7 @@ TAKES = 6
 #: The avatar's baseline: every other strip is rebased against its run.
 AVATAR_BASELINE_STATE = "run"
 #: The most one build of the shipped package may cost, every redraw included.
-BUDGET_USD = 80.0
+BUDGET_USD = 115.0
 
 _NAME = re.compile(r"^[a-z][a-z0-9_]*$")
 _REDRAW = {"regenerate": {"max": TAKES, "then": "fail"}}

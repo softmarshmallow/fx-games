@@ -71,7 +71,7 @@ TAKES = 6
 #: The most one room build may cost, every redraw included.
 ROOM_BUDGET_USD = 25.0
 #: The most one scene build may cost, every redraw included.
-SCENE_BUDGET_USD = 150.0
+SCENE_BUDGET_USD = 190.0
 #: The narration answer's instruction, as the room recipe has always sent it.
 NARRATION_SYSTEM = (
     "Return only the strict narration JSON. No puzzle hints beyond the listed "

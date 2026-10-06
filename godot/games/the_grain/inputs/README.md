@@ -62,7 +62,7 @@ The package is authored data. Playing it needs each leaf built and the case publ
 the delivered folders. From `godot/games/the_grain`:
 
 ```bash
-uv run python -m grida.fx run pipeline/workflow.py:scene --arg package=inputs --live --max-usd 150 \
+uv run python -m grida.fx run pipeline/workflow.py:scene --arg package=inputs --live --max-usd 190 \
   --deliver package=../../../out/<scene-tag>/{key}
 uv run python -m grida.fx run pipeline/workflow.py:room --arg package=inputs/rooms/motor_court --live --max-usd 25 \
   --deliver package=../../../out/<court-tag>/{key}

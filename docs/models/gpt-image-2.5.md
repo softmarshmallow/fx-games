@@ -90,6 +90,30 @@ $5 per million text-input tokens, $1.25 cached; $8 per million image-input
 tokens, $2 cached; and $30 per million image-output tokens. Rate limits are
 organization-specific.
 
+Image output is most of an image's price, and it is fixed by size. OpenAI's
+usage reports for this repository's earlier `quality="max"` Sunburst calls give
+the same image-output tokens for every call at one size:
+
+| Size | Image-output tokens | At $30 per million |
+| --- | ---: | ---: |
+| 2880 by 960 | 3,660 | $0.1098 |
+| 1536 by 1024 or 1024 by 1536 | 5,488 | $0.16464 |
+| 1152 by 1024 | 6,487 | $0.19461 |
+| 1024 by 1024 | 7,024 | $0.21072 |
+| 1536 by 1536 | 10,044 | $0.30132 |
+| 2464 by 3328 | 17,382 | $0.52146 |
+
+Grida FX's built-in image routes are priced per call in tiers by exact size.
+A tier's low is the image output: measured for the sizes in this table and for
+the two OpenRouter canaries below, and derived from a measured bill for the five
+one-reference canaries after them. Its high leaves room for a long prompt and,
+on an edit, 16 input pictures. Any other size, `auto`, or no size takes the
+route's whole range. OpenAI reports no cost, so FX books each OpenAI image at
+its tier's high, or at the route's whole-range high ($0.70 for a generate,
+$0.85 for an edit) when no tier names its size. Each OpenAI high leaves room for one
+image output, as measured or derived here; the October bill below leaves open
+whether that still covers a call.
+
 Primary sources:
 
 - [OpenAI September 2026 changelog](https://developers.openai.com/api/docs/changelog#september-2026)
@@ -185,6 +209,34 @@ the Universe workflow and of the since-removed Storefront workflow. All returned
 and 2560-by-1712 and 1712-by-2560 cost $0.294423 each. No canary image or
 credential was persisted.
 
+Those five bills give no token counts. FX's tiers for their sizes take the image
+output as the bill less $0.006314, the input of the one-reference 2560-by-1440
+canary (its bill less its 7,370 output tokens): about 4,949 tokens at 1152 by
+2496 and 2496 by 1152, 4,403 at 2064 by 1008, and 9,604 at 2560 by 1712 and
+1712 by 2560. The whole bill bounds each output from above; at that bound every
+tier's high still leaves at least $0.06 for a generate's prompt.
+
+On 2026-10-07, Grida FX's OpenRouter smoke run sent a text-only 1024-by-1024
+generation at `quality="max"` and was billed $0.42164. That is exactly twice
+the September canary's 7,024 image-output tokens at $30 per million
+($0.42144), plus a few prompt tokens. OpenRouter's published Sunburst rates
+were unchanged that day. One bill does not show whether OpenRouter now counts
+the output twice or the model drew twice as much. FX's built-in OpenRouter
+highs therefore leave room for twice the measured output. OpenRouter reports a
+cost, so its high is only held; a call is settled at what it was billed.
+
+The OpenAI and fal highs leave room for one output only, so they are not known
+to be worst cases. OpenAI's usage reports still gave the measured output tokens
+for all 313 of this repository's direct calls on 2026-09-29 (34 of them at 1024
+by 1024, at 7,024 tokens each), eight days before that bill; they are the newest
+calls with recorded usage. The image-output tokens of FX's 2026-10-07 OpenAI
+smoke edit (1024 by 1024) are not recorded: FX keeps no usage in an answer, so
+only OpenAI's usage report for that day can give them. 7,024 tokens would put
+the doubling on OpenRouter. 14,048 would mean the model now draws twice as much:
+every OpenAI call would then be booked at its high but cost up to one more
+output (a 1024-by-1024 generate about $0.42, booked at $0.29), and the OpenAI
+and fal highs would need the same room as OpenRouter's.
+
 Primary sources:
 
 - [OpenRouter image-model catalog](https://openrouter.ai/api/v1/images/models)
@@ -240,8 +292,10 @@ scheduling with the workflow. A future topology change must update the
 and its executable graph contract in the same implementation change.
 
 What an image call costs is the provider's reported cost, else the whole amount
-held for it. OpenAI reports token usage but no cost, so FX charges each OpenAI
-image attempt its whole hold; OpenRouter reports a cost.
+held for it: the high of its size's tier, or the route's whole-range high ($0.70
+for a generate, $0.85 for an edit) when no tier names its size. OpenAI reports token
+usage but no cost, so FX charges each OpenAI image attempt its whole hold;
+OpenRouter reports a cost.
 
 Keys, the routes each project names, and retries are in
 [provider operations](providers.md).

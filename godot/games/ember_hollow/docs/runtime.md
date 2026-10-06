@@ -60,7 +60,7 @@ Build and deliver a folder first, or select one already delivered. From
 
 ```sh
 uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs --arg scope=full --live \
-  --max-usd 40 --deliver package=../../../out/ember-hollow/{key}
+  --max-usd 60 --deliver package=../../../out/ember-hollow/{key}
 ```
 
 Then play it. Everything after the bare `--` belongs to the host; the editor

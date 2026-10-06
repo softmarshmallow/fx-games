@@ -3,7 +3,7 @@
     uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs \\
         --arg scope=minimal
     uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs \\
-        --live --max-usd 40 --deliver package=../../../out/ember-hollow/{key}
+        --live --max-usd 60 --deliver package=../../../out/ember-hollow/{key}
 
 The game's own reader resolves the package, unchanged, and refuses an incomplete world
 while planning. A scope is one rung of a ladder (minimal, props, actors, full) that selects
@@ -70,7 +70,7 @@ INTERFACE = "./pipeline/nodes/interface.py"
 #: Draws a judged painting, track or answer gets before the run stops on it.
 TAKES = 6
 #: The most one full build may cost, every redraw included.
-BUDGET_USD = 220.0
+BUDGET_USD = 320.0
 #: The props a minimal build draws: one tall, one squat, one soft, and the vegetation
 #: set, because a wood of one repeated conifer is the demo's most visible flaw.
 MINIMAL_PROPS = ("pine", "moss_boulder", "thorn_bush", "birch", "dead_snag")

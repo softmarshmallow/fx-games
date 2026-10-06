@@ -26,7 +26,7 @@ uv run python -m grida.fx plan pipeline/workflow.py:room --arg package=inputs/ro
 uv run python -m grida.fx plan pipeline/workflow.py:scene --arg package=inputs
 uv run python -m grida.fx run pipeline/workflow.py:room --arg package=inputs/rooms/window --live --max-usd 25 \
   --deliver package=../../../out/the-grain-window/{key}
-uv run python -m grida.fx run pipeline/workflow.py:scene --arg package=inputs --live --max-usd 150 \
+uv run python -m grida.fx run pipeline/workflow.py:scene --arg package=inputs --live --max-usd 190 \
   --deliver package=../../../out/the-grain-scene/{key}
 ```
 

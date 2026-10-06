@@ -8,8 +8,8 @@ copy this repository runs is the one pinned at `third_party/fx`. This page keeps
 decides: which route each workflow and game picks and why, what this repository has measured
 about those routes, and what happens to their output afterwards.
 
-FX's adapters have not yet made a live call from this repository; one budgeted smoke run per
-provider is still to come. The live evidence below was gathered through the predecessor
+FX's adapters made their first live calls from this repository on 2026-10-07, one budgeted
+smoke run per provider. The rest of the live evidence below was gathered through the predecessor
 adapters on the same provider surfaces, and each finding is dated. Hosted capabilities drift:
 re-check a provider's current contract before widening a route, and repeat a scoped live check
 after.
@@ -119,7 +119,18 @@ hint, not a protected region, so a workflow that needs untouched pixels restores
 refuses one before sending. The seven exact sizes are the canvases verified live in September
 2026: `1024x1024`, `1152x2496`, `1712x2560`, `2064x1008`, `2496x1152`, `2560x1440` and
 `2560x1712`. Reference-conditioned maximum-quality calls cost USD 0.138393 to 0.294423 across
-them. Every request turns OpenRouter's upstream fallbacks off.
+them then. On 2026-10-07 FX's smoke run was billed USD 0.42164 for a text-only `1024x1024`
+generation: twice the image output of the September canary at that size, at an unchanged
+published rate. Every request turns OpenRouter's upstream fallbacks off.
+
+FX prices every image route per call in tiers by exact size (FX providers §10). A tier's low is
+the image output at maximum quality, measured or derived from a measured bill; its high leaves
+room for a long prompt and, on an edit, 16 input pictures, and OpenRouter's highs also cover twice
+the output. Any other size, `auto`, or no size takes the route's whole range. OpenAI reports no
+cost, so an OpenAI image is booked at its tier's high, or at the route's whole-range high ($0.70
+for a generate, $0.85 for an edit) when no tier names its size; OpenRouter reports one, so its
+high is only held. The measured and derived tokens and the October bill are in the
+[GPT Image 2.5 record](gpt-image-2.5.md).
 
 The route-by-route live verdicts, including the shared seam-repaint admission failure of
 2026-09-10, are in the [GPT Image 2.5 record](gpt-image-2.5.md).
@@ -314,6 +325,16 @@ Character-3d names two Tripo routes, both long jobs:
 A task is posted once, polled, and after a crash collected instead of posted again; an answer the
 post cannot confirm is never posted twice. Models are downloaded only from Tripo's own hosts.
 Tripo reports credits, which FX converts at USD 0.01 a credit (FX providers §9.4).
+
+Tripo's billing documentation says credits are frozen when a task is created, and that failed
+and cancelled tasks are not charged. So a task the submitting run sees end `failed` or
+`cancelled` books the credits Tripo's status read reports for it, or $0 when it reports none.
+A task that succeeded but whose result FX cannot use books the credits its success read reports,
+as a usable one would. Tripo does not document a refused request as unbilled, so a refusal of the
+paid request (HTTP 400, 401, 403, 404 or 422) still books the whole hold, as does a task that
+ends `banned` or `expired`, and so does any task whose credits figure cannot be read. A task still
+running when the submitting run stops waiting (20 minutes for a mesh, 10 for a rig) keeps the
+whole hold that run booked: a later run that collects it, and finds it failed, bills nothing new.
 
 ## Background removal
 

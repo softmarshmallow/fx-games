@@ -317,16 +317,17 @@ spending cap:
 
 ```bash
 uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs --arg scope=full --live \
-  --max-usd 40 --deliver package=../../../out/<tag>/{key}
+  --max-usd 60 --deliver package=../../../out/<tag>/{key}
 ```
 
 Runs land in `out/runs/ember-hollow/` and the store in `out/fx-cache/`, so a second build
 pays only for what changed; `--deliver` copies the folder the host plays out of a
-successful build. Budget the widest scope at roughly **USD 19–34** at first takes for the
-committed fixture, from the planner's own low estimate; the build's ceiling, every take
-redrawn, is USD 220. That is a planning allowance, not a quote: redraws and deliberate
-semantic regenerations change the charge, and a semantic regeneration is not a provider
-retry.
+successful build. Budget the widest scope at roughly **USD 21–60** at first takes for the
+committed fixture: USD 21 is the planner's own low estimate, and about USD 60 the most the
+first takes may cost. Each OpenAI image is booked at its size's high, since OpenAI reports
+no cost. The build's ceiling, every take redrawn, is USD 320 (the plan's worst case is USD
+315.18). That is a planning allowance, not a quote: redraws and deliberate semantic
+regenerations change the charge, and a semantic regeneration is not a provider retry.
 
 ## Machine-checked plan contract
 

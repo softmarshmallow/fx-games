@@ -22,7 +22,7 @@ game's own reader and writes one group of steps per asset. From the game's folde
 ```sh
 cd godot/games/bellweather
 uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs/default
-uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs/default --live --max-usd 175 \
+uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs/default --live --max-usd 260 \
   --deliver package=../../../out/bellweather/{key}
 ```
 

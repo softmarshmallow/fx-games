@@ -41,7 +41,7 @@ A live build needs the owner's go and a ceiling. It runs every step, draws again
 refuses, and delivers the runtime folder the Godot host plays:
 
 ```bash
-uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs/default --live --max-usd 175 --deliver package=../../../out/bellweather/{key}
+uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs/default --live --max-usd 260 --deliver package=../../../out/bellweather/{key}
 cd ../../.. && godot --path godot/games/bellweather -- --run "$PWD/out/bellweather"
 ```
 

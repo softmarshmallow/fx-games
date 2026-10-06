@@ -197,7 +197,7 @@ From `godot/games/the_grain`:
 
 ```bash
 uv run python -m grida.fx plan pipeline/workflow.py:scene --arg package=inputs
-uv run python -m grida.fx run pipeline/workflow.py:scene --arg package=inputs --live --max-usd 150 \
+uv run python -m grida.fx run pipeline/workflow.py:scene --arg package=inputs --live --max-usd 190 \
   --deliver package=../../../out/<tag>/{key}
 ```
 

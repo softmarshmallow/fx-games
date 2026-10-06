@@ -2,7 +2,7 @@
 
     uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs/default
     uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs/default \\
-        --live --max-usd 175 --deliver package=../../../out/bellweather/{key}
+        --live --max-usd 260 --deliver package=../../../out/bellweather/{key}
 
 The game's reader resolves its own TOML package, unchanged, and this builder writes one group
 of steps per asset. Each map composes its terrain (a model judged by the game's validator,
@@ -105,7 +105,7 @@ TAKES = 6
 #: validator refused in the one before.
 TERRAIN_COMPOSITIONS = 3
 #: The most one build of the shipped package may cost, every redraw included.
-BUDGET_USD = 175.0
+BUDGET_USD = 260.0
 #: What a build may be asked to make.
 PARTS = ("all", "world", "content", "soundtrack")
 

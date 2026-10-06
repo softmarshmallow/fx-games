@@ -132,10 +132,17 @@ on 2026-09-09 at 2560 by 1440, 2560 by 1712 and 1712 by 2560. The `routes:` of t
 run from may choose the OpenAI or fal Sunburst route instead; an unsupported size is refused before
 any spend, and a run never falls back to another provider.
 
-For the default route, budget **USD 0.22–0.30 per maximum-quality OpenRouter image** across the
-current dimensions; the exact canaries ranged from $0.227414 to $0.294423. Image output for a
-36-image gallery is therefore roughly USD 8–11 before its structured calls. Structured calls go to
-the configured text model through OpenRouter, priced at USD 0.02–0.60 each.
+The gallery asks for three sizes (`tables.size_by_mode`): 2560 by 1440, 2560 by 1712 and 1712
+by 2560. On the default route FX prices **a maximum-quality image at USD 0.22–0.52 at 2560 by
+1440 and USD 0.28–0.65 at the other two**, and holds the high until OpenRouter reports the bill.
+The September canaries at these sizes cost $0.227414 to $0.294423, but on 2026-10-07 OpenRouter
+billed twice September's image output for a 1024-by-1024 image, so budget up to about USD
+0.45–0.59 an image. Image output for a 36-image gallery is therefore roughly USD 8–11 at
+September's bills and up to about USD 16–21 at twice them, before its structured calls. An
+image's size follows its entity's concept mode, so until the census's list exists the plan prices
+each image at the route's whole range, up to USD 0.70; once it exists, the plan puts 36 images at
+no more than USD 23.40. Structured calls go to the configured text model through OpenRouter,
+priced at USD 0.02–0.60 each.
 
 ## Running it
 
@@ -155,8 +162,9 @@ uv run python -m grida.fx run universe --inputs <dir>/inputs.yaml --live --max-u
 ```
 
 The second command continues from the first's cache: the world is not proposed again, and the
-gallery is drawn inside the ceiling. `uv run python -m grida.fx inspect universe` reads the newest
-run back with no provider call, and the workflow's own view shows the gallery in the viewer
+gallery is drawn inside the ceiling. Raise that ceiling for a large census: a 36-image gallery's
+images alone may bill up to about USD 21. `uv run python -m grida.fx inspect universe` reads the
+newest run back with no provider call, and the workflow's own view shows the gallery in the viewer
 (`uv run python scripts/view.py`).
 
 ## Outputs
