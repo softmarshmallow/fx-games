@@ -12,6 +12,8 @@ import hashlib
 from collections.abc import Callable, Sequence
 from typing import Any
 
+from grida.fx import Ctx, Group, StepRef, node
+
 from demo_game_tools.kits.ui_art.inventory_panel import (
     INVENTORY_PANEL_VALIDATION_VERSION,
     INVENTORY_REVIEW_CHECKS,
@@ -22,7 +24,6 @@ from demo_game_tools.kits.ui_art.inventory_panel import (
 from demo_game_tools.kits.ui_art.models import UiArtwork, inventory_panel_layout_contract
 from demo_game_tools.kits.ui_art.nodes import ui_atlas_review_schema
 from demo_game_tools.steps.ui_atlas import REVIEW_MAX_TOKENS, REVIEW_SYSTEM
-from gnode import Ctx, Group, StepRef, node
 from stage_gen.resources import inventory_template_path
 
 #: Paintings a panel gets before the run stops on it.
@@ -155,7 +156,7 @@ def add_inventory_steps(
     painting = group.step(
         "generate",
         title="Paint the inventory panel",
-        uses="gnode/image.edit@1",
+        uses="fx/image.edit@1",
         with_={
             "image": pictures[0],
             "references": pictures[1:],
@@ -163,7 +164,7 @@ def add_inventory_steps(
             "size": "1536x1024",
             "background": "transparent",
         },
-        requires=["transparent_background"],
+        requires=["alpha"],
         view=True,
     )
     group.step(
@@ -198,7 +199,7 @@ def add_inventory_steps(
         steps["review"] = group.step(
             "review",
             title="Review the inventory panel",
-            uses="gnode/structured.generate@1",
+            uses="fx/structured.generate@1",
             with_={
                 "prompt": inventory_review_prompt(panel.prompt),
                 "system": REVIEW_SYSTEM,

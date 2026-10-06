@@ -7,11 +7,10 @@ All routine verification is credential-free. Provider-backed tests carry the
 
 | Surface | Command |
 |---|---|
-| Config and engine reliability | `uv run pytest tests/unit/test_config.py tests/unit/gnode -q` |
 | Reusable components/providers | `uv run pytest tests/unit/components -q` |
 | Verified single-axis image repeats | `uv run pytest tests/unit/components/image_repeat -q` |
 | Deterministic media | `uv run pytest tests/unit/media -q` |
-| Workflows, SDK and orchestration | `uv run pytest tests/unit/workflows tests/unit/pipeline tests/unit/orchestration -q` |
+| Workflows | `uv run pytest tests/unit/workflows -q` |
 | Game-owned graphs | `uv run pytest tests/unit/games -q` |
 | CLI boundary | `uv run pytest tests/integration -q` |
 | Wheel-packaged resources | `uv run pytest tests/contract/test_packaged_resources.py -q` |
@@ -36,8 +35,8 @@ The retained game tests require the optional `games` workspace group; use it whe
 selecting old test directories directly.
 
 The pre-push hook checks each pushed commit in a temporary worktree, preserving the
-working checkout. It installs all groups, then runs the format and lint checks, the web tests,
-the contract tests and the gnode [conformance suite](../tests/conformance/README.md).
+working checkout. It installs all groups, then runs the format and lint checks, the web tests
+and the contract tests, after building FX's engine for the pinned FX commit (needs cargo).
 
 ## Live provider tests
 

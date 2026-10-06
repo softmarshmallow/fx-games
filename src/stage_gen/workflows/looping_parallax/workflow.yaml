@@ -1,4 +1,4 @@
-gnode: workflow/v1
+fx: workflow/v1
 id: looping-parallax
 title: Looping parallax
 description: >-
@@ -88,14 +88,14 @@ steps:
           ${{ (item.repeat_x || item.repeat_y)
               && (item.loop_construction == 'mirror_repeat'
                   || steps.seam_ok.facts.verdict == 'reject') }}
-        uses: gnode/image.mirror_repeat@1
+        uses: fx/image.mirror_repeat@1
         with:
           image: ${{ item.file }}
           axis: ${{ (item.repeat_x && 'x' || '') + (item.repeat_y && 'y' || '') }}
 
       loop:
         title: Take the layer's loop
-        uses: gnode/select@1
+        uses: fx/select@1
         with:
           first_of:
             - ${{ steps.repaint.outputs.image }}
@@ -114,7 +114,7 @@ steps:
       constructions: ${{ steps.layer.*.loop.facts.chosen }}
       specs: ${{ inputs.layers }}
       canvas: ${{ inputs.canvas }}
-    view: true
+    view: ./views/parallax.html
 
 outputs:
   manifest: ${{ steps.compose.outputs.manifest }}

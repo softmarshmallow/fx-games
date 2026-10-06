@@ -1,6 +1,0 @@
-# gnode.lock: the source behind each versioned node type; commit it
-nodes:
-  nodes/compose.py#compose@1: 905f1e373836b5b2ce5ec7f9701c0528cbbcf28a8585049675483e19bf53296d
-  nodes/seams.py#loops_already@1: d75820fc454fadf8e94737eae2d8bef6ea2b3e0dbe0fd885e058d7fec724c8c3
-  nodes/seams.py#seam_check@1: d75820fc454fadf8e94737eae2d8bef6ea2b3e0dbe0fd885e058d7fec724c8c3
-  nodes/seams.py#seam_repaint@1: aaa856d54aad63adf27c31ed8b1f16dd00693066de5ebe37eb2b4396bdc97ae5

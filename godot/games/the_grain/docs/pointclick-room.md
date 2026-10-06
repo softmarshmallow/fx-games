@@ -74,8 +74,8 @@ package with the room's own reader and writes one step per asset. From
 `godot/games/the_grain`:
 
 ```bash
-gnode plan pipeline/workflow.py:room --arg package=inputs/rooms/window
-gnode run pipeline/workflow.py:room --arg package=inputs/rooms/window --live --max-usd 25 \
+uv run python -m grida.fx plan pipeline/workflow.py:room --arg package=inputs/rooms/window
+uv run python -m grida.fx run pipeline/workflow.py:room --arg package=inputs/rooms/window --live --max-usd 25 \
   --deliver package=../../../out/<tag>/{key}
 ```
 
@@ -92,7 +92,7 @@ The last step reads the room again from its own files and writes
 <!-- pipeline-graph-contract:start -->
 ```json
 {
-  "kind": "pointclick-room-gnode-plan-contract-v1",
+  "kind": "pointclick-room-fx-plan-contract-v1",
   "fixture_ref": "godot/games/the_grain/inputs/rooms/window",
   "builder": "pipeline/workflow.py:room",
   "workflow_id": "the-grain-room",
@@ -117,8 +117,8 @@ The last step reads the room again from its own files and writes
     "./pipeline/nodes/style.py#admit_style",
     "./pipeline/nodes/style.py#selection_schema",
     "./pipeline/nodes/style.py#style_record",
-    "gnode/image.edit@1",
-    "gnode/structured.generate@1"
+    "fx/image.edit@1",
+    "fx/structured.generate@1"
   ]
 }
 ```

@@ -1,31 +1,17 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
 from pathlib import Path
-from typing import ClassVar, Literal
 
-import httpx
 import pytest
 from pydantic import ValidationError
 
-from gnode import (
-    ProviderResponseMetadata,
-    ProviderStructuredOutput,
-    RetryPolicy,
-    StructuredGenerationRequest,
-    StructuredGenerationService,
-)
-from gnode.providers.openrouter import OpenRouterStructuredBackend
-from stage_gen.identity import STAGE_GEN_TOOL, STRUCTURED_GENERATION_COMPONENT
 from stage_gen.image_prompting import (
-    build_image_style_compiler_request,
-    image_style_compiler_cache_key,
+    image_style_question,
     load_image_style_resources,
+    materialize_style_anchor,
 )
-from stage_gen.image_style import (
-    CanonicalStyleAnchor,
-)
+from stage_gen.image_style import StyleModeSelection
 from stage_gen.resources import image_style_resource_digests
 
 
@@ -60,45 +46,40 @@ def test_resources_cover_every_recognized_mode_and_exact_asset_treatments() -> N
     }
 
 
-def test_compiler_schema_allows_only_vocabulary_mode_and_cache_binds_resources(
+def test_the_style_question_offers_only_the_vocabulary_and_binds_its_resources(
     tmp_path: Path,
 ) -> None:
     resources = load_image_style_resources()
-    request = build_image_style_compiler_request(
-        prompt="adult character in a lantern-lit plaza",
-        artifact_path=tmp_path / "anchor.json",
-        asset_kinds=("character_sprite", "environment_background"),
+    prompt, system = image_style_question(
+        "adult character in a lantern-lit plaza",
+        ("environment_background", "character_sprite"),
         resources=resources,
     )
-    properties = request.schema.json_schema["properties"]
-    assert isinstance(properties, Mapping)
-    assert set(properties) == {
+    assert set(StyleModeSelection.model_json_schema()["properties"]) == {
         "schema_version",
         "kind",
         "style_mode",
     }
-    assert request.metadata["resource_sha256"] == resources.resource_sha256
-    assert request.metadata["compiler_sha256"] == resources.compiler_sha256
-    assert resources.skill.body.rstrip() in (request.system or "")
-    assert resources.vocabulary_document.rstrip() in (request.system or "")
-    assert request.temperature is None
-    assert request.max_tokens is None
-    base = image_style_compiler_cache_key("brief", ("character_sprite",), resources=resources)
-    assert base == image_style_compiler_cache_key(
-        "brief", ("character_sprite",), resources=resources
-    )
-    assert base != image_style_compiler_cache_key(
-        "changed", ("character_sprite",), resources=resources
-    )
+    assert resources.skill.body.rstrip() in system
+    assert "APPROVED_IMAGE_STYLE_VOCABULARY_JSON:\n" in system
+    assert resources.vocabulary_document.rstrip() in system
+    assert 'ASSET_KINDS_JSON: ["character_sprite","environment_background"]' in prompt
+    assert 'CREATIVE_BRIEF_JSON_STRING: "adult character in a lantern-lit plaza"' in prompt
+    with pytest.raises(ValueError, match="non-empty"):
+        image_style_question("  ", ("character_sprite",), resources=resources)
+    with pytest.raises(ValueError, match="unique"):
+        image_style_question("brief", ("character_sprite", "character_sprite"))
     mutated_document = json.loads(resources.vocabulary_document)
     mutated_document["modes"][2]["observable_traits"][3] = "subtle paper grain"
     mutated_path = tmp_path / "mutated-vocabulary.json"
     mutated_path.write_text(json.dumps(mutated_document), encoding="utf-8")
     mutated = load_image_style_resources(vocabulary_path=mutated_path)
     assert mutated.resource_sha256 != resources.resource_sha256
-    assert base != image_style_compiler_cache_key("brief", ("character_sprite",), resources=mutated)
+    _, mutated_system = image_style_question("brief", ("character_sprite",), resources=mutated)
+    assert "subtle paper grain" in mutated_system
+    assert "subtle paper grain" not in system
     with pytest.raises(ValidationError):
-        request.parse(
+        StyleModeSelection.model_validate(
             {
                 "schema_version": 1,
                 "kind": "image_style_selection_v1",
@@ -106,133 +87,15 @@ def test_compiler_schema_allows_only_vocabulary_mode_and_cache_binds_resources(
                 "medium_keyword": "invented edge text",
             }
         )
-
-
-class _StyleSelectionBackend:
-    spec_version: ClassVar[Literal[1]] = 1
-    provider = "test"
-    model = "test-structured"
-    secrets: tuple[str, ...] = ()
-
-    def __init__(self) -> None:
-        self.calls = 0
-
-    async def generate_once(
-        self, request: StructuredGenerationRequest[object]
-    ) -> ProviderStructuredOutput:
-        del request
-        self.calls += 1
-        decoded: object = (
-            {"schema_version": 1, "kind": "image_style_selection_v1", "style_mode": "bad"}
-            if self.calls == 1
-            else {
+    anchor = materialize_style_anchor(
+        StyleModeSelection.model_validate(
+            {
                 "schema_version": 1,
                 "kind": "image_style_selection_v1",
-                "style_mode": "photorealistic_natural",
+                "style_mode": "cel_shaded_anime_2d",
             }
-        )
-        return ProviderStructuredOutput(
-            decoded=decoded,
-            raw_text=json.dumps(decoded),
-            response_metadata=ProviderResponseMetadata(),
-        )
-
-    async def aclose(self) -> None:
-        return None
-
-
-@pytest.mark.asyncio
-async def test_existing_structured_service_owns_retry_and_persists_local_anchor(
-    tmp_path: Path,
-) -> None:
-    backend = _StyleSelectionBackend()
-    request = build_image_style_compiler_request(
-        prompt="natural campus portrait",
-        artifact_path=tmp_path / "anchor.json",
-        asset_kinds=("illustration",),
+        ),
+        resources,
     )
-    result = await StructuredGenerationService[CanonicalStyleAnchor](
-        backend,
-        component=STRUCTURED_GENERATION_COMPONENT,
-        tool=STAGE_GEN_TOOL,
-        retry_policy=RetryPolicy(initial_delay_s=0, max_delay_s=0),
-    ).generate(request)
-    assert backend.calls == result.attempts == 2
-    assert result.value.style_mode == "photorealistic_natural"
-    persisted = json.loads((tmp_path / "anchor.json").read_text())
-    assert persisted["kind"] == "canonical_style_anchor_v1"
-    assert persisted["medium_keyword"] == "photorealistic natural photography"
-    sidecar = json.loads((tmp_path / "anchor.json.meta.json").read_text())
-    assert sidecar["params"]["artifact_value"] == "caller-canonicalized"
-    assert sidecar["params"]["metadata"]["resource_sha256"] == (result.value.resource_sha256)
-    assert sidecar["params"]["metadata"]["compiler_sha256"] == (result.value.compiler_sha256)
-
-
-@pytest.mark.asyncio
-async def test_style_compiler_matches_working_openrouter_shape_and_six_attempt_contract(
-    tmp_path: Path,
-) -> None:
-    bodies: list[dict[str, object]] = []
-    urls: list[str] = []
-
-    def handler(request: httpx.Request) -> httpx.Response:
-        urls.append(str(request.url))
-        body = json.loads(request.content)
-        assert isinstance(body, dict)
-        bodies.append(body)
-        if len(bodies) < 6:
-            return httpx.Response(404, json={"error": {"code": 404}})
-        return httpx.Response(
-            200,
-            json={
-                "choices": [
-                    {
-                        "message": {
-                            "content": json.dumps(
-                                {
-                                    "schema_version": 1,
-                                    "kind": "image_style_selection_v1",
-                                    "style_mode": "cel_shaded_anime_2d",
-                                }
-                            )
-                        }
-                    }
-                ]
-            },
-        )
-
-    request = build_image_style_compiler_request(
-        prompt="original adult visual-novel character and background",
-        artifact_path=tmp_path / "style-anchor.json",
-        asset_kinds=("concept_art", "environment_background", "character_sprite"),
-    )
-    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-        result = await StructuredGenerationService[CanonicalStyleAnchor](
-            OpenRouterStructuredBackend(
-                api_key="secret",
-                model="openai/gpt-5.6",
-                base_url="https://openrouter.ai/api/v1",
-                client=client,
-            ),
-            component=STRUCTURED_GENERATION_COMPONENT,
-            tool=STAGE_GEN_TOOL,
-            retry_policy=RetryPolicy(initial_delay_s=0, max_delay_s=0),
-        ).generate(request)
-
-    assert result.attempts == len(bodies) == 6
-    assert set(urls) == {"https://openrouter.ai/api/v1/chat/completions"}
-    for body in bodies:
-        assert body["model"] == "openai/gpt-5.6"
-        assert body["provider"] == {"require_parameters": True}
-        assert body["response_format"] == {
-            "type": "json_schema",
-            "json_schema": {
-                "name": "image_style_selection_v1",
-                "strict": True,
-                "schema": request.schema.json_schema,
-                "description": "Select exactly one approved image style mode.",
-            },
-        }
-        assert "temperature" not in body
-        assert "max_tokens" not in body
-    assert result.value.style_mode == "cel_shaded_anime_2d"
+    assert anchor.resource_sha256 == resources.resource_sha256
+    assert anchor.compiler_sha256 == resources.compiler_sha256

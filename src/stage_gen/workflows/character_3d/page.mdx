@@ -26,11 +26,11 @@ When it finishes, show me the character and what the rig reviewer said about it.
 <Shell>
 
 ```sh
-gnode plan character-3d --inputs src/stage_gen/workflows/character_3d/inputs/sample/inputs.yaml
+uv run python -m grida.fx plan character-3d --inputs src/stage_gen/workflows/character_3d/inputs/sample/inputs.yaml
 ```
 
 ```sh
-gnode run character-3d --inputs src/stage_gen/workflows/character_3d/inputs/sample/inputs.yaml --live --max-usd 30
+uv run python -m grida.fx run character-3d --inputs src/stage_gen/workflows/character_3d/inputs/sample/inputs.yaml --live --max-usd 30
 ```
 
 Needs Blender and your OpenRouter and Tripo keys. `gnode doctor character-3d` says whether Blender is found.
@@ -126,7 +126,7 @@ instead of `brief`, one FBX or GLB per part role of the profile.
 ### Plan, run, read
 
 ```sh
-gnode plan character-3d --inputs inputs.yaml
+uv run python -m grida.fx plan character-3d --inputs inputs.yaml
 ```
 
 The plan runs nothing paid: it compiles the profile, so a profile or set of parts the character
@@ -134,7 +134,7 @@ rules refuse stops here, and it prices every call with the most it may cost. A r
 `--live` and a ceiling:
 
 ```sh
-gnode run character-3d --inputs inputs.yaml --live --max-usd 30
+uv run python -m grida.fx run character-3d --inputs inputs.yaml --live --max-usd 30
 ```
 
 Every paid answer is kept in the call cache, so running the same inputs again, or resuming a run

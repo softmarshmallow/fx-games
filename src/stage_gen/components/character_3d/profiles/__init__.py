@@ -1,4 +1,4 @@
-"""Replaceable character requirements and articulation recipes, outside gnode."""
+"""Replaceable character requirements and articulation recipes, outside the workflow engine."""
 
 from types import ModuleType
 from typing import Any

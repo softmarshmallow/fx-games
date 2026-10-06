@@ -1,47 +1,28 @@
-"""Movie sprite through gnode, offline: a take drawn once, finished, and kept by its request."""
+"""Movie sprite through FX, offline: a take drawn once, finished, and kept by its request."""
 
 from __future__ import annotations
 
 import json
 import subprocess
-from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-import pytest
 import yaml
+from grida.fx import Answer, RunResult, StandInCall, plan_async, run_async
 
-from gnode import (
-    CallRecord,
-    HostServices,
-    JobLog,
-    LongJob,
-    Plan,
-    Route,
-    RunOutcome,
-    WorkflowRun,
-    plan_async,
-    project_run,
-    run_async,
-    verify_run,
-)
 from stage_gen.workflows.movie_sprite.inputs.supplied_clip.make_inputs import make_inputs
 from stage_gen.workflows.movie_sprite.nodes.take import QUIET_IDLE
-
-
-@pytest.fixture(autouse=True)
-def _no_dotenv(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("_STAGE_GEN_DISABLE_DOTENV", "1")
+from tests.unit._fx import caches, dispatch, problems, scratch_project, verify
 
 
 def _green_take(path: Path) -> bytes:
-    """A short clip on the green plate, as a take would come back."""
+    """A take on the green plate as the fal route returns one: 360p at 9:16, three seconds."""
 
     subprocess.run(
         [
             "ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i",
-            "color=c=0x0bf212:s=32x56:d=1:r=8,"
-            "drawbox=x=10:y=14:w=12:h=28:color=0xd07a5a:t=fill",
+            "color=c=0x0bf212:s=360x640:d=3:r=8,"
+            "drawbox=x=112:y=160:w=136:h=320:color=0xd07a5a:t=fill",
             "-c:v", "libx264", "-pix_fmt", "yuv420p", str(path),
         ],
         check=True,
@@ -50,38 +31,20 @@ def _green_take(path: Path) -> bytes:
 
 
 class FakeVideo:
-    """``video.generate`` as a long job that answers every submission with one clip."""
+    """``video.generate`` answered with one clip; the engine reads the clip's facts itself."""
 
     def __init__(self, clip: bytes) -> None:
         self.clip = clip
         self.prompts: list[str] = []
 
-    def services(self, plan: Plan) -> HostServices:
-        store = plan.planner.store
-
-        async def start(
-            route: Route, request: Mapping[str, Any], take: int, log: JobLog
-        ) -> CallRecord:
-            log.submitting()
-            self.prompts.append(str(request["prompt"]))
-            log.submitted({"request_id": f"job-{len(self.prompts)}"})
-            return CallRecord(
-                {"video": store.put_bytes(self.clip, kind="video/mp4", name="video")}, None, 0.09
-            )
-
-        async def collect(*_: Any) -> CallRecord:
-            raise AssertionError("nothing was left to collect")
-
-        return HostServices(
-            store=store, capabilities={"video.generate": LongJob(start, collect)}, live=True
-        )
+    def __call__(self, call: StandInCall) -> Answer:
+        prompt = call.request["prompt"]
+        self.prompts.append(prompt if isinstance(prompt, str) else prompt.read_bytes().decode())
+        return Answer(files={"video": self.clip})
 
 
 def _project(tmp_path: Path) -> Path:
-    project = tmp_path / "project"
-    project.mkdir()
-    (project / "gnode.yaml").write_text("gnode: project/v1\n", encoding="utf-8")
-    return project
+    return scratch_project(tmp_path / "project")
 
 
 def _take_inputs(tmp_path: Path, name: str, **changes: Any) -> Path:
@@ -97,12 +60,14 @@ def _take_inputs(tmp_path: Path, name: str, **changes: Any) -> Path:
     return path
 
 
-async def _run(project: Path, inputs: Path, video: FakeVideo, run: str) -> RunOutcome:
-    plan = await plan_async("movie-sprite", input_files=[inputs], cwd=project)
-    assert plan.ok, plan.problems
-    return await WorkflowRun(
-        plan, run_dir=project / "runs" / run, services=video.services(plan)
-    ).run()
+async def _run(project: Path, inputs: Path, video: FakeVideo, run: str) -> RunResult:
+    return await run_async(
+        "movie-sprite",
+        input_files=[inputs],
+        cwd=project,
+        run_dir=project / "runs" / run,
+        stand_in=dispatch({"video.generate": video}),
+    )
 
 
 async def test_a_take_is_drawn_once_and_a_finishing_change_reruns_only_finishing(
@@ -114,13 +79,17 @@ async def test_a_take_is_drawn_once_and_a_finishing_change_reruns_only_finishing
     longer = _take_inputs(tmp_path, "longer", finish={"playback_seconds": 2})
     second = await _run(project, longer, video, "second")
 
-    assert first.ok and second.ok, (first.failed, second.failed)
+    assert first.ok and second.ok, (first.failures, second.failures)
     assert len(video.prompts) == 1
-    caches = {node.node_id: node.cache for node in project_run(second.run_dir).nodes}
-    assert caches == {"plate#1": "hit", "brief#1": "hit", "take#1": "hit", "finish#1": "miss"}
+    assert caches(second) == {
+        "plate#1": "hit",
+        "brief#1": "hit",
+        "take#1": "hit",
+        "finish#1": "miss",
+    }
     manifest = json.loads((second.run_dir / "outputs/manifest.json").read_text(encoding="utf-8"))
     assert (manifest["playback_seconds"], manifest["alpha_mode"]) == (2.0, "straight")
-    assert verify_run(second.run_dir) == []
+    assert verify(second.run_dir) == []
 
 
 async def test_the_brief_keeps_the_authors_sections_in_order(tmp_path: Path) -> None:
@@ -153,7 +122,7 @@ async def test_a_character_and_footage_together_are_refused_while_planning(
     both = _take_inputs(tmp_path, "both", footage="actor.mkv")
     plan = await plan_async("movie-sprite", input_files=[both], cwd=project)
     assert not plan.ok
-    assert any("not both" in problem.message for problem in plan.problems)
+    assert "not both" in problems(plan)
 
 
 async def test_supplied_footage_is_finished_for_free(tmp_path: Path) -> None:
@@ -163,10 +132,10 @@ async def test_supplied_footage_is_finished_for_free(tmp_path: Path) -> None:
         "movie-sprite", input_files=[tmp_path / "inputs/clip.yaml"], cwd=project
     )
 
-    assert result.ok, result.failed
-    assert [node.node_id for node in project_run(result.run_dir).nodes] == ["finish#1"]
-    manifest = json.loads(result.outputs["manifest"].path.read_bytes())
+    assert result.ok, result.failures
+    assert list(caches(result)) == ["finish#1"]
+    manifest = json.loads(result.outputs["manifest"].read_bytes())
     assert (manifest["frame_count"], manifest["width"], manifest["height"]) == (12, 96, 160)
-    assert result.outputs["loop"].path.read_bytes()[:4] == b"\x1aE\xdf\xa3"
-    assert result.outputs["frames"].path.read_bytes()[:2] == b"PK"
-    assert verify_run(result.run_dir) == []
+    assert result.outputs["loop"].read_bytes()[:4] == b"\x1aE\xdf\xa3"
+    assert result.outputs["frames"].read_bytes()[:2] == b"PK"
+    assert verify(result.run_dir) == []

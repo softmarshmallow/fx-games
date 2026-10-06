@@ -1,12 +1,10 @@
-// /docs/<slug>/: the staged markdown docs (scripts/site.py SITE_DOCS), the generated CLI
-// reference, and the generated reference page of every workflow.
+// /docs/<slug>/: the staged markdown docs (scripts/site.py SITE_DOCS) and the generated
+// reference page of every workflow.
 
 import type { Metadata } from "next";
-import CliReference from "@/components/CliReference";
 import DocShell from "@/components/DocShell";
 import WorkflowReference from "@/components/WorkflowReference";
 import { loadCatalog } from "@/lib/catalog";
-import { loadCliReference } from "@/lib/cli";
 import { href } from "@/lib/media";
 import { renderMarkdown } from "@/lib/mdx";
 import { docLink, docPages, findDoc, type DocPage } from "@/lib/pages";
@@ -25,7 +23,6 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
 }
 
 async function body(doc: DocPage) {
-  if (doc.kind === "cli") return <CliReference root={loadCliReference()} />;
   if (doc.kind === "workflow") {
     const workflow = loadCatalog().workflows.find((entry) => entry.id === doc.workflow);
     if (workflow === undefined) throw new Error(`no workflow ${String(doc.workflow)}`);

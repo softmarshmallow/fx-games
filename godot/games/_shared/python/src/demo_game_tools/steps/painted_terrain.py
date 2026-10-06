@@ -12,6 +12,8 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
+from grida.fx import Ctx, Group, StepRef, node
+
 from demo_game_tools.kits.painted_terrain import PAINTED_TERRAIN_MODE
 from demo_game_tools.kits.painted_terrain.canonicalize import (
     canonicalize_painted_terrain_segment,
@@ -30,7 +32,6 @@ from demo_game_tools.kits.painted_terrain.validate import (
     painted_terrain_join_discontinuity,
     validate_painted_terrain_source,
 )
-from gnode import Ctx, Group, StepRef, node
 from stage_gen.media.codec import decode_rgba
 
 #: Paintings a segment gets before the run stops on it.
@@ -208,7 +209,7 @@ def add_painted_terrain_steps(
         painting = part.step(
             "generate",
             title="Paint the segment",
-            uses="gnode/image.edit@1",
+            uses="fx/image.edit@1",
             with_={
                 "image": guide.outputs.image,
                 "references": list(materials),
@@ -218,7 +219,7 @@ def add_painted_terrain_steps(
                 "size": f"{PAINTED_TERRAIN_GUIDE_WIDTH}x{PAINTED_TERRAIN_GUIDE_HEIGHT}",
                 "background": "transparent",
             },
-            requires=["transparent_background"],
+            requires=["alpha"],
             view=True,
         )
         part.step(

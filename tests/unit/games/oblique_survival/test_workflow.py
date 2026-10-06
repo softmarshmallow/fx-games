@@ -1,6 +1,6 @@
-"""Ember Hollow's builder through gnode, offline: the scope ladder, whole builds, takes, reuse.
+"""Ember Hollow's builder through FX, offline: the scope ladder, whole builds, takes, reuse.
 
-Each run builds a copy of the shipped package inside a scratch copy of the game's gnode
+Each run builds a copy of the shipped package inside a scratch copy of the game's FX
 project, with its auditioned takes struck so every asset is drawn. Paid calls are answered
 by the stand-ins in ``_ember.py``. The build is documented in
 ``godot/games/ember_hollow/docs/generation-v1.md``.
@@ -8,7 +8,6 @@ by the stand-ins in ``_ember.py``. The build is documented in
 
 from __future__ import annotations
 
-import asyncio
 import hashlib
 import json
 import re
@@ -17,26 +16,16 @@ from itertools import pairwise
 from pathlib import Path
 
 import pytest
+from grida.fx import FxError
+from grida.fx import plan as plan_fx
 
 from ember_hollow_pipeline import survival_prompts
 from ember_hollow_pipeline.manifest import MANIFEST_KIND
 from ember_hollow_pipeline.scopes import SCOPES
 from ember_hollow_pipeline.survival_request import load_package
-from gnode import PlanError, plan_async
+from tests.unit._fx import calls_of, ceiling, deliver, failures, first_takes
 
-from ._ember import (
-    GAME,
-    PACKAGE,
-    calls_of,
-    deliver,
-    ember_project,
-    failures,
-    first_takes,
-    plan,
-    plate,
-    run,
-    stand_ins_for,
-)
+from ._ember import GAME, PACKAGE, ember_project, plan, plate, run, stand_ins_for
 
 #: The paid calls each scope makes at first takes, as the generation document's table says.
 SCOPE_CALLS = {
@@ -62,9 +51,9 @@ def test_each_scope_plans_inside_the_game_project(scope: str) -> None:
     planned = plan(GAME, scope)
 
     assert planned.ok, planned.problems
-    assert planned.planner.workflow.id == "ember-hollow"
-    budget = planned.planner.workflow.budget
-    assert budget is not None and planned.estimate()[1] <= budget.max_usd
+    assert planned.document["workflow"]["id"] == "ember-hollow"
+    budget = ceiling(planned)
+    assert budget is not None and planned.estimate()[1] <= budget
 
 
 @pytest.mark.parametrize("scope", SCOPES)
@@ -82,7 +71,7 @@ def test_each_scope_makes_the_paid_calls_its_table_states(scope: str) -> None:
 def test_the_ladder_only_ever_adds_steps_and_keeps_their_identity() -> None:
     plans = {scope: plan(GAME, scope) for scope in SCOPES}
     steps = {
-        scope: {i.step: i.identity for i in first_takes(planned)}
+        scope: {row["step"]: row["identity"] for row in first_takes(planned)}
         for scope, planned in plans.items()
     }
     for narrow, wide in pairwise(SCOPES):
@@ -97,7 +86,7 @@ def test_the_ladder_only_ever_adds_steps_and_keeps_their_identity() -> None:
 
 
 def test_an_unknown_scope_is_refused_while_planning() -> None:
-    with pytest.raises(PlanError, match="unknown scope 'everything'"):
+    with pytest.raises(FxError, match="unknown scope 'everything'"):
         plan(GAME, "everything")
 
 
@@ -111,7 +100,8 @@ def test_a_minimal_build_runs_offline_and_lays_out_what_the_host_reads(tmp_path:
     outcome = run(project, stand_ins)
 
     assert outcome.ok, failures(outcome)
-    played = deliver(stand_ins.store, outcome, tmp_path / "ember")
+    played = tmp_path / "ember"
+    deliver(outcome, played)
     manifest = json.loads((played / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["kind"] == MANIFEST_KIND
     assert manifest["run"]["scope"] == "minimal"
@@ -163,8 +153,7 @@ def test_a_take_on_disk_is_adopted_and_a_missing_one_is_refused_with_a_notice(
     outcome = run(project, stand_ins)
 
     assert "ground.forest_floor.adopt#1" not in outcome.failed
-    refused = outcome.results.get("ground.dry_meadow.adopt#1")
-    assert "is not on disk" in str(getattr(refused, "error", ""))
+    assert "is not on disk" in outcome.failures["ground.dry_meadow.adopt#1"].message
     package = load_package(project / PACKAGE)
     adopted = survival_prompts.ground_prompt(package, package.biomes[0])
     assert package.biomes[0].biome_id == "forest_floor"
@@ -205,7 +194,8 @@ def test_mixing_edits_bill_nothing(tmp_path: Path) -> None:
 
     assert outcome.ok, failures(outcome)
     assert sum(second.calls.values()) == 0
-    played = deliver(second.store, outcome, tmp_path / "ember")
+    played = tmp_path / "ember"
+    deliver(outcome, played)
     manifest = json.loads((played / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["ground"]["splat"]["blend"]["edge_softness"] == 0.05
 
@@ -214,11 +204,9 @@ def test_a_package_outside_the_project_is_refused(tmp_path: Path) -> None:
     outside = tmp_path / "elsewhere"
     shutil.copytree(GAME / PACKAGE, outside)
 
-    with pytest.raises(PlanError, match="not inside a gnode project"):
-        asyncio.run(
-            plan_async(
-                "pipeline/workflow.py:build",
-                cwd=GAME,
-                arguments={"package": str(outside), "scope": "minimal"},
-            )
+    with pytest.raises(FxError, match="not inside an FX project"):
+        plan_fx(
+            "pipeline/workflow.py:build",
+            cwd=GAME,
+            arguments={"package": str(outside), "scope": "minimal"},
         )

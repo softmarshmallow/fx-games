@@ -28,13 +28,15 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from grida.fx import Plan, run
+from grida.fx import plan as make_plan
 
-from gnode import Plan, run
-from gnode import plan as make_plan
+from stage_gen.workflows._fx import write_project
 from stage_gen.workflows.character_3d.support import (
     WORKFLOW_ID,
     SupportRefused,
     blender_build,
+    planned_inputs,
     support_target,
 )
 
@@ -83,8 +85,10 @@ def plan_cohort(
         written.write_text(
             yaml.safe_dump({**settings, "brief": str(brief)}, sort_keys=True), encoding="utf-8"
         )
-        plan = make_plan(WORKFLOW_ID, input_files=[written], max_usd=max_usd_each, cwd=project)
-        target = support_target(plan, blender=blender)
+        plan = make_plan(
+            WORKFLOW_ID, input_files=[written.resolve()], max_usd=max_usd_each, cwd=project
+        )
+        target = support_target(plan, inputs=planned_inputs([written]), blender=blender)
         targets[episode] = _digest(target)
         low, high = plan.estimate()
         episodes.append(
@@ -92,7 +96,7 @@ def plan_cohort(
                 "episode_id": episode,
                 "brief_sha256": hashlib.sha256(brief.read_bytes()).hexdigest(),
                 "estimate_usd": [low, high],
-                "ceiling_usd": plan.ceiling_usd,
+                "ceiling_usd": plan.document["estimate"]["ceiling_usd"],
             }
         )
         planned.append((episode, plan))
@@ -124,7 +128,8 @@ def run_cohort(
     episodes = {entry["episode_id"]: entry for entry in manifest["episodes"]}
     for episode, plan in planned:
         entry = episodes[episode]
-        run_dir = out / "runs" / episode
+        # Absolute: FX resolves a relative run folder against the plan's project.
+        run_dir = (out / "runs" / episode).resolve()
         earlier = _result(run_dir)
         if earlier is None or earlier.get("status") != "accepted":
             result = run(plan, live=True, run_dir=run_dir)
@@ -152,14 +157,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     mode.add_argument("--live", action="store_true", help="run the plans; paid")
     parser.add_argument("--max-usd-each", type=float, default=None, help="each run's ceiling")
     parser.add_argument("--blender", default=None)
-    parser.add_argument("--project", type=Path, default=None, help="where gnode.yaml is")
+    parser.add_argument("--project", type=Path, default=None, help="where fx.yaml is")
     arguments = parser.parse_args(argv)
     out: Path = arguments.out
     project: Path = arguments.project or out
-    if arguments.project is None and not (out / "gnode.yaml").is_file():
-        # The cohort is its own gnode project: its runs and its call cache stay inside it.
-        out.mkdir(parents=True, exist_ok=True)
-        (out / "gnode.yaml").write_text("gnode: project/v1\n", encoding="utf-8")
+    if arguments.project is None and not (out / "fx.yaml").is_file():
+        # The cohort is its own FX project: its runs and its call cache stay inside it.
+        write_project(out)
     try:
         if arguments.live and arguments.max_usd_each is None:
             raise SupportRefused("a live cohort needs --max-usd-each")

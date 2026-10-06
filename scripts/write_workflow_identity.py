@@ -5,16 +5,15 @@ tests/contract/fixtures/workflow-identity.json holds values only - digests, stri
 versions and cache keys - never a module path, so moving code changes this script's
 imports and never the fixture. Each section prices what a change to it would cost:
 
-  identities               the run-view version, provenance names and the product
-                           node-type inventory
-  cache_keys               node_id -> cache_key for offline plans and free runs over
+  identities               the run-view version and the product node-type inventory
+  cache_keys               instance id -> identity for offline plans and free runs over
                            committed files or the constant bytes in
                            workflow-identity-inputs.json, and the key of each paid call a
                            free run made through a stand-in that answers with constant bytes
 
 The input bytes are constants captured once. Nothing here regenerates them with Pillow or
-FFmpeg, runs a provider or reads a credential; configuration is an explicit empty
-environment.
+FFmpeg, runs a provider or reads a credential: every run is a stand-in run in a scratch
+project, offline.
 
     uv run python scripts/write_workflow_identity.py --check
     uv run python scripts/write_workflow_identity.py --only identities
@@ -23,10 +22,10 @@ environment.
 from __future__ import annotations
 
 import argparse
-import asyncio
 import base64
 import hashlib
 import json
+import os
 import re
 import runpy
 import sys
@@ -38,26 +37,13 @@ from typing import Any
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from grida.fx import Answer, RunResult, StandInCall, plan, run
+
 import stage_gen
-import stage_gen.identity as provenance_identities
-from gnode import (
-    RUN_VIEW_SCHEMA_VERSION,
-    CallRecord,
-    HostServices,
-    JobLog,
-    LongJob,
-    NodeType,
-    Route,
-    RunView,
-    SoftwareIdentity,
-    WorkflowRun,
-    plan_async,
-    project_run,
-)
-from gnode import run as gnode_run
 from stage_gen.fs import atomic_write_text
-from stage_gen.workflows._gnode import GnodeWorkflow
-from stage_gen.workflows._registry import discover
+from stage_gen.runview import RUN_VIEW_SCHEMA_VERSION, read_plan
+from stage_gen.workflows._fx import FxWorkflow, instances, write_project
+from stage_gen.workflows._registry import NodeType, discover
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = REPOSITORY_ROOT / "tests/contract/fixtures"
@@ -67,7 +53,6 @@ INPUTS_PATH = FIXTURES / "workflow-identity-inputs.json"
 PACKAGE_ROOT = Path(stage_gen.__file__).parent
 UNIVERSE_INPUTS = PACKAGE_ROOT / "workflows/universe/inputs/lantern_ferry/inputs.yaml"
 UNIVERSE_ANSWERS = FIXTURES / "universe/lantern_ferry.answers.json"
-#: Modules whose NodeType constants are product node types.
 
 type Section = dict[str, Any]
 
@@ -77,10 +62,10 @@ def _sha256(path: Path) -> str:
 
 
 def _node_types() -> Iterable[NodeType]:
-    # A workflow file's steps, each titled and typed by the gnode type it uses.
+    # A workflow file's steps, each titled and typed by the FX type it uses.
     for workflow in discover():
         if workflow.root.joinpath("workflow.yaml").is_file():
-            yield from GnodeWorkflow.read(workflow.package).types.values()
+            yield from FxWorkflow.read(workflow.package).types.values()
 
 
 def identities(scratch: Path) -> Section:
@@ -89,14 +74,8 @@ def identities(scratch: Path) -> Section:
         (node_type.type_id, node_type.cache_identity, node_type.contract_version)
         for node_type in _node_types()
     }
-    software = {
-        value.name: value.version
-        for value in vars(provenance_identities).values()
-        if isinstance(value, SoftwareIdentity)
-    }
     return {
         "view_schema_version": RUN_VIEW_SCHEMA_VERSION,
-        "software_identities": dict(sorted(software.items())),
         "node_types": [list(entry) for entry in sorted(inventory)],
     }
 
@@ -125,41 +104,40 @@ PARALLAX_INPUTS = {
 }
 
 
-def run_looping_parallax(scratch: Path) -> RunView:
+def _project(scratch: Path) -> Path:
+    """A scratch FX project that finds the first-party workflows by id, its runs and store
+    inside it."""
+    return write_project(scratch / "project", runs="runs", cache="cache")
+
+
+def _run_keys(result: RunResult) -> dict[str, str]:
+    """Every finished step's identity, a step the plan already ran (``at: plan``) included,
+    and every paid call's key, of one run."""
+    planned = read_plan(result.run_dir).get("instances") or []
+    keys = {str(i["id"]): str(i["identity"]) for i in planned if i.get("state") == "done"}
+    finished = {event["id"] for event in result.events if event.get("event") == "node_finished"}
+    for event in result.events:
+        if event.get("event") == "node_started" and event["id"] in finished:
+            keys[str(event["id"])] = str(event["identity"])
+        elif event.get("event") == "call":
+            keys[f"{event['id']} {event['capability']}"] = str(event["call"])
+    return dict(sorted(keys.items()))
+
+
+def _ran(name: str, result: RunResult) -> dict[str, str]:
+    if not result.ok:
+        failed = {id_: failure.message for id_, failure in result.failures.items()}
+        raise RuntimeError(f"the {name} sample failed: {failed or result.stopped}")
+    return _run_keys(result)
+
+
+def run_looping_parallax(scratch: Path) -> dict[str, str]:
     """The sample run offline, free: every identity, downstream of results included."""
     root = materialize_inputs("looping-parallax", scratch)
     inputs = root / "inputs.yaml"
     inputs.write_text(json.dumps(PARALLAX_INPUTS), encoding="utf-8")
-    project = scratch / "project"
-    project.mkdir()
-    (project / "gnode.yaml").write_text("gnode: project/v1\n", encoding="utf-8")
-    completed = gnode_run("looping-parallax", input_files=[inputs], cwd=project)
-    if not completed.ok:
-        raise RuntimeError(f"the looping-parallax sample failed: {completed.failed}")
-    return project_run(completed.run_dir)
-
-
-class _ConstantClip:
-    """``video.generate`` answered with the constant clip, as a long job: never a provider."""
-
-    def __init__(self, store: Any, clip: bytes) -> None:
-        self.store, self.clip = store, clip
-
-    def job(self) -> LongJob:
-        async def start(route: Route, request: Any, take: int, log: JobLog) -> CallRecord:
-            del route, request, take, log
-            return CallRecord(
-                {"video": self.store.put_bytes(self.clip, kind="video/mp4", name="video")},
-                None,
-                0.0,
-            )
-
-        async def collect(
-            route: Route, request: Any, take: int, handle: Any, log: JobLog
-        ) -> CallRecord:
-            raise AssertionError("nothing was left to collect")
-
-        return LongJob(start, collect)
+    result = run("looping-parallax", input_files=[inputs], cwd=_project(scratch))
+    return _ran("looping-parallax", result)
 
 
 def run_movie_sprite_take(scratch: Path) -> dict[str, str]:
@@ -178,73 +156,63 @@ def run_movie_sprite_take(scratch: Path) -> dict[str, str]:
         ),
         encoding="utf-8",
     )
-    project = scratch / "project"
-    project.mkdir()
-    (project / "gnode.yaml").write_text("gnode: project/v1\n", encoding="utf-8")
-    planned = asyncio.run(plan_async("movie-sprite", input_files=[inputs], cwd=project))
-    if not planned.ok:
-        raise RuntimeError(f"the movie-sprite take does not plan: {planned.problems}")
-    clip = _ConstantClip(planned.planner.store, (root / "take.mp4").read_bytes())
-    services = HostServices(
-        store=planned.planner.store, capabilities={"video.generate": clip.job()}, live=True
-    )
-    run_dir = project / "runs/take"
-    outcome = asyncio.run(WorkflowRun(planned, run_dir=run_dir, services=services).run())
-    if not outcome.ok:
-        raise RuntimeError(f"the movie-sprite take failed: {outcome.failed}")
-    keys = cache_key_map(project_run(run_dir))
-    for line in (run_dir / "events.jsonl").read_text(encoding="utf-8").splitlines():
-        event = json.loads(line)
-        if event.get("event") == "call":
-            keys[f"{event['id']} {event['capability']}"] = event["call"]
-    return dict(sorted(keys.items()))
+    clip = (root / "take.mp4").read_bytes()
+
+    def take(call: StandInCall) -> Answer:
+        assert call.capability == "video.generate", call.capability
+        return Answer(files={"video": clip})
+
+    result = run("movie-sprite", input_files=[inputs], cwd=_project(scratch), stand_in=take)
+    return _ran("movie-sprite take", result)
 
 
-def _schema_title(location: str) -> str:
-    return str(json.loads(Path(location).read_text(encoding="utf-8"))["title"])
+def _text(value: Any) -> str:
+    """A request's text, sent as written or as the file that holds it."""
+    return value if isinstance(value, str) else str(value.read_bytes().decode("utf-8"))
 
 
-def _universe_answers(store: Any) -> dict[str, Any]:
+def _schema(value: Any) -> Mapping[str, Any]:
+    """A request's schema, sent as the object or as the file that holds it."""
+    if isinstance(value, Mapping):
+        return value
+    schema: Mapping[str, Any] = json.loads(value.read_bytes())
+    return schema
+
+
+def _universe_answers() -> Callable[[StandInCall], Answer]:
     """Every paid call of the lantern_ferry world, answered from committed constants."""
 
     answers = json.loads(UNIVERSE_ANSWERS.read_text(encoding="utf-8"))
-    picture = base64.b64decode(answers["image_png_base64"])
+    pictures = {
+        size: base64.b64decode(encoded) for size, encoded in answers["images_png_base64"].items()
+    }
 
-    async def structured(route: Route, request: Any, take: int) -> CallRecord:
-        del route, take
-        title = _schema_title(request["schema"].location)
-        answer = answers[title]
+    def answer(call: StandInCall) -> Answer:
+        if call.capability == "image.generate":
+            return Answer(files={"image": pictures[str(call.request["size"])]})
+        assert call.capability == "structured.generate", call.capability
+        title = str(_schema(call.request["schema"])["title"])
+        value = answers[title]
         if title in {"EntityDirection", "ImageReview"}:
-            bound = re.search(r"(?:Bound|Required) entity_id: (\w+)", str(request["prompt"]))
+            prompt = _text(call.request["prompt"])
+            bound = re.search(r"(?:Bound|Required) entity_id: (\w+)", prompt)
             assert bound is not None, title
-            answer = answer[bound[1]]
-        return CallRecord({}, {"json": answer}, 0.0)
+            value = value[bound[1]]
+        return Answer.json(value)
 
-    async def image(route: Route, request: Any, take: int) -> CallRecord:
-        del route, request, take
-        return CallRecord(
-            {"image": store.put_bytes(picture, kind="image/png", name="image")}, None, 0.0
-        )
-
-    return {"structured.generate": structured, "image.generate": image}
+    return answer
 
 
 def run_universe(scratch: Path) -> dict[str, str]:
     """The committed lantern_ferry world, run free: every call answered from constants, so
     every step identity and every paid call's key is pinned, the gallery included."""
-    project = scratch / "project"
-    project.mkdir(parents=True)
-    (project / "gnode.yaml").write_text("gnode: project/v1\n", encoding="utf-8")
-    planned = asyncio.run(plan_async("universe", input_files=[UNIVERSE_INPUTS], cwd=project))
-    if not planned.ok:
-        raise RuntimeError(f"the universe sample does not plan: {planned.problems}")
-    store = planned.planner.store
-    services = HostServices(store=store, capabilities=_universe_answers(store), live=True)
-    run_dir = project / "runs/universe"
-    outcome = asyncio.run(WorkflowRun(planned, run_dir=run_dir, services=services).run())
-    if not outcome.ok:
-        raise RuntimeError(f"the universe sample failed: {outcome.failed}")
-    return _run_keys(run_dir)
+    result = run(
+        "universe",
+        input_files=[UNIVERSE_INPUTS],
+        cwd=_project(scratch),
+        stand_in=_universe_answers(),
+    )
+    return _ran("universe", result)
 
 
 #: Draws the portrait sample and answers its paid calls from the sample's own colours.
@@ -260,34 +228,9 @@ def run_portrait_motion(scratch: Path) -> dict[str, str]:
         json.dumps({"portrait": "sprite.png", "spec": "spec.json", "face_crop": True}),
         encoding="utf-8",
     )
-    project = scratch / "project"
-    project.mkdir()
-    (project / "gnode.yaml").write_text("gnode: project/v1\n", encoding="utf-8")
-    planned = asyncio.run(plan_async("portrait-motion", input_files=[inputs], cwd=project))
-    if not planned.ok:
-        raise RuntimeError(f"the portrait sample does not plan: {planned.problems}")
-    store = planned.planner.store
     stand_in = runpy.run_path(str(PORTRAIT_INPUTS_SCRIPT))["stand_in"]
-    services = HostServices(store=store, capabilities=stand_in(store), live=True)
-    run_dir = project / "runs/face"
-    outcome = asyncio.run(WorkflowRun(planned, run_dir=run_dir, services=services).run())
-    if not outcome.ok:
-        raise RuntimeError(f"the portrait sample failed: {outcome.failed}")
-    return _run_keys(run_dir)
-
-
-def _run_keys(run_dir: Path) -> dict[str, str]:
-    """Every finished step's identity, and every paid call's key, of one run."""
-    keys = {
-        node.node_id: node.cache_key
-        for node in project_run(run_dir).nodes
-        if node.state == "succeeded" and node.cache_key
-    }
-    for line in (run_dir / "events.jsonl").read_text(encoding="utf-8").splitlines():
-        event = json.loads(line)
-        if event.get("event") == "call":
-            keys[f"{event['id']} {event['capability']}"] = event["call"]
-    return dict(sorted(keys.items()))
+    result = run("portrait-motion", input_files=[inputs], cwd=_project(scratch), stand_in=stand_in)
+    return _ran("portrait", result)
 
 
 CHARACTER_INPUTS = PACKAGE_ROOT / "workflows/character_3d/inputs/sample/inputs.yaml"
@@ -296,17 +239,16 @@ CHARACTER_INPUTS = PACKAGE_ROOT / "workflows/character_3d/inputs/sample/inputs.y
 def plan_character_3d(scratch: Path) -> dict[str, str]:
     """The committed brief planned offline: the identity of every step a plan can know
     (a run needs Blender, so the rest is pinned by the workflow's own offline tests)."""
-    project = scratch / "project"
-    project.mkdir(parents=True)
-    (project / "gnode.yaml").write_text("gnode: project/v1\n", encoding="utf-8")
-    planned = asyncio.run(plan_async("character-3d", input_files=[CHARACTER_INPUTS], cwd=project))
+    planned = plan("character-3d", input_files=[CHARACTER_INPUTS], cwd=_project(scratch))
     if not planned.ok:
         raise RuntimeError(f"the character sample does not plan: {planned.problems}")
-    return {i.id: i.identity for i in planned.instances if i.identity is not None}
+    return dict(
+        sorted((i.id, str(i.identity)) for i in instances(planned) if i.identity is not None)
+    )
 
 
 #: Each pinned plan or free run.
-CACHE_KEY_PLANS: dict[str, Callable[[Path], RunView | dict[str, str]]] = {
+CACHE_KEY_PLANS: dict[str, Callable[[Path], dict[str, str]]] = {
     "character-3d": plan_character_3d,
     "looping-parallax": run_looping_parallax,
     "movie-sprite-take": run_movie_sprite_take,
@@ -315,15 +257,8 @@ CACHE_KEY_PLANS: dict[str, Callable[[Path], RunView | dict[str, str]]] = {
 }
 
 
-def cache_key_map(graph: RunView | dict[str, str]) -> dict[str, str]:
-    if isinstance(graph, dict):
-        return graph
-    keys = {node.node_id: node.cache_key for node in graph.nodes}
-    return dict(sorted(keys.items()))
-
-
 def cache_keys(scratch: Path) -> Section:
-    return {name: cache_key_map(build(scratch / name)) for name, build in CACHE_KEY_PLANS.items()}
+    return {name: build(scratch / name) for name, build in CACHE_KEY_PLANS.items()}
 
 
 SECTIONS: dict[str, Callable[[Path], Section]] = {
@@ -372,6 +307,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--check", action="store_true", help="compare without writing")
     parser.add_argument("--only", choices=tuple(SECTIONS), help="check or rewrite one section")
     args = parser.parse_args(argv)
+    # Every engine this script starts stays offline and reads no ``.env``.
+    os.environ.update(GRIDA_FX_DISABLE_DOTENV="1", GRIDA_FX_NETWORK="off")
     names = (args.only,) if args.only else tuple(SECTIONS)
     actual = compute(names)
     pinned: dict[str, Section] = (

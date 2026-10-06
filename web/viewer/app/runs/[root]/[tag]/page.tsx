@@ -1,8 +1,8 @@
 // One run. What it renders depends on what the run carries:
 //
-// - a run whose workflow has a view of its own (a gnode `view:`, such as universe's gallery)
+// - a run whose workflow has a view of its own (a workflow `view:`, such as universe's gallery)
 //   is shown in that view, with the run's graph one link away (`?view=graph`);
-// - otherwise its execution view — the run's own, or the one `gnode view` derived
+// - otherwise its execution view — the run's own, or the one `scripts/view.py` derived
 //   into the cache — fills the window as a graph, and refreshes while the run is live;
 // - a run with neither says how a view is made. A game
 //   run's view is exported by its game; the viewer never derives one.
@@ -91,12 +91,12 @@ function NoView({ run, runDir, rootLabel, entry, workflow, game }: NoViewFacts) 
       {entry?.viewRefusal ? <p className={errorBanner}>{entry.viewRefusal}</p> : null}
       {game ? (
         <p className="text-dim">
-          No run view. A delivered game package carries none; the gnode run that built it
+          No run view. A delivered game package carries none; the FX run that built it
           does.
         </p>
       ) : (
         <p className="text-dim">
-          This run has no view yet. <code>gnode view</code> keeps one in its cache for every
+          This run has no view yet. <code>scripts/view.py</code> keeps one in its cache for every
           workflow run under the folders it is given, and writes it again whenever the run&apos;s
           record grows.
         </p>

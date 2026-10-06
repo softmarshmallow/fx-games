@@ -23,7 +23,9 @@ import type { RunIdentity } from "@/lib/run-groups";
 import { readExecutionView, type ViewSource, viewLocation } from "./execution-view";
 import { readRunDocument } from "./run-json";
 import type { RunRef } from "./run-ref";
-import { type FoundRun, discoverRuns, runDirFor } from "./runs";
+import { FX_GRAPH_KIND, type FoundRun, discoverRuns, runDirFor } from "./runs";
+
+export { FX_GRAPH_KIND };
 
 /** The documents that say what a run is, in the order the index asks them. */
 export const ANCHOR_DOCUMENTS = [
@@ -43,10 +45,6 @@ const UPDATE_FILES = [
   "bundle.json",
   "case.json",
 ] as const;
-
-/** A gnode workflow run's plan (`plan.json`) declares itself so, and names its workflow. */
-const GNODE_PLAN = "graph/v2";
-export const GNODE_GRAPH_KIND = "gnode-graph-v2";
 
 /** What a run's view says about the whole run. */
 export interface ViewSummary {
@@ -135,13 +133,14 @@ async function readAnchor(run: RunRef, runDir: string): Promise<Anchor> {
           return { ...NO_ANCHOR, document: name };
         }
         const declared = body as Record<string, unknown>;
-        if (name === "plan.json" && declared.gnode === GNODE_PLAN) {
+        // An FX run's plan (`plan.json`) declares its kind and names its workflow.
+        if (name === "plan.json" && declared.kind === FX_GRAPH_KIND) {
           const workflow = declared.workflow;
           const id =
             workflow !== null && typeof workflow === "object" && !Array.isArray(workflow)
               ? textField(workflow as Record<string, unknown>, "id")
               : null;
-          return { ...NO_ANCHOR, document: name, kind: GNODE_GRAPH_KIND, workflowId: id };
+          return { ...NO_ANCHOR, document: name, kind: FX_GRAPH_KIND, workflowId: id };
         }
         return {
           document: name,

@@ -108,8 +108,8 @@ the old names.
 | `godot/games/_shared/runtime/addons/demo_support/simulation/families/hud/gauge_bar.gd` | was web/lib/families/hud/gauge-bar.ts, retired in the Godot pass; `sideview/gauge-bar.ts` until runtime step 6 | shared side-view presentation | c — one capsule widget, placed by its caller in world or screen space |
 
 The modality components (image, structured, music, background removal) left
-this table in the same change series: they are `gnode` ring-1 material — see
-[gnode rings](gnode-rings.md).
+this table in the same change series: they are capabilities of Grida FX, which owns their specifications and
+provider adapters.
 
 ## The coordinated bump happened with the node ABI
 

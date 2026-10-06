@@ -27,6 +27,13 @@ REVIEWED = {
         "read_absolute_regular_file",
         "read_relative_regular_file",
     },
+    # The one shared Grida FX glue: the graph-contract writer reads plans and declared
+    # outputs through it, and a game's FX test writes its scratch project with it.
+    "stage_gen.workflows._fx": {
+        "declared_outputs",
+        "instances",
+        "write_project",
+    },
 }
 
 

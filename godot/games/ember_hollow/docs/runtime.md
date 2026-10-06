@@ -59,7 +59,7 @@ Build and deliver a folder first, or select one already delivered. From
 `godot/games/ember_hollow` ([the generation document](generation-v1.md) has the rest):
 
 ```sh
-gnode run pipeline/workflow.py:build --arg package=inputs --arg scope=full --live \
+uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs --arg scope=full --live \
   --max-usd 40 --deliver package=../../../out/ember-hollow/{key}
 ```
 

@@ -122,8 +122,8 @@ static func of(
 		return KernelRefusal.of(
 			"room/ui",
 			(
-				"this room publishes no panel or button art; build it again with its gnode "
-				+ "builder (cd godot/games/the_grain && gnode run pipeline/workflow.py:room)"
+				"this room publishes no panel or button art; build it again with its builder "
+				+ "(cd godot/games/the_grain && uv run python -m grida.fx run pipeline/workflow.py:room)"
 			),
 			"ui"
 		)

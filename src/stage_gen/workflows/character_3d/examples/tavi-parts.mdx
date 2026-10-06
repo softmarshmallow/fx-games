@@ -31,11 +31,11 @@ When it finishes, show me the character and what the rig reviewer said about it.
 <Shell>
 
 ```sh
-gnode plan character-3d --inputs work/tavi.yaml
+uv run python -m grida.fx plan character-3d --inputs work/tavi.yaml
 ```
 
 ```sh
-gnode run character-3d --inputs work/tavi.yaml --live --max-usd 25
+uv run python -m grida.fx run character-3d --inputs work/tavi.yaml --live --max-usd 25
 ```
 
 Needs Blender and your OpenRouter key. The inputs file names the three meshes under `parts` (`body`, `head` and `hair`), the reference sheet as `reference`, and sets `profile` to `sd_human_grouped_hands_v1`, whose rig an agent builds.

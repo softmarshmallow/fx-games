@@ -39,8 +39,8 @@ from typing import Any, Literal, NotRequired, TypedDict
 from PIL import Image, ImageChops
 from pydantic import BaseModel, ConfigDict, Field, JsonValue
 
-from gnode import Project, project_run, read_plan
 from stage_gen.fs import atomic_write_bytes
+from stage_gen.runview import FX_GRAPH_KIND, find_file, project_run, read_plan
 
 EXAMPLE_KIND: Literal["workflow-example-v1"] = "workflow-example-v1"
 GAME_ENTRY_KIND: Literal["game-example-entry-v1"] = "game-example-entry-v1"
@@ -296,15 +296,13 @@ def sha256(path: Path) -> str:
 # ---------------------------------------------------------------- currency and pins
 
 
-def currency(
-    example: WorkflowExample, type_ids: Iterable[str], graph_kinds: Iterable[str]
-) -> Currency:
-    """``current`` when every node that ran is a type of the workflow and the graph kind,
-    if any, is one the workflow writes; otherwise the example was made with an earlier
-    version and a page shows it only behind its production notes."""
+def currency(example: WorkflowExample, type_ids: Iterable[str]) -> Currency:
+    """``current`` when every node that ran is a type of the workflow; otherwise the example
+    was made with an earlier version and a page shows it only behind its production notes.
+
+    The graph kind an example records is provenance, not currency: an example made by an
+    earlier engine keeps the kind it recorded, and the types that ran decide."""
     if not example.run_type_ids() <= frozenset(type_ids):
-        return "earlier_version"
-    if example.graph_kind is not None and example.graph_kind not in frozenset(graph_kinds):
         return "earlier_version"
     return "current"
 
@@ -1019,10 +1017,10 @@ class Delivered:
     metrics: dict[str, int | float]
 
 
-# ------------------------------------------------------------------- gnode runs
+# ------------------------------------------------------------------- FX runs
 
 #: What kind of model each paid capability is, as an example names a node's kind.
-GNODE_CAPABILITY_KINDS = {
+CAPABILITY_KINDS = {
     "video.generate": "Video model",
     "image.generate": "Image model",
     "image.edit": "Image model",
@@ -1036,11 +1034,11 @@ GNODE_CAPABILITY_KINDS = {
 
 
 @dataclass(frozen=True, slots=True)
-class GnodeRun:
-    """One gnode run folder, for a workflow to say what it delivered.
+class FxRun:
+    """One FX run folder, for a workflow to say what it delivered.
 
     The run holds its outputs under ``outputs/``, and its plan names each input by digest;
-    an input's bytes are found beside a view that showed it, or in the project's cache.
+    a file's bytes are found where the folder placed them, or in the run's store.
     """
 
     request: ImportRequest
@@ -1048,12 +1046,28 @@ class GnodeRun:
     plan: Mapping[str, Any]
     events: tuple[Mapping[str, Any], ...]
 
+    @classmethod
+    def read(cls, request: ImportRequest) -> FxRun:
+        """The request's one run, its plan and record read through the request's reader."""
+
+        if len(request.runs) != 1:
+            raise ValueError("an FX run holds the whole workflow; make an example from one run")
+        reader = request.reader
+        run_dir = request.runs[0].resolve()
+        plan = reader.json(run_dir / "plan.json")
+        if plan != read_plan(run_dir):
+            raise ValueError(f"{run_dir.name} changed while it was read")
+        lines = reader.bytes(run_dir / "events.jsonl").decode("utf-8").split("\n")[:-1]
+        events = tuple(json.loads(line) for line in lines if line.strip())
+        return cls(request, run_dir, plan, events)
+
     def output(self, name: str) -> Path:
         """The file the workflow delivered as ``name``."""
 
+        outputs = self.run_dir / "outputs"
         found = [
             path
-            for path in (self.run_dir / "outputs").glob(f"{name}.*")
+            for path in [outputs / name, *outputs.glob(f"{name}.*")]
             if path.stem == name and path.is_file()
         ]
         if len(found) != 1:
@@ -1070,14 +1084,14 @@ class GnodeRun:
         return self.file(digest), self._name_of(digest) or digest
 
     def file(self, digest: str) -> Path:
-        """A file the run read or made, by digest: beside its views, or in the cache."""
+        """A file the run read or made, by digest: where the folder placed it, or in its
+        store."""
 
-        shown = sorted((self.run_dir / "views" / "files").glob(f"{digest}*"))
-        cached = Project.find(self.run_dir).cache_dir / "files" / digest[:2] / digest
-        for path in [*shown, cached]:
-            if path.is_file() and sha256(self.request.reader.path(path)) == digest:
-                return path
-        raise ValueError(f"{self.run_dir.name} read {digest[:12]}, whose bytes are gone")
+        try:
+            path = find_file(self.run_dir, digest, self.plan)
+        except FileNotFoundError as error:
+            raise ValueError(str(error)) from error
+        return self.request.reader.path(path)
 
     def settings(self, node_id: str) -> dict[str, Any]:
         """What a step was given, as its last start recorded it: values, and files by digest."""
@@ -1101,8 +1115,8 @@ class GnodeRun:
         return None
 
 
-def _gnode_pictures(
-    run: GnodeRun, node_id: str, artifacts: Sequence[Mapping[str, Any]], pictured: set[str]
+def _pictures(
+    run: FxRun, node_id: str, artifacts: Sequence[Mapping[str, Any]], pictured: set[str]
 ) -> list[dict[str, Any]]:
     media, reader = run.request.media, run.request.reader
     pictures: list[dict[str, Any]] = []
@@ -1130,32 +1144,29 @@ def _gnode_pictures(
     return pictures
 
 
-def import_gnode_run(
+def import_fx_run(
     request: ImportRequest,
     *,
     type_of: Callable[[str], str],
-    deliver: Callable[[GnodeRun], Delivered],
+    deliver: Callable[[FxRun], Delivered],
 ) -> WorkflowExample:
-    """An example from one gnode run folder.
+    """An example from one FX run folder.
 
-    A gnode run holds the whole workflow, its takes and its resumes, so an example is made
-    from exactly one. ``type_of`` names the catalog type of a step path. Every step that ran
-    shows its PNG pictures and frames of its MP4 clips; a paid step shows the prompt it was
-    given; ``deliver`` names what the run delivered.
+    An FX run holds the whole workflow, its takes and its resumes, so an example is made from
+    exactly one. ``type_of`` names the catalog type of a step path. Every step that ran shows
+    its PNG pictures and frames of its MP4 clips; a paid step shows the prompt it was given;
+    ``deliver`` names what the run delivered. A stand-in run maps like any other: refusing one
+    is the caller's choice (``scripts/examples.py promote``).
     """
 
-    if len(request.runs) != 1:
-        raise ValueError("a gnode run holds the whole workflow; make an example from one run")
-    reader, names = request.reader, display_names()
-    run_dir = request.runs[0].resolve()
-    plan = reader.json(run_dir / "plan.json")
-    if plan != read_plan(run_dir):
-        raise ValueError(f"{run_dir.name} changed while it was read")
-    lines = reader.bytes(run_dir / "events.jsonl").decode("utf-8").splitlines()
-    events = tuple(json.loads(line) for line in lines if line.strip())
-    run = GnodeRun(request, run_dir, plan, events)
+    names = display_names()
+    run = FxRun.read(request)
+    reader, run_dir, plan = request.reader, run.run_dir, run.plan
     view = project_run(run_dir).model_dump(mode="json")
     steps = {item["id"]: item["step"] for item in plan["instances"]}
+    for event in run.events:
+        if event.get("event") == "node_started" and isinstance(event.get("id"), str):
+            steps.setdefault(event["id"], str(event.get("step", "")))
 
     pictured: set[str] = set()
     nodes: dict[str, dict[str, Any]] = {}
@@ -1163,14 +1174,14 @@ def import_gnode_run(
         if item["state"] != "succeeded":
             continue
         nid = item["node_id"]
-        pictures = _gnode_pictures(run, nid, item["artifacts"], pictured)
+        pictures = _pictures(run, nid, item["artifacts"], pictured)
         prompt = run.settings(nid).get("prompt") if item["operation"] != "local" else None
         if isinstance(prompt, Mapping):  # a prompt another step wrote
             prompt = reader.bytes(run.file(str(prompt["digest"]))).decode("utf-8")
         nodes[nid] = node(
             nid,
             type_id=type_of(steps[nid]),
-            kind=GNODE_CAPABILITY_KINDS.get(item["operation"] or "", "Local"),
+            kind=CAPABILITY_KINDS.get(item["operation"] or "", "Local"),
             description=item["description"],
             provider=names.provider(item["provider"]),
             model=names.model(item["model"]),
@@ -1203,12 +1214,12 @@ def import_gnode_run(
         {
             "example_id": request.example_id,
             "made_by": request.made_by,
-            "importer": "gnode_run",
+            "importer": "fx_run",
             "delivered_run": relative_to_base(request.base, run_dir),
             "source_runs": [source_run(request.base, run_dir)],
             "source_files": reader.files,
             "status": "succeeded" if view["run_state"] == "succeeded" else view["run_state"],
-            "graph_kind": "gnode-graph-v2",
+            "graph_kind": FX_GRAPH_KIND,
             "graph_sha256": view["graph_sha256"],
             "inputs": delivered.inputs,
             "outputs": delivered.outputs,
@@ -1240,9 +1251,9 @@ __all__ = [
     "FigureEntry",
     "FigureSource",
     "FiguresLedger",
-    "GNODE_CAPABILITY_KINDS",
+    "CAPABILITY_KINDS",
+    "FxRun",
     "GameExampleEntry",
-    "GnodeRun",
     "GameExampleStep",
     "ImportRequest",
     "Lineage",
@@ -1258,7 +1269,7 @@ __all__ = [
     "document_bytes",
     "figures_bytes",
     "has_alpha",
-    "import_gnode_run",
+    "import_fx_run",
     "index",
     "model_name",
     "models_of",

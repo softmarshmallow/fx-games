@@ -12,7 +12,8 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any, cast
 
-from gnode import Ctx, Group, StepRef, node
+from grida.fx import Ctx, Group, StepRef, node
+
 from stage_gen.components.sideview_layers.models import LayerRequest
 from stage_gen.components.sideview_layers.pipeline import loop_layer as construct_loop
 from stage_gen.components.sideview_layers.publish import (
@@ -188,7 +189,7 @@ def add_layer_steps(
     generate = group.step(
         "generate",
         title="Paint the layer",
-        uses="gnode/image.edit@1",
+        uses="fx/image.edit@1",
         with_={
             "image": references[0],
             "references": list(references[1:]),
@@ -196,7 +197,7 @@ def add_layer_steps(
             "size": size,
             "background": "transparent" if transparent else "opaque",
         },
-        requires=["transparent_background"] if transparent else [],
+        requires=["alpha"] if transparent else [],
         view=True,
     )
     admit = group.step(
@@ -227,7 +228,7 @@ def add_layer_steps(
             title="Repaint the seam",
             uses=f"{nodes}#repaint_loop_layer",
             with_={**looping, "prompt": loop_prompt},
-            requires=["mask", *(["transparent_background"] if transparent else [])],
+            requires=["mask", *(["alpha"] if transparent else [])],
             view=True,
         )
     else:

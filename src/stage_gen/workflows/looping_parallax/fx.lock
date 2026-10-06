@@ -1,0 +1,7 @@
+# fx.lock: the source behind each versioned node type; commit it
+fx: lock/v1
+nodes:
+  nodes/compose.py#compose@1: ef7cc8c9e5306311add18e2d18535fdc87d727d6badf27dd20a05661e7186476
+  nodes/seams.py#loops_already@1: 827625829dded4eeb050457095f131c0df4d122b1906e7981d727621451ab0cd
+  nodes/seams.py#seam_check@1: 827625829dded4eeb050457095f131c0df4d122b1906e7981d727621451ab0cd
+  nodes/seams.py#seam_repaint@1: c12ecf562040cf0de6f5dc7e4e92c5dd027cef1b448265506dba72169279dcc5

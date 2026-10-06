@@ -32,10 +32,9 @@ Runnable inputs live beside workflows. Start with [`../workflows/looping_paralla
 
 A Stage Gen component is an independently testable application package under
 `src/stage_gen/components/`, such as sprite-sheet processing, soundtrack assembly,
-or an authored game contract. Components use the provider-neutral modality services
-exported from `gnode`: image generation, background removal, structured generation,
-and music generation live in ring 1 under `src/gnode/modalities/`. Provider adapters
-live in ring 2. See the [gnode rings](../../../docs/spec/gnode-rings.md) for their import boundaries.
+or an authored game contract. Components call no provider themselves: image generation,
+background removal, structured generation and music generation are calls a node type makes
+through Grida FX, which owns their specifications, retries and provider adapters.
 
 Shared, workflow-neutral media inspection and transforms live under
 `src/stage_gen/media/`; component-specific processing stays with its component,
@@ -110,31 +109,6 @@ behavior inside reusable components.
 
 Components must not import `web/`. The viewer and the site consume exported manifests and
 examples; they never reach into a component.
-
-## Artifact result
-
-A successful result should provide this information, directly or through a
-manifest. This offline example constructs only an in-memory result record with
-illustrative paths, digest, and media facts. It does not generate, validate, or
-persist an artifact:
-
-```python
-from gnode import ArtifactResult
-
-result = ArtifactResult(
-    component="image-generation",
-    artifact_path="out/concept.png",
-    provenance_path="out/concept.png.meta.json",
-    media_type="image/png",
-    sha256="0" * 64,
-    bytes=1,
-    attempts=1,
-    validation={"width": 1, "height": 1},
-)
-```
-
-Image dimensions, audio duration, channel count, or other media-specific facts
-belong in `validation`. Never infer success from HTTP 200 alone.
 
 ## Failure contract
 

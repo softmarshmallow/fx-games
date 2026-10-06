@@ -9,7 +9,8 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from gnode import Ctx, node
+from grida.fx import Ctx, node
+
 from stage_gen.image_style import ImageAssetKind
 from the_grain_pipeline.style import style_anchor, style_clauses, style_schema
 

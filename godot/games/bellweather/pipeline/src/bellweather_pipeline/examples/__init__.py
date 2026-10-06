@@ -138,10 +138,10 @@ def page_of(example_id: str, game_root: Path = GAME_ROOT) -> Path:
 
 
 def currency_of(example: WorkflowExample) -> Currency:
-    """Every example here is a record of the build before gnode: its nodes ran as types the
+    """Every example here is a record of the build before FX: its nodes ran as types the
     game no longer declares, in a graph kind it no longer writes. None is current until one
-    is imported from a run of the gnode build."""
-    return currency(example, (), ())
+    is imported from a run of the FX build."""
+    return currency(example, ())
 
 
 def problems_of(declaration: ExampleDeclaration, example: WorkflowExample) -> list[str]:

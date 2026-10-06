@@ -7,7 +7,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from gnode import Ctx, node
+from grida.fx import Ctx, node
+
 from stage_gen.workflows.universe import models
 from stage_gen.workflows.universe.medium import medium_contract
 from stage_gen.workflows.universe.nodes.world import compact
@@ -136,7 +137,7 @@ def record(ctx: Ctx) -> dict[str, Any]:
     """The entity as a reader keeps it beside its image, admitted or rejected by its review.
 
     A rejected image is a result, not a failure: the gallery keeps it, marked, and a new
-    take is drawn only by asking for one (``gnode reroll``).
+    take is drawn only by asking for one (``python -m grida.fx reroll``).
     """
 
     entity_id = ctx.params["entity_id"]

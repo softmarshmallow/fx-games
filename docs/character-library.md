@@ -101,7 +101,7 @@ The game's scene build takes a package directory, and the package names its own 
 From `godot/games/the_grain`:
 
 ```sh
-uv run gnode plan pipeline/workflow.py:scene --arg package=inputs
+uv run python -m grida.fx plan pipeline/workflow.py:scene --arg package=inputs
 ```
 
 The game owns this build. Planning is offline; add `gnode run ... --live` only for

@@ -1,5 +1,5 @@
 # Only what the workflow file cannot say. Steps, titles and the sample plan come from
-# workflow.yaml through gnode.
+# workflow.yaml through FX.
 schema_version = 1
 kind = "stage-gen-workflow-v1"
 id = "character-3d"
@@ -13,9 +13,9 @@ in the export's own finish, and the export is admitted only when numbers and pic
 [try]
 input = "The committed brief in inputs/sample, an original courier, and the inputs.yaml that names it. The run is paid: it needs OpenRouter and Tripo keys, Blender, and --live"
 commands = [
-  "gnode plan character-3d --inputs src/stage_gen/workflows/character_3d/inputs/sample/inputs.yaml",
-  "gnode run character-3d --inputs src/stage_gen/workflows/character_3d/inputs/sample/inputs.yaml --live --max-usd 30",
-  "gnode inspect character-3d",
+  "uv run python -m grida.fx plan character-3d --inputs src/stage_gen/workflows/character_3d/inputs/sample/inputs.yaml",
+  "uv run python -m grida.fx run character-3d --inputs src/stage_gen/workflows/character_3d/inputs/sample/inputs.yaml --live --max-usd 30",
+  "uv run python -m grida.fx inspect character-3d",
 ]
 
 [[tools]]

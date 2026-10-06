@@ -10,8 +10,8 @@ separate, game-independent asset capability belongs in Stage Gen.
 
 ## Boundaries
 
-- Put reusable asset capabilities in `src/stage_gen/components/`, modality services
-  in `src/gnode/modalities/`, and provider adapters in `src/gnode/providers/`.
+- Put reusable asset capabilities in `src/stage_gen/components/`. Modality services
+  and provider adapters belong to Grida FX (`third_party/fx`), not to Stage Gen.
 - Put shared workflow-neutral media inspection and transforms in
   `src/stage_gen/media/`. Keep capability-specific deterministic processing
   with its component contract and workflow-specific canonicalization with its

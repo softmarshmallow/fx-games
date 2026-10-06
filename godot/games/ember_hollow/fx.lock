@@ -1,0 +1,43 @@
+# fx.lock: the source behind each versioned node type; commit it
+fx: lock/v1
+nodes:
+  pipeline/nodes/actors.py#publish_rebase@1: 7b611628eab4a3f74d9c7721fa99bd3a6602df79625977e110751c7fa6e13366
+  pipeline/nodes/actors.py#rebase_admit@1: 7b611628eab4a3f74d9c7721fa99bd3a6602df79625977e110751c7fa6e13366
+  pipeline/nodes/actors.py#rebase_plate@1: 7b611628eab4a3f74d9c7721fa99bd3a6602df79625977e110751c7fa6e13366
+  pipeline/nodes/actors.py#rebase_record@1: 7b611628eab4a3f74d9c7721fa99bd3a6602df79625977e110751c7fa6e13366
+  pipeline/nodes/actors.py#rebase_schema@1: 7b611628eab4a3f74d9c7721fa99bd3a6602df79625977e110751c7fa6e13366
+  pipeline/nodes/actors.py#rebase_verify_admit@1: 7b611628eab4a3f74d9c7721fa99bd3a6602df79625977e110751c7fa6e13366
+  pipeline/nodes/actors.py#rebase_verify_plate@1: 7b611628eab4a3f74d9c7721fa99bd3a6602df79625977e110751c7fa6e13366
+  pipeline/nodes/actors.py#rebase_verify_record@1: 7b611628eab4a3f74d9c7721fa99bd3a6602df79625977e110751c7fa6e13366
+  pipeline/nodes/audio.py#admit_audio@1: bd162f4ceeec5abd9b1d6b48259689f3e86bf758f3c8bf4ed21a18911279af7d
+  pipeline/nodes/audio.py#adopt_audio@1: bd162f4ceeec5abd9b1d6b48259689f3e86bf758f3c8bf4ed21a18911279af7d
+  pipeline/nodes/audio.py#publish_audio@1: bd162f4ceeec5abd9b1d6b48259689f3e86bf758f3c8bf4ed21a18911279af7d
+  pipeline/nodes/interface.py#admit_ui_sheet@1: 5ead4d97e82256be6e1c4ae6321ef70f4f91b5d082828a465b6da2558c952e0e
+  pipeline/nodes/interface.py#publish_ui_sheet@1: 5ead4d97e82256be6e1c4ae6321ef70f4f91b5d082828a465b6da2558c952e0e
+  pipeline/nodes/interface.py#ui_review_schema@1: 5ead4d97e82256be6e1c4ae6321ef70f4f91b5d082828a465b6da2558c952e0e
+  pipeline/nodes/interface.py#ui_template@1: 5ead4d97e82256be6e1c4ae6321ef70f4f91b5d082828a465b6da2558c952e0e
+  pipeline/nodes/pictures.py#admit_picture@1: 2972eb5fdd53a129a56fceb09ca93c93fa5ee1e88fee13fdaa7c6b0431acbd63
+  pipeline/nodes/pictures.py#adopt_picture@1: 2972eb5fdd53a129a56fceb09ca93c93fa5ee1e88fee13fdaa7c6b0431acbd63
+  pipeline/nodes/pictures.py#cut_look@1: 2972eb5fdd53a129a56fceb09ca93c93fa5ee1e88fee13fdaa7c6b0431acbd63
+  pipeline/nodes/pictures.py#finish_picture@1: 2972eb5fdd53a129a56fceb09ca93c93fa5ee1e88fee13fdaa7c6b0431acbd63
+  pipeline/nodes/pictures.py#lattice_template@1: 2972eb5fdd53a129a56fceb09ca93c93fa5ee1e88fee13fdaa7c6b0431acbd63
+  pipeline/nodes/pictures.py#lay_sheet@1: 2972eb5fdd53a129a56fceb09ca93c93fa5ee1e88fee13fdaa7c6b0431acbd63
+  pipeline/nodes/props.py#place_anchor@1: eacdbcb4fc790fa1f5ead73f637853ecfab95dada500e3e0f64add577b4cba4f
+  pipeline/nodes/reviews.py#admit_review@1: 662e51bde795863d892d80bb0ecb53328fad3760c3d4a389380c806991719e12
+  pipeline/nodes/reviews.py#review_record@1: 662e51bde795863d892d80bb0ecb53328fad3760c3d4a389380c806991719e12
+  pipeline/nodes/reviews.py#review_schema@1: 662e51bde795863d892d80bb0ecb53328fad3760c3d4a389380c806991719e12
+  pipeline/nodes/reviews.py#review_sheet@1: 662e51bde795863d892d80bb0ecb53328fad3760c3d4a389380c806991719e12
+  pipeline/nodes/shell.py#admit_clip@1: 823f3edd005cd70f47d783cec1bc03a5e137d83b93c8269b16b503ae0250ff4e
+  pipeline/nodes/shell.py#admit_shell_plate@1: 823f3edd005cd70f47d783cec1bc03a5e137d83b93c8269b16b503ae0250ff4e
+  pipeline/nodes/shell.py#admit_shell_review@1: 823f3edd005cd70f47d783cec1bc03a5e137d83b93c8269b16b503ae0250ff4e
+  pipeline/nodes/shell.py#adopt_clip@1: 823f3edd005cd70f47d783cec1bc03a5e137d83b93c8269b16b503ae0250ff4e
+  pipeline/nodes/shell.py#clip_record@1: 823f3edd005cd70f47d783cec1bc03a5e137d83b93c8269b16b503ae0250ff4e
+  pipeline/nodes/shell.py#measure_ending@1: 823f3edd005cd70f47d783cec1bc03a5e137d83b93c8269b16b503ae0250ff4e
+  pipeline/nodes/shell.py#publish_clip@1: 823f3edd005cd70f47d783cec1bc03a5e137d83b93c8269b16b503ae0250ff4e
+  pipeline/nodes/shell.py#publish_shell_plate@1: 823f3edd005cd70f47d783cec1bc03a5e137d83b93c8269b16b503ae0250ff4e
+  pipeline/nodes/shell.py#publish_typeface@1: 823f3edd005cd70f47d783cec1bc03a5e137d83b93c8269b16b503ae0250ff4e
+  pipeline/nodes/shell.py#shell_review_brief@1: 823f3edd005cd70f47d783cec1bc03a5e137d83b93c8269b16b503ae0250ff4e
+  pipeline/nodes/shell.py#shell_review_record@1: 823f3edd005cd70f47d783cec1bc03a5e137d83b93c8269b16b503ae0250ff4e
+  pipeline/nodes/shell.py#shell_review_schema@1: 823f3edd005cd70f47d783cec1bc03a5e137d83b93c8269b16b503ae0250ff4e
+  pipeline/nodes/world.py#package_manifest@1: 6a4d6ae8582555f16979d84a1933ae71076c12e7f79bb5504bcabb1c1512cec5
+  pipeline/nodes/world.py#world_layout@1: 6a4d6ae8582555f16979d84a1933ae71076c12e7f79bb5504bcabb1c1512cec5

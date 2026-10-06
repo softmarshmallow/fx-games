@@ -11,9 +11,9 @@ import io
 from typing import Any
 
 import numpy as np
+from grida.fx import Ctx, node
 from PIL import Image
 
-from gnode import Ctx, node
 from stage_gen.components.portrait_motion.face_crop import create_working_crop
 from stage_gen.components.portrait_motion.face_location import validate_location
 from stage_gen.components.portrait_motion.face_playback import (

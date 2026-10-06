@@ -8,9 +8,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from grida.fx import Ctx, node
 from pydantic import ValidationError
 
-from gnode import Ctx, node
 from stage_gen.components.movie_sprite import finish_video, validate_finish_config
 
 

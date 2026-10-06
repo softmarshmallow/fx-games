@@ -1,19 +1,22 @@
-// gnode views: an HTML template and a read-only context, shown in a sandboxed frame.
+// Run views: an HTML template and a read-only context, shown in a sandboxed frame.
 //
-// `view-contexts.json` (`gnode-view-contexts-v1`) sits beside a derived run view. Each
-// context (`gnode-view-context-v1`) is what the view's `context()` returns. A step's view
+// `view-contexts.json` (`stage-gen-view-contexts-v1`) sits beside a derived run view in the
+// view cache `scripts/view.py` keeps. Each context (`stage-gen-view-context-v1`) is what the
+// view's `context()` returns. A step's view
 // (`scope: node`) gets the `step` it shows (path, title, status, take, cost and every
 // resolved `with` value), its `inputs` and `outputs` files, its `facts` and its `run`; a
 // workflow's own view (`scope: workflow`) gets every step by name, a repeat as its
 // `instances`, with the workflow's `outputs` and its `run`. A file is `{kind, digest,
-// size, key, ref, facts}`, `ref` being where the run folder keeps it for the view; a small
+// size, key, ref, facts}`, `ref` being where the view cache keeps it for the view; a small
 // JSON file carries its parsed `value` too. The viewer adds each file's `url` and hands the
-// context to the frame through `/_gnode/view.js`; the frame can do nothing but draw it.
+// context to the frame through `/_views/view.js`; the frame can do nothing but draw it.
 
 import { artifactReference } from "./artifact-preview";
 
-export const VIEW_CONTEXTS_KIND = "gnode-view-contexts-v1";
-export const VIEW_CONTEXT_KIND = "gnode-view-context-v1";
+export const VIEW_CONTEXTS_KIND = "stage-gen-view-contexts-v1";
+export const VIEW_CONTEXT_KIND = "stage-gen-view-context-v1";
+/** What a view's frame posts once it is ready for its context. */
+export const VIEW_READY_KIND = "stage-gen-view-ready";
 
 export interface ViewContext {
   readonly kind: typeof VIEW_CONTEXT_KIND;
@@ -21,7 +24,7 @@ export interface ViewContext {
   /** The step a node view shows; null for a workflow's own view. */
   readonly nodeId: string | null;
   readonly title: string;
-  /** Run-relative path of the view's HTML template. */
+  /** Path of the view's HTML template in the run's view cache. */
   readonly template: string;
   /** The context as the frame receives it, files' `url` still to be added. */
   readonly document: Readonly<Record<string, unknown>>;
@@ -78,7 +81,7 @@ export function parseViewContexts(value: unknown): ViewContexts {
     if (view.kind !== VIEW_CONTEXT_KIND) throw new Error(`${label} must be ${VIEW_CONTEXT_KIND}`);
     const template = artifactReference(view.template, `${label}.template`);
     if (!/^views\/[0-9a-f]{64}\.html$/.test(template))
-      throw new Error(`${label}.template must be a view template the run keeps`);
+      throw new Error(`${label}.template must be a view template the view cache keeps`);
     checkFiles(view.outputs, `${label}.outputs`);
     if (view.scope === "workflow") {
       checkFiles(object(view.steps, `${label}.steps`), `${label}.steps`);
@@ -121,13 +124,13 @@ export function withUrls(context: ViewContext, urlFor: (ref: string) => string):
 }
 
 /** Where a host serves the module a view imports its context from. */
-export const VIEW_HELPER_PATH = "/_gnode/view.js";
+export const VIEW_HELPER_PATH = "/_views/view.js";
 
 /**
- * `import { context } from "/_gnode/view.js"`: the step a view shows, as data. The view
+ * `import { context } from "/_views/view.js"`: the step a view shows, as data. The view
  * asks its host once, and every call returns the same frozen context.
  */
-export const VIEW_HELPER_SOURCE = `// gnode view helper: the step this view shows, read-only.
+export const VIEW_HELPER_SOURCE = `// View helper: the step this view shows, read-only.
 let asked;
 export function context() {
   asked ??= new Promise((resolve) => {
@@ -136,7 +139,7 @@ export function context() {
       removeEventListener("message", receive);
       resolve(Object.freeze(event.data));
     });
-    parent.postMessage({ kind: "gnode-view-ready" }, "*");
+    parent.postMessage({ kind: "${VIEW_READY_KIND}" }, "*");
   });
   return asked;
 }

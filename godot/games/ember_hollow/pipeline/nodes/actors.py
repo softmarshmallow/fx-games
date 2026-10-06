@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from typing import Any, cast
 
+from grida.fx import Ctx, node
+
 from demo_game_tools.steps.rebase import (
     rebase_admit,
     rebase_plate,
@@ -18,7 +20,6 @@ from demo_game_tools.steps.rebase import (
     rebase_verify_plate,
     rebase_verify_record,
 )
-from gnode import Ctx, node
 
 
 @node(

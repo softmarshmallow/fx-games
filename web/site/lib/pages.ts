@@ -7,7 +7,6 @@ import path from "node:path";
 import type { Catalog, CatalogExample, CatalogWorkflow } from "@stage-gen/ui/contracts/catalog";
 import type { WorkflowExample } from "@stage-gen/ui/contracts/example";
 import { loadCatalog, readPageSource } from "./catalog";
-import { cliReferenceStaged } from "./cli";
 import { href } from "./media";
 import {
   DEFAULT_FOOTER,
@@ -407,11 +406,8 @@ export function landingCards(catalog: Catalog = loadCatalog()): Card[] {
 export interface DocPage {
   readonly slug: readonly string[];
   readonly title: string;
-  /**
-   * What the page renders: a staged Markdown doc, the generated reference of one workflow,
-   * or the generated CLI reference.
-   */
-  readonly kind: "markdown" | "workflow" | "cli";
+  /** What the page renders: a staged Markdown doc, or the generated reference of one workflow. */
+  readonly kind: "markdown" | "workflow";
   /** The staged Markdown source under .catalog/pages/, for a Markdown doc. */
   readonly source: string | null;
   /** Where that Markdown lives in the checkout; its relative links resolve against it. */
@@ -441,7 +437,7 @@ function stagedDocs(): StagedDoc[] {
   });
 }
 
-/** The staged guides in SITE_DOCS order, the CLI reference, then every workflow's reference. */
+/** The staged guides in SITE_DOCS order, then every workflow's reference. */
 export function docPages(catalog: Catalog = loadCatalog()): DocPage[] {
   return [
     ...stagedDocs().map((doc) => ({
@@ -452,9 +448,6 @@ export function docPages(catalog: Catalog = loadCatalog()): DocPage[] {
       path: doc.path,
       workflow: null,
     })),
-    ...(cliReferenceStaged()
-      ? [{ slug: ["cli"], title: "CLI reference", kind: "cli" as const, source: null, path: null, workflow: null }]
-      : []),
     ...catalog.workflows.map((workflow) => ({
       slug: ["workflows", workflow.id],
       title: workflow.manifest.title,

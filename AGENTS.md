@@ -12,8 +12,8 @@ and [IP](docs/oss-ip.md). This file controls applicability; focused docs control
   example project. [The Godot charter](godot/CHARTER.md) owns the latter's purpose and internal evolution.
   Further runtime, shared game-system or visual-novel refactors belong within Godot; reuse by multiple games
   does not by itself justify moving them into the asset product.
-- Python is the headless implementation. Stage Gen's asset product has two layers: `src/gnode/` is the ringed asset-graph
-  SDK and `src/stage_gen/` is the application that consumes it. gnode's rings (`docs/spec/gnode-rings.md`):
+- Python is the headless implementation. Stage Gen's asset product has two layers: Grida FX (`third_party/fx`) is the
+  engine and `src/stage_gen/` is the application that consumes it. gnode's rings (`docs/spec/gnode-rings.md`):
   ring 0 the agnostic engine core (topology, scheduling, trace, run view, model bindings, reliability,
   provenance — media-free), ring 1 per-modality model specs and retry-owning services, ring 2 first-party
   provider adapters. A ring imports only rings below it; nothing game-, workflow-, or genre-specific belongs

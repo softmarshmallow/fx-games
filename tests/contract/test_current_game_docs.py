@@ -137,9 +137,9 @@ def test_game_docs_describe_the_exact_current_prepared_closure() -> None:
     assert 'mode = "portal-pair-1x2-v1"' in map_contract
 
     pipeline = documents["godot/games/bellweather/docs/generation-pipeline.md"]
-    # The game's folder is the gnode project; its node types are locked to their source.
-    assert "The game's folder is a gnode project" in pipeline
-    assert "`gnode.lock` pins every node type" in pipeline
+    # The game's folder is the FX project; its node types are locked to their source.
+    assert "The game's folder is an FX project" in pipeline
+    assert "`fx.lock` pins every node type" in pipeline
     assert "the 47-mask atlas painted over the packed template and assembled" in pipeline
     assert "the sheet, repacked one subject per cell" in pipeline
     assert "Every painting and every track is drawn at most six times" in pipeline
@@ -154,11 +154,12 @@ def test_game_docs_describe_the_exact_current_prepared_closure() -> None:
     sound_effects = documents["godot/games/iron_petal_unit/docs/audio.md"]
     assert "No normalization, no trimming, no\nconcatenation" in sound_effects
     assert "spec/model-eleven-text-to-sound-v2.md" in sound_effects
+    assert "pipeline/iron-petal-unit.takes.yaml" in sound_effects
 
     runner = documents["godot/games/iron_petal_unit/docs/runner.md"]
     assert "native-alpha GPT Image 2.5 Sunburst" in runner
     voice = documents["godot/games/iron_petal_unit/docs/voices.md"]
-    assert "workflow.takes.yaml" in voice
+    assert "pipeline/iron-petal-unit.takes.yaml" in voice
 
     dialogue = documents["docs/dialogue-character-runtime-pipeline.md"]
     assert "NPC visual identity in `content/npcs.toml`" in dialogue

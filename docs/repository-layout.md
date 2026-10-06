@@ -137,7 +137,7 @@ portrait animation and movie sprite assets retain their own bounded roles.
 ```text
 src/stage_gen/workflows/
 ├── _registry.py, _catalog.py, _checks.py   # Discovery, catalog export, drift checks
-├── _gnode.py                          # How a workflow file declares itself to the registry
+├── _fx.py                             # How a workflow file declares itself to the registry, and the scratch-project writer
 ├── looping_parallax/                  # A gnode workflow file, run with `gnode`
 │   ├── workflow.yaml, gnode.yaml      # The workflow; its home (sources, default routes)
 │   ├── gnode.lock                     # The source behind each versioned node type
@@ -187,7 +187,7 @@ owner's manifest pins them by digest.
 ## Documentation
 
 `docs/` holds only what crosses workflows: [getting started](getting-started.md), the
-[gnode guide](guide/README.md) and its example projects, the [glossary](glossary.md), the
+[FX guide](https://github.com/gridaco/fx/blob/main/docs/guide/README.md) and its example projects, the [glossary](glossary.md), the
 [viewer](viewer.md) and [site](site.md) guides, provider notes under `models/`, policy
 (storage, publication, IP), cross-cutting specifications under `spec/`, and the history
 under `decisions/`, `plans/` and `research/`. A workflow's guide and contract live in its

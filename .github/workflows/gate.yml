@@ -5,7 +5,29 @@ on:
   pull_request:
 
 jobs:
+  # FX's engine, built once from the submodule; every job that plans or runs downloads it.
+  engine:
+    runs-on: ubuntu-latest
+    env:
+      CARGO_INCREMENTAL: "0"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true   # third_party/fx: the engine's source
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: third_party/fx
+      - run: python3 third_party/fx/tools/build_engine.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: grida-fx
+          path: third_party/fx/python/src/grida/fx/_bin/grida-fx
+          if-no-files-found: error
+          retention-days: 1
+
   product:
+    needs: engine
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,9 +36,17 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - run: uv sync --frozen
+      - uses: actions/download-artifact@v4
+        with:
+          name: grida-fx
+          path: ${{ runner.temp }}/fx-engine
+      - run: |   # an artifact loses the execute bit
+          chmod +x "$RUNNER_TEMP/fx-engine/grida-fx"
+          echo "GRIDA_FX_BIN=$RUNNER_TEMP/fx-engine/grida-fx" >> "$GITHUB_ENV"
       - run: uv run python scripts/check.py
 
   optional-python:
+    needs: engine
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -29,9 +59,17 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - run: uv sync --all-groups --frozen
+      - uses: actions/download-artifact@v4
+        with:
+          name: grida-fx
+          path: ${{ runner.temp }}/fx-engine
+      - run: |   # an artifact loses the execute bit
+          chmod +x "$RUNNER_TEMP/fx-engine/grida-fx"
+          echo "GRIDA_FX_BIN=$RUNNER_TEMP/fx-engine/grida-fx" >> "$GITHUB_ENV"
       - run: uv run --all-groups python scripts/check.py --scope ${{ matrix.scope }}
 
   web:
+    needs: engine
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,6 +82,13 @@ jobs:
       - run: uv sync --frozen
       - run: bun install --frozen-lockfile
         working-directory: web
+      - uses: actions/download-artifact@v4
+        with:
+          name: grida-fx
+          path: ${{ runner.temp }}/fx-engine
+      - run: |   # an artifact loses the execute bit
+          chmod +x "$RUNNER_TEMP/fx-engine/grida-fx"
+          echo "GRIDA_FX_BIN=$RUNNER_TEMP/fx-engine/grida-fx" >> "$GITHUB_ENV"
       - run: uv run python scripts/check.py --scope web
 
   lint:
@@ -76,7 +121,7 @@ jobs:
           godot/tools/write_game_contract_identities.py
           godot/tools/write_game_graph_contract.py
           godot/templates/asset_consumer/prepare.py
-      - name: Typecheck gnode game projects
+      - name: Typecheck game projects
         run: |
           uv run --all-groups mypy --strict godot/games/iron_petal_unit/pipeline/workflow.py godot/games/iron_petal_unit/pipeline/nodes
           uv run --all-groups mypy --strict godot/games/bellweather/pipeline/workflow.py godot/games/bellweather/pipeline/nodes
@@ -84,6 +129,7 @@ jobs:
           uv run --all-groups mypy --strict godot/games/ember_hollow/pipeline/workflow.py godot/games/ember_hollow/pipeline/nodes
 
   godot:
+    needs: engine
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -104,4 +150,11 @@ jobs:
           mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" "$HOME/.local/bin/godot"
           chmod +x "$HOME/.local/bin/godot"
           echo "GODOT=$HOME/.local/bin/godot" >> "$GITHUB_ENV"
+      - uses: actions/download-artifact@v4
+        with:
+          name: grida-fx
+          path: ${{ runner.temp }}/fx-engine
+      - run: |   # an artifact loses the execute bit
+          chmod +x "$RUNNER_TEMP/fx-engine/grida-fx"
+          echo "GRIDA_FX_BIN=$RUNNER_TEMP/fx-engine/grida-fx" >> "$GITHUB_ENV"
       - run: uv run --all-groups python scripts/check.py --scope godot

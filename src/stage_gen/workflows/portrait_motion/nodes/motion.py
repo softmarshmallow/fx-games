@@ -12,10 +12,10 @@ import io
 from typing import Any
 
 import numpy as np
+from grida.fx import Ctx, node
 from PIL import Image, ImageDraw
 from pydantic import ValidationError
 
-from gnode import Ctx, node
 from stage_gen.components.portrait_motion import PortraitMotionSpec
 from stage_gen.components.portrait_motion.models import PortraitMotionResult
 from stage_gen.components.portrait_motion.playback import build_combinations, encode_preview

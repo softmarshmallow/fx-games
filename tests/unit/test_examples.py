@@ -2,16 +2,21 @@
 
 from __future__ import annotations
 
+import io
 import json
 from pathlib import Path
 from typing import Any
 
 import pytest
+from grida.fx import Answer, StandInCall, run
 from PIL import Image
 
 from stage_gen.examples import (
+    Delivered,
     ExamplePin,
     FiguresLedger,
+    FxRun,
+    ImportRequest,
     MadeBy,
     Media,
     RecordingReader,
@@ -19,6 +24,7 @@ from stage_gen.examples import (
     currency,
     display_names,
     document_bytes,
+    import_fx_run,
     index,
     node,
     pin_of,
@@ -28,6 +34,8 @@ from stage_gen.examples import (
     verify,
     write_example,
 )
+from stage_gen.workflows._fx import write_project
+from tests.unit._fx import failures
 
 
 def _example(nodes: dict[str, dict[str, Any]], graph_kind: str | None = "demo-graph-v1") -> Any:
@@ -112,10 +120,14 @@ def test_currency_counts_only_nodes_that_ran_in_a_source_graph() -> None:
         "crop": node("crop", type_id="demo.crop_by_hand", origin="derived"),
     }
     example = _example(nodes)
-    assert currency(example, {"demo.make"}, {"demo-graph-v1"}) == "current"
-    assert currency(example, {"demo.other"}, {"demo-graph-v1"}) == "earlier_version"
-    assert currency(example, {"demo.make"}, {"demo-graph-v2"}) == "earlier_version"
-    assert currency(_example(nodes, graph_kind=None), {"demo.make"}, set()) == "current"
+    assert currency(example, {"demo.make"}) == "current"
+    assert currency(example, {"demo.other"}) == "earlier_version"
+    assert currency(_example(nodes, graph_kind=None), {"demo.make"}) == "current"
+
+
+def test_the_graph_kind_an_example_records_is_provenance_not_currency() -> None:
+    example = _example({"make": node("make", type_id="demo.make")}, graph_kind="older-graph-v2")
+    assert currency(example, {"demo.make"}) == "current"
 
 
 def test_example_nodes_refuse_unknown_fields_and_origins() -> None:
@@ -161,3 +173,63 @@ def test_display_names_cover_recorded_ids_and_their_names() -> None:
     assert names.provider("openrouter") == "OpenRouter"
     assert names.knows_model("GPT-6 Astra") and names.knows_model("openai/gpt-6-astra")
     assert not names.knows_model("unlisted/model")
+
+
+FLOW = """\
+fx: workflow/v1
+id: flow
+title: Flow
+steps:
+  draw:
+    title: Draw a lantern
+    uses: fx/image.generate@1
+    with: { prompt: a lantern, size: 64x64 }
+outputs:
+  image: ${{ steps.draw.outputs.image }}
+"""
+
+
+def _png() -> bytes:
+    out = io.BytesIO()
+    Image.new("RGB", (64, 64), (200, 120, 40)).save(out, "PNG")
+    return out.getvalue()
+
+
+def _answer(call: StandInCall) -> Answer:
+    return Answer(files={"image": _png()})
+
+
+def test_a_stand_in_run_maps_like_any_fx_run(tmp_path: Path) -> None:
+    project = write_project(
+        tmp_path / "project",
+        runs="runs",
+        cache="cache",
+        routes={"image.generate": "gpt-image-2.5-sunburst@openai"},
+        workflows=(),
+    )
+    (project / "flow.yaml").write_text(FLOW, encoding="utf-8")
+    result = run("flow.yaml", cwd=project, stand_in=_answer)
+    assert result.ok and result.stand_in, failures(result)
+    request = ImportRequest(
+        example_id="lantern",
+        made_by=MadeBy(kind="workflow", id="flow"),
+        base=tmp_path,
+        runs=(result.run_dir,),
+        out=tmp_path / "store/flow/lantern",
+    )
+    delivered: list[Path] = []
+
+    def deliver(run: FxRun) -> Delivered:
+        delivered.append(run.output("image"))
+        return Delivered(inputs={}, outputs={"image": {"kind": "image"}}, metrics={})
+
+    example = import_fx_run(request, type_of=lambda step: f"flow/{step}", deliver=deliver)
+
+    assert delivered == [result.run_dir / "outputs/image.png"]
+    assert (example.importer, example.graph_kind) == ("fx_run", "fx-graph-v1")
+    draw = example.nodes["draw#1"]
+    assert (draw.type_id, draw.kind, draw.prompt) == ("flow/draw", "Image model", "a lantern")
+    assert draw.thumb is not None
+    assert "project/runs/flow/" in example.delivered_run
+    digest = sha256(result.run_dir / "files/draw/image.png")
+    assert FxRun.read(request).file(digest) == result.run_dir / "files/draw/image.png"

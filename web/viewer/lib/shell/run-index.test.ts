@@ -44,7 +44,7 @@ describe("the run index", () => {
         schema_version: 1,
         ground: { size_meters: 512 },
       },
-      "out/runs/universe/2026-10-03-1/plan.json": { gnode: "graph/v2", workflow: { id: "universe" } },
+      "out/runs/universe/2026-10-03-1/plan.json": { kind: "fx-graph-v1", workflow: { id: "universe" } },
       "out/runs/universe/2026-10-03-1/events.jsonl": "",
       "out/old/execution-plan.json": { kind: "pointclick-room-execution-graph-v1" },
     });
@@ -56,7 +56,7 @@ describe("the run index", () => {
     expect(byName.get("survival")?.schemaVersion).toBe(1);
     expect(byName.get("runs/universe/2026-10-03-1")?.identity).toMatchObject({
       document: "plan.json",
-      kind: "gnode-graph-v2",
+      kind: "fx-graph-v1",
       workflowId: "universe",
     });
     // A plan the retired executor wrote is no longer a run.
@@ -79,7 +79,7 @@ describe("the run index", () => {
   test("summarises a view, and lists a run that has none", async () => {
     await withRuns({
       "out/viewed/execution-view.json": executionViewFixture(),
-      "spikes/review/yuzu/run-01/plan.json": { gnode: "plan/v1" },
+      "spikes/review/yuzu/run-01/plan.json": { kind: "fx-graph-v1" },
       "spikes/review/yuzu/run-01/events.jsonl": "",
       "spikes/stale/execution-view.json": { ...executionViewFixture(), schema_version: 2 },
     });
@@ -91,5 +91,16 @@ describe("the run index", () => {
     expect(byName.get("review/yuzu/run-01")?.view).toBeNull();
     expect(byName.get("stale")?.view).toBeNull();
     expect(byName.get("stale")?.viewRefusal).toContain("derive it again");
+  });
+
+  test("a plan and record of another engine are not listed, nor searched below", async () => {
+    await withRuns({
+      "out/runs/universe/2026-10-01-1/plan.json": { kind: "other-graph-v2", workflow: { id: "universe" } },
+      "out/runs/universe/2026-10-01-1/events.jsonl": "",
+      "out/runs/universe/2026-10-01-1/inner/manifest.json": { kind: "a-package-v1" },
+      "out/runs/universe/2026-10-03-1/plan.json": { kind: "fx-graph-v1", workflow: { id: "universe" } },
+      "out/runs/universe/2026-10-03-1/events.jsonl": "",
+    });
+    expect((await listRuns()).map((entry) => entry.relative)).toEqual(["runs/universe/2026-10-03-1"]);
   });
 });

@@ -6,7 +6,7 @@ The committed `lantern_ferry` world is a complete source: a poster, a synopsis, 
 direction and the `inputs.yaml` that names them. Plan it offline, before any spend:
 
 ```sh
-uv run gnode plan universe --inputs src/stage_gen/workflows/universe/inputs/lantern_ferry/inputs.yaml
+uv run python -m grida.fx plan universe --inputs src/stage_gen/workflows/universe/inputs/lantern_ferry/inputs.yaml
 ```
 
 The plan prices the world phase exactly and the gallery at its ceiling, since how many entities

@@ -4,7 +4,7 @@ Pure: the builder names a gate or a finish and states its arguments while planni
 judges and publishing steps call these over bytes. A gate refuses with a ``ValueError``
 whose message lists every reason; a finish returns the published bytes and the record the
 manifest reads, in the shape every earlier run of this game wrote, so ``manifest.py`` reads
-a gnode build exactly as it read one of those.
+an FX build exactly as it read one of those.
 """
 
 from __future__ import annotations

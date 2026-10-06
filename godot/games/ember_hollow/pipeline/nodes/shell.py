@@ -14,6 +14,8 @@ import json
 from types import SimpleNamespace
 from typing import Any, cast
 
+from grida.fx import Ctx, node
+
 from demo_game_tools.kits.screen_art.layouts import SHELL_LAYOUTS
 from demo_game_tools.kits.screen_art.plates import (
     canonicalize_shell_plate,
@@ -37,7 +39,6 @@ from ember_hollow_pipeline.shell.nodes import (
 from ember_hollow_pipeline.shell.nodes import (
     shell_review_schema as answer_schema,
 )
-from gnode import Ctx, node
 from stage_gen.components.video_clip import (
     CLIP_REVIEW_CELL_WIDTH,
     CLIP_REVIEW_COLUMNS,
@@ -184,8 +185,8 @@ async def _admit(ctx: Ctx, data: bytes) -> dict[str, object]:
         expected_seconds=ctx.params["seconds"],
         expected_size=layout.canvas,
         expected_codec=CLIP_SOURCE_CODEC,
-        ffmpeg=ctx.tool("ffmpeg").executable,
-        ffprobe=ctx.tool("ffprobe").executable,
+        ffmpeg=str(ctx.tool("ffmpeg").executable),
+        ffprobe=str(ctx.tool("ffprobe").executable),
     )
 
 
@@ -260,8 +261,8 @@ async def clip_record(ctx: Ctx) -> dict[str, Any]:
         expected_seconds=ctx.params["seconds"],
         expected_size=layout.canvas,
         expected_codec=CLIP_SOURCE_CODEC,
-        ffmpeg=ctx.tool("ffmpeg").executable,
-        ffprobe=ctx.tool("ffprobe").executable,
+        ffmpeg=str(ctx.tool("ffmpeg").executable),
+        ffprobe=str(ctx.tool("ffprobe").executable),
     )
     record = {
         "schema_version": 1,
@@ -293,8 +294,8 @@ async def publish_clip(ctx: Ctx) -> dict[str, Any]:
 
     layout = SHELL_LAYOUTS[ctx.params["layout"]]
     seconds = ctx.params["seconds"]
-    ffmpeg, ffprobe = ctx.tool("ffmpeg").executable, ctx.tool("ffprobe").executable
-    theora = ctx.tool("ffmpeg-theora").executable
+    ffmpeg, ffprobe = str(ctx.tool("ffmpeg").executable), str(ctx.tool("ffprobe").executable)
+    theora = str(ctx.tool("ffmpeg-theora").executable)
     version = await run_process(theora, ["-version"], 60.0)
     encoder = next((line.strip() for line in version.stdout.splitlines() if line.strip()), "")
     if not encoder.lower().startswith("ffmpeg version"):
@@ -341,7 +342,7 @@ async def measure_ending(ctx: Ctx) -> dict[str, Any]:
     """The opening's last published frame against the title backdrop it claims to end on."""
 
     last = await extract_frame_png(
-        ctx.inputs["clip"].path, from_end=True, ffmpeg=ctx.tool("ffmpeg").executable
+        ctx.inputs["clip"].path, from_end=True, ffmpeg=str(ctx.tool("ffmpeg").executable)
     )
     verdict = match_title_verdict(last, ctx.read.bytes("backdrop"))
     return {

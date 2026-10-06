@@ -24,7 +24,7 @@ describe("parseWorkflowExample", () => {
     expect(parsed.exampleId).toBe("slate-swatches");
     expect(parsed.madeBy).toEqual({ kind: "workflow", id: "swatch-sheet" });
     expect(parsed.sourceRuns[0].anchor).toBe("plan.json");
-    expect(parsed.graphKind).toBe("gnode-graph-v2");
+    expect(parsed.graphKind).toBe("fx-graph-v1");
     expect(Object.keys(parsed.nodes)).toEqual(["brief", "draw", "check", "contact-sheet"]);
     expect(parsed.nodes.draw.dependsOn).toEqual(["brief"]);
     expect(parsed.nodes.draw.maxAttempts).toBe(6);

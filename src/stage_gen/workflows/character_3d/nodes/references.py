@@ -12,8 +12,8 @@ import hashlib
 from typing import Any
 
 import jsonschema
+from grida.fx import Ctx, node
 
-from gnode import Ctx, node
 from stage_gen.components.character_3d.io import confined, digest
 from stage_gen.components.character_3d.reference_studio import ReferenceStudio
 from stage_gen.workflows.character_3d.harness import (

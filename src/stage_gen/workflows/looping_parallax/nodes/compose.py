@@ -5,7 +5,8 @@ from __future__ import annotations
 import hashlib
 from typing import Any
 
-from gnode import Ctx, NodeFailure, node
+from grida.fx import Ctx, NodeFailure, node
+
 from stage_gen.components.sideview_layers.parallax import (
     ParallaxLayer,
     ParallaxLayerConstruction,
@@ -30,7 +31,6 @@ _SEAM_OUTCOMES: tuple[ParallaxLayerConstruction, ...] = (
     inputs={"layers": "image{}"},
     params={"specs": list, "canvas": dict, "constructions": dict},
     outputs={"manifest": "json", "preview": "image/png"},
-    view="views/parallax.html",
     version=1,
 )
 def compose(ctx: Ctx) -> dict[str, Any]:

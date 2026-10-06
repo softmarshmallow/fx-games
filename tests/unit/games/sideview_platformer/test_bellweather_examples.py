@@ -98,10 +98,18 @@ def test_steps_place_each_node_once_with_a_title(manifest: ExamplesManifest) -> 
         assert all(title.strip() for title in declaration.labels.values())
 
 
-def test_commands_are_live_gnode_builds_of_a_part(manifest: ExamplesManifest) -> None:
+def test_commands_are_live_fx_builds_of_a_part(manifest: ExamplesManifest) -> None:
     for declaration in manifest.examples:
         words = shlex.split(declaration.command)
-        assert words[:3] == ["gnode", "run", "pipeline/workflow.py:build"], declaration.id
+        assert words[:7] == [
+            "uv",
+            "run",
+            "python",
+            "-m",
+            "grida.fx",
+            "run",
+            "pipeline/workflow.py:build",
+        ], declaration.id
         arguments = dict(
             words[index + 1].split("=", 1) for index, word in enumerate(words) if word == "--arg"
         )
@@ -121,7 +129,7 @@ def test_related_names_product_workflows(manifest: ExamplesManifest) -> None:
         assert set(declaration.related) <= workflows
 
 
-def test_every_example_is_a_record_of_the_build_before_gnode() -> None:
+def test_every_example_is_a_record_of_the_build_before_fx() -> None:
     for kind in ("sideview-platformer-execution-graph-v1", KIND_V2):
         assert currency_of(_example([f"{P}/map_ground.generate"], kind)) == "earlier_version"
 

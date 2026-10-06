@@ -10,8 +10,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from grida.fx import Ctx, node
+
 from demo_game_tools.kits.sideview_actor.motion_geometry import DEFAULT_MOTION_ATLAS_GEOMETRY
-from gnode import Ctx, node
 from iron_petal_unit_pipeline.admission import (
     admit_motion_candidate,
     admit_transparent_sprite,

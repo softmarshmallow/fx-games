@@ -1,7 +1,7 @@
-"""Ember Hollow's gnode project in a scratch folder, and stand-ins for every paid call it makes.
+"""Ember Hollow's FX project in a scratch folder, and stand-ins for every paid call it makes.
 
 A package's references and takes are project files, so each test copies the game's project
-(``gnode.yaml``, the lock, ``pipeline/nodes`` and the builder) and puts a package inside it.
+(``fx.yaml``, the lock, ``pipeline/nodes`` and the builder) and puts a package inside it.
 Paid calls are answered offline with flat drawings that pass the game's real gates,
 recognised by the exact brief the builder sends: the stand-ins compute every brief with the
 same prompt functions the builder calls. An agent's anchor episode submits the measured
@@ -10,7 +10,6 @@ starting point it is offered.
 
 from __future__ import annotations
 
-import asyncio
 import io
 import math
 import re
@@ -20,6 +19,9 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from grida.fx import Answer, InputFile, Plan, RunResult, StandInCall
+from grida.fx import plan as plan_fx
+from grida.fx import run as run_fx
 from PIL import Image, ImageDraw, ImageFilter
 
 from demo_game_collection.resources import bundled_music_path
@@ -28,7 +30,7 @@ from ember_hollow_pipeline import survival_prompts as prompts
 from ember_hollow_pipeline.build import STRIKE_CELL_KINDS
 from ember_hollow_pipeline.models import Package
 from ember_hollow_pipeline.survival_request import load_package
-from gnode import CallRecord, HostServices, Plan, Route, RunOutcome, Store, WorkflowRun, plan_async
+from tests.unit._fx import game_project, schema_of
 from tests.unit._ui_atlas_fixture import ui_sheet
 from tests.unit.games.oblique_survival import _survival_fixture as fixture
 
@@ -46,15 +48,7 @@ def ember_project(tmp_path: Path, *, takes: bool = False) -> Path:
     drawn: a clone does not carry the takes, and a test must not depend on them.
     """
 
-    project = tmp_path / "project"
-    (project / "pipeline").mkdir(parents=True)
-    settings = (GAME / "gnode.yaml").read_text(encoding="utf-8")
-    settings = settings.replace("runs: ../../../out/runs", "runs: runs")
-    settings = settings.replace("cache: ../../../out/gnode-cache", "cache: cache")
-    (project / "gnode.yaml").write_text(settings, encoding="utf-8")
-    shutil.copy(GAME / "gnode.lock", project / "gnode.lock")
-    shutil.copytree(GAME / "pipeline/nodes", project / "pipeline/nodes")
-    shutil.copy(GAME / "pipeline/workflow.py", project / "pipeline/workflow.py")
+    project = game_project("ember_hollow", tmp_path)
     shutil.copytree(GAME / PACKAGE, project / PACKAGE)
     if not takes:
         for document in (project / PACKAGE).glob("*.toml"):
@@ -66,17 +60,7 @@ def ember_project(tmp_path: Path, *, takes: bool = False) -> Path:
 
 
 def plan(project: Path, scope: str = "minimal") -> Plan:
-    return asyncio.run(
-        plan_async(BUILDER, cwd=project, arguments={"package": PACKAGE, "scope": scope})
-    )
-
-
-def first_takes(planned: Plan) -> list[Any]:
-    return [i for i in planned.instances if i.state != "absent" and set(i.takes) <= {1}]
-
-
-def calls_of(planned: Plan) -> Counter[str]:
-    return Counter(route for instance in first_takes(planned) for route in instance.routes)
+    return plan_fx(BUILDER, cwd=project, arguments={"package": PACKAGE, "scope": scope})
 
 
 # ------------------------------------------------------------------------------- drawings
@@ -168,13 +152,11 @@ class EmberStandIns:
     """Every paid call a build of this package makes, answered offline.
 
     ``refuse`` names kinds of answer and how many times each is answered wrongly first, so
-    a test can watch a judge send a take back.
+    a test can watch a judge send a take back. A wrong drawing is an empty one at the asked
+    size: FX admits it, and the game's gate refuses it.
     """
 
-    def __init__(
-        self, store: Store, package: Package, *, refuse: Mapping[str, int] | None = None
-    ) -> None:
-        self.store = store
+    def __init__(self, package: Package, *, refuse: Mapping[str, int] | None = None) -> None:
         self.calls: Counter[str] = Counter()
         self.prompts: dict[str, list[str]] = {}
         self.refuse: Counter[str] = Counter(refuse or {})
@@ -184,19 +166,17 @@ class EmberStandIns:
         self.kinds = _kinds(package)
         self.baselines = {actor.display_name: actor.baseline_key for actor in package.actors}
 
-    def services(self) -> HostServices:
-        return HostServices(
-            store=self.store,
-            capabilities={
-                "image.generate": self._image,
-                "image.edit": self._image,
-                "structured.generate": self._structured,
-                "music.generate": self._audio,
-                "sound.generate": self._audio,
-                "agent.turn": self._agent,
-            },
-            live=True,
-        )
+    def __call__(self, call: StandInCall) -> Answer:
+        if call.capability in ("image.generate", "image.edit"):
+            return self._image(call.request)
+        if call.capability == "structured.generate":
+            return self._structured(call)
+        if call.capability in ("music.generate", "sound.generate"):
+            self._note("audio", str(call.request["prompt"]))
+            return Answer(files={"audio": bundled_music_path().read_bytes()})
+        if call.capability == "agent.turn":
+            return self._agent(call.request)
+        raise AssertionError(f"unexpected call: {call!r}")
 
     def _note(self, kind: str, prompt: str) -> bool:
         self.calls[kind] += 1
@@ -207,7 +187,8 @@ class EmberStandIns:
         return False
 
     def _bytes(self, value: Any) -> bytes:
-        return self.store.file_path(value.digest).read_bytes()
+        assert isinstance(value, InputFile), value
+        return value.read_bytes()
 
     def _draw(self, request: Mapping[str, Any]) -> tuple[str, bytes]:
         prompt = str(request["prompt"])
@@ -245,19 +226,17 @@ class EmberStandIns:
             return kind, sprite(size)
         raise AssertionError(f"no stand-in for this brief: {prompt[:120]!r}")
 
-    async def _image(self, route: Route, request: Mapping[str, Any], take: int) -> CallRecord:
+    def _image(self, request: Mapping[str, Any]) -> Answer:
         kind, data = self._draw(request)
         if self._note(kind, str(request["prompt"])):
-            data = png(Image.new("RGBA", (64, 64), (0, 0, 0, 0)))
-        stored = self.store.put_bytes(data, kind="image/png", name="image")
-        return CallRecord({"image": stored}, None, 0.01)
+            if request.get("background") != "transparent":
+                raise AssertionError(f"an opaque {kind} cannot be answered empty")
+            data = png(Image.new("RGBA", _size(str(request["size"])), (0, 0, 0, 0)))
+        return Answer(files={"image": data})
 
-    async def _structured(self, route: Route, request: Mapping[str, Any], take: int) -> CallRecord:
-        import json
-
-        schema = json.loads(self.store.file_path(request["schema"].digest).read_text())
-        fields = set(schema.get("properties") or {})
-        prompt = str(request["prompt"])
+    def _structured(self, call: StandInCall) -> Answer:
+        fields = set(schema_of(call).get("properties") or {})
+        prompt = str(call.request["prompt"])
         if "consistent_pitch" in fields:
             wrong = self._note("review", prompt)
             answer: dict[str, Any] = {
@@ -293,16 +272,9 @@ class EmberStandIns:
             }
         else:
             raise AssertionError(f"unexpected structured schema: {sorted(fields)}")
-        return CallRecord({}, {"json": answer}, 0.01)
+        return Answer.json(answer)
 
-    async def _audio(self, route: Route, request: Mapping[str, Any], take: int) -> CallRecord:
-        self._note("audio", str(request["prompt"]))
-        audio = self.store.put_bytes(
-            bundled_music_path().read_bytes(), kind="audio/mpeg", name="audio"
-        )
-        return CallRecord({"audio": audio}, None, 0.05)
-
-    async def _agent(self, route: Route, request: Mapping[str, Any], take: int) -> CallRecord:
+    def _agent(self, request: Mapping[str, Any]) -> Answer:
         opening = str(request["messages"][0]["content"])
         prop = re.search(r"one 2D billboard prop: ([a-z_]+),", opening)
         start = re.search(r"anchor \(([0-9.]+), ([0-9.]+)\), radius ([0-9]*\.?[0-9]+)", opening)
@@ -315,8 +287,7 @@ class EmberStandIns:
             "motion_hint": "none",
             "rationale": "The measured starting point sits under the object.",
         }
-        calls = [{"id": "stand-in", "name": "submit", "arguments": answer}]
-        return CallRecord({}, {"text": "", "tool_calls": calls}, 0.0)
+        return Answer.submit(**answer)
 
 
 def _kinds(package: Package) -> dict[str, tuple[str, Any]]:
@@ -379,33 +350,17 @@ def _kinds(package: Package) -> dict[str, tuple[str, Any]]:
     return kinds
 
 
-def stand_ins_for(project: Path, scope: str = "minimal", **options: Any) -> EmberStandIns:
-    planned = plan(project, scope)
-    assert planned.ok, planned.problems
-    return EmberStandIns(planned.planner.store, load_package(project / PACKAGE), **options)
+def stand_ins_for(project: Path, **options: Any) -> EmberStandIns:
+    return EmberStandIns(load_package(project / PACKAGE), **options)
 
 
 def run(
     project: Path, stand_ins: EmberStandIns, scope: str = "minimal", name: str = "run"
-) -> RunOutcome:
-    planned = plan(project, scope)
-    assert planned.ok, planned.problems
-    stand_ins.store = planned.planner.store
-    return asyncio.run(
-        WorkflowRun(planned, run_dir=project / name, services=stand_ins.services()).run()
+) -> RunResult:
+    return run_fx(
+        BUILDER,
+        cwd=project,
+        arguments={"package": PACKAGE, "scope": scope},
+        run_dir=project / name,
+        stand_in=stand_ins,
     )
-
-
-def deliver(store: Store, outcome: RunOutcome, folder: Path) -> Path:
-    for key, file in outcome.outputs["package"].items:
-        target = folder / key
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(store.file_path(file.digest), target)
-    return folder
-
-
-def failures(outcome: RunOutcome) -> dict[str, str]:
-    return {
-        step: str(getattr(outcome.results.get(step), "error", None) or "")
-        for step in outcome.failed
-    } or {"stopped": str(outcome.stopped)}

@@ -11,11 +11,12 @@ from __future__ import annotations
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from grida.fx import Ctx, node
+
 from bellweather_pipeline.bindings import coverage_matrix, gameplay_bindings
 from bellweather_pipeline.input import resolve_game_package
 from bellweather_pipeline.prepared_manifest import assemble_prepared_runtime, runtime_artifact_paths
 from bellweather_pipeline.validation import ResolvedGamePackage
-from gnode import Ctx, node
 
 
 def _lay_out(root: Path, files: dict[str, Any]) -> None:

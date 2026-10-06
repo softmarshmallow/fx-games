@@ -12,8 +12,8 @@ import json
 from typing import Any
 
 import jsonschema
+from grida.fx import Ctx, node
 
-from gnode import Ctx, node
 from stage_gen.components.character_3d.studio import Studio
 from stage_gen.workflows.character_3d.harness import (
     PRODUCE_SCHEMA,

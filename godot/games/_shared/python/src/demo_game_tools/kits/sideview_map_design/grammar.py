@@ -31,7 +31,6 @@ from dataclasses import dataclass
 
 from demo_game_tools.kits.sideview_map_design.capabilities import PlatformerProfile
 from demo_game_tools.kits.sideview_map_design.design import Climbable, DesignedMap
-from gnode import StructuredOutputSchema
 
 
 @dataclass(frozen=True)
@@ -89,25 +88,21 @@ def _stacks_by_jumping(profile: PlatformerProfile) -> bool:
 
 
 def _run_properties(profile: PlatformerProfile) -> dict[str, object]:
-    return {"len": {"type": "integer", "minimum": 2}}
+    return {"len": {"type": "integer"}}
 
 
 def _stairs_properties(profile: PlatformerProfile) -> dict[str, object]:
     return {
-        "steps": {"type": "integer", "minimum": 1},
-        "step_h": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": profile.movement.max_step_up_tiles,
-        },
-        "tread": {"type": "integer", "minimum": 1},
+        "steps": {"type": "integer"},
+        "step_h": {"type": "integer"},
+        "tread": {"type": "integer"},
         "dir": {"type": "string", "enum": ["up", "down"]},
     }
 
 
 def _slope_properties(profile: PlatformerProfile) -> dict[str, object]:
     return {
-        "rise": {"type": "integer", "minimum": 2},
+        "rise": {"type": "integer"},
         "grade": {"type": "string", "enum": ["gentle", "steep"]},
         "dir": {"type": "string", "enum": ["up", "down"]},
     }
@@ -115,44 +110,35 @@ def _slope_properties(profile: PlatformerProfile) -> dict[str, object]:
 
 def _hollow_properties(profile: PlatformerProfile) -> dict[str, object]:
     return {
-        "width": {"type": "integer", "minimum": 2},
-        "depth": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": profile.movement.max_step_up_tiles,
-        },
+        "width": {"type": "integer"},
+        "depth": {"type": "integer"},
     }
 
 
 def _hop_chain_properties(profile: PlatformerProfile) -> dict[str, object]:
     movement = profile.movement
     return {
-        "count": {"type": "integer", "minimum": 2},
+        "count": {"type": "integer"},
         "jump_rise": {"type": "integer", "enum": sorted(movement.jump_reach)},
-        "gap": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": max(movement.jump_reach.values(), default=1),
-        },
-        "platform_width": {"type": "integer", "minimum": 2},
+        "gap": {"type": "integer"},
+        "platform_width": {"type": "integer"},
         "dir": {"type": "string", "enum": ["up", "down"]},
     }
 
 
 def _shelves_properties(profile: PlatformerProfile) -> dict[str, object]:
-    movement = profile.movement
     return {
-        "tiers": {"type": "integer", "minimum": 2, "maximum": 8},
-        "decks": {"type": "integer", "minimum": 2},
-        "platform_width": {"type": "integer", "minimum": profile.geometry.shelf_min_width_tiles},
-        "gap": {"type": "integer", "minimum": 1, "maximum": movement.level_gap_tiles},
+        "tiers": {"type": "integer"},
+        "decks": {"type": "integer"},
+        "platform_width": {"type": "integer"},
+        "gap": {"type": "integer"},
         "lean": {"type": "string", "enum": ["left", "right"]},
     }
 
 
 def _perch_properties(profile: PlatformerProfile) -> dict[str, object]:
     return {
-        "platform_width": {"type": "integer", "minimum": 2},
+        "platform_width": {"type": "integer"},
         "climb_rise": {"type": "integer", "enum": sorted(profile.movement.climbable_rise_tiles)},
         "variant": {"type": "string", "enum": list(profile.climbable_variants)},
     }
@@ -160,7 +146,7 @@ def _perch_properties(profile: PlatformerProfile) -> dict[str, object]:
 
 def _tower_properties(profile: PlatformerProfile) -> dict[str, object]:
     return {
-        "storeys": {"type": "integer", "minimum": 2, "maximum": 6},
+        "storeys": {"type": "integer"},
         **_perch_properties(profile),
     }
 
@@ -288,10 +274,12 @@ def _chunk_shapes(profile: PlatformerProfile) -> list[dict[str, object]]:
 
       * the discriminator is ``{"type": "string", "enum": [kind]}`` and never ``{"const": kind}``
         -- the provider rejects ``const`` with ``invalid_json_schema``.
-      * ``canonicalize_strict_json_schema`` strips ``minimum``/``maximum``/``minItems`` and forces
-        ``required`` to every declared property plus ``additionalProperties: false``. Numeric
-        bounds here are therefore ADVISORY: the validator in ``design.check`` is authoritative.
-        Because every declared property becomes required, a property the model may legitimately
+      * FX sends a strict form and checks answers against the schema as written, so it states
+        shape only: no ``minimum``/``maximum``/``minItems``. A bound here would turn an answer
+        out of bounds into a failed call with no feedback; ``design.check`` owns every bound and
+        refuses with feedback the next draft reads. Strict output also makes ``required`` every
+        declared property, with ``additionalProperties: false``. Because every declared property
+        is required, a property the model may legitimately
         omit cannot be declared -- which is why ``storeys`` lives only on the ``tower`` branch
         rather than being an optional field of a shared perch/tower shape. A separate branch is
         how optionality is legitimately expressed under strict output.
@@ -311,9 +299,12 @@ def _chunk_shapes(profile: PlatformerProfile) -> list[dict[str, object]]:
     return [shape(word) for word in _profile_words(profile)]
 
 
-def build_chunk_schema(profile: PlatformerProfile) -> StructuredOutputSchema:
-    low, high = profile.geometry.ground_depth_tiles
-    json_schema: dict[str, object] = {
+def build_chunk_schema(profile: PlatformerProfile) -> dict[str, object]:
+    """The answer's JSON Schema. FX names the response format after its ``title``."""
+
+    return {
+        "title": "composed_map",
+        "description": "A map composed as a sequence of pattern chunks.",
         "type": "object",
         "additionalProperties": False,
         "required": ["design_notes", "start_height_tiles", "chunks"],
@@ -322,19 +313,10 @@ def build_chunk_schema(profile: PlatformerProfile) -> StructuredOutputSchema:
                 "type": "string",
                 "description": "Plan the composition before writing the sentence.",
             },
-            "start_height_tiles": {"type": "integer", "minimum": low, "maximum": high},
-            "chunks": {
-                "type": "array",
-                "minItems": 3,
-                "items": {"anyOf": _chunk_shapes(profile)},
-            },
+            "start_height_tiles": {"type": "integer"},
+            "chunks": {"type": "array", "items": {"anyOf": _chunk_shapes(profile)}},
         },
     }
-    return StructuredOutputSchema(
-        name="composed_map",
-        description="A map composed as a sequence of pattern chunks.",
-        json_schema=json_schema,
-    )
 
 
 def build_chunk_prompt(profile: PlatformerProfile, columns: int) -> str:

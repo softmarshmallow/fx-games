@@ -6,10 +6,15 @@ and ``tests/contract/test_workflow_registry.py`` report every disagreement at on
 
 from __future__ import annotations
 
+import json
 import re
 import shlex
+import subprocess
+import sys
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
+from functools import cache
+from pathlib import Path
 from typing import Any
 
 from stage_gen.examples import Currency, DisplayNames, FiguresLedger, WorkflowExample
@@ -341,9 +346,9 @@ def readme(workflows: Sequence[LoadedWorkflow], text: str) -> list[str]:
 
 
 def try_commands(workflow: LoadedWorkflow) -> list[str]:
-    """Each ``[try]`` command must be a ``gnode`` command that parses with gnode's own
-    argument parser; a ``plan`` or ``run`` command's own flags must be the workflow's inputs.
-    A command may start with environment assignments, such as a live opt-in."""
+    """Each ``[try]`` command must be ``[uv run] python -m grida.fx <verb> ...`` and parse
+    against FX's own help; a ``plan`` or ``run`` command's other flags must be the workflow's
+    inputs. A command may start with environment assignments."""
     manifest = workflow.discovered.manifest
     if manifest.try_ is None:
         return []
@@ -352,49 +357,163 @@ def try_commands(workflow: LoadedWorkflow) -> list[str]:
         words = shlex.split(command)
         while words and ENVIRONMENT.match(words[0]):
             words = words[1:]
-        if words[:1] != ["gnode"]:
-            problems.append(f"{manifest.id}: [try] command does not start with gnode")
+        if words[:2] == ["uv", "run"]:
+            words = words[2:]
+        if tuple(words[: len(FX_PROGRAM)]) != FX_PROGRAM:
+            problems.append(f"{manifest.id}: [try] command does not start with python -m grida.fx")
             continue
-        problems += [f"{manifest.id}: [try] {p}" for p in gnode_command_problems(words[1:])]
+        problems += [
+            f"{manifest.id}: [try] {p}" for p in fx_command_problems(words[len(FX_PROGRAM) :])
+        ]
     return problems
 
 
-def gnode_command_problems(words: Sequence[str]) -> list[str]:
-    """What is wrong with one ``gnode`` command line (its words after ``gnode``): it must
-    parse, and a ``plan`` or ``run`` of an installed workflow may add only that workflow's
-    own input flags."""
-    import contextlib
-    import io
+#: How a command runs FX: the engine's own command line, through the interpreter.
+FX_PROGRAM = ("python", "-m", "grida.fx")
+#: The verbs whose unknown flags may be the target workflow's inputs.
+_INPUT_VERBS = frozenset({"plan", "run"})
+_OPTION = re.compile(r"^\s+(?:(?P<short>-\w),\s+)?(?P<long>--[\w-]+)(?:\s+<(?P<value>[^>]+)>)?")
+_ARGUMENT = re.compile(r"^\s+(?P<open>[<\[])(?P<name>[^>\]]+)[>\]](?P<many>\.\.\.)?")
+_COMMAND = re.compile(r"^\s+(?P<name>[a-z][a-z-]*)\s")
 
-    from gnode import cli as gnode_cli
 
-    with contextlib.redirect_stderr(io.StringIO()):
-        try:
-            args, rest = gnode_cli.build_parser().parse_known_args(list(words))
-        except SystemExit:
-            return [f"gnode {shlex.join(words)} does not parse"]
-    if not rest:
+@dataclass(frozen=True, slots=True)
+class _Verb:
+    """One verb's command line, as its ``--help`` states it."""
+
+    #: Each option, short and long, to whether it takes a value.
+    options: Mapping[str, bool]
+    #: Each positional argument: required, and whether it repeats.
+    arguments: tuple[tuple[bool, bool], ...]
+
+
+def _sections(text: str) -> dict[str, list[str]]:
+    sections: dict[str, list[str]] = {}
+    current: list[str] | None = None
+    for line in text.splitlines():
+        if line and not line[0].isspace() and line.endswith(":"):
+            current = sections.setdefault(line[:-1], [])
+        elif current is not None and line.strip():
+            current.append(line)
+    return sections
+
+
+@cache
+def _fx_help(*verb: str) -> str:
+    done = subprocess.run(
+        [sys.executable, "-m", "grida.fx", *verb, "--help"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if done.returncode != 0:
+        raise RuntimeError(f"python -m grida.fx {' '.join(verb)} --help: {done.stderr.strip()}")
+    return done.stdout
+
+
+@cache
+def _verbs() -> frozenset[str]:
+    commands = _sections(_fx_help()).get("Commands", [])
+    return frozenset(
+        match["name"] for line in commands if (match := _COMMAND.match(line)) and line
+    ) - {"help"}
+
+
+@cache
+def _verb(name: str) -> _Verb:
+    sections = _sections(_fx_help(name))
+    options: dict[str, bool] = {}
+    for line in sections.get("Options", []):
+        if (match := _OPTION.match(line)) is not None:
+            takes = match["value"] is not None
+            options[match["long"]] = takes
+            if match["short"]:
+                options[match["short"]] = takes
+    arguments = tuple(
+        (match["open"] == "<", match["many"] is not None)
+        for line in sections.get("Arguments", [])
+        if (match := _ARGUMENT.match(line)) is not None
+    )
+    return _Verb(options, arguments)
+
+
+def fx_command_problems(words: Sequence[str]) -> list[str]:
+    """What is wrong with one FX command line, given its words after ``python -m grida.fx``:
+    its verb, options and arguments must be what ``python -m grida.fx <verb> --help`` states,
+    and a ``plan`` or ``run`` of a first-party workflow may add that workflow's input flags."""
+    shown = f"python -m grida.fx {shlex.join(words)}".rstrip()
+    if not words:
+        return [f"{shown} names no verb"]
+    if list(words) in (["--help"], ["-h"], ["--version"], ["-V"]):
         return []
-    inputs = _input_names(str(getattr(args, "target", "")))
-    if args.verb not in {"plan", "run", "expand", "identity", "price"} or inputs is None:
-        return [f"gnode {shlex.join(words)} has unknown arguments {rest}"]
-    flags = {f"--{name.replace('_', '-')}" for name in inputs}
-    unknown = [word for word in rest if word.startswith("--") and word.split("=")[0] not in flags]
-    return [f"gnode {shlex.join(words)} has unknown flags {unknown}"] if unknown else []
+    verb_name, rest = words[0], list(words[1:])
+    if verb_name not in _verbs():
+        return [f"{shown}: {verb_name} is not an FX verb"]
+    verb = _verb(verb_name)
+    positional: list[str] = []
+    unknown: list[str] = []
+    problems: list[str] = []
+    index = 0
+    while index < len(rest):
+        word = rest[index]
+        index += 1
+        if word == "--":
+            positional += rest[index:]
+            break
+        if not word.startswith("-") or word == "-":
+            positional.append(word)
+            continue
+        option, equals, _ = word.partition("=")
+        if option not in verb.options:
+            unknown.append(option)
+            # An input flag takes its value as the next word, unless it was joined by "=".
+            if not equals and index < len(rest) and not rest[index].startswith("--"):
+                index += 1
+            continue
+        if verb.options[option] and not equals:
+            if index >= len(rest):
+                problems.append(f"{shown}: {option} needs a value")
+            index += 1
+        elif not verb.options[option] and equals:
+            problems.append(f"{shown}: {option} takes no value")
+    required = sum(1 for needed, _ in verb.arguments if needed)
+    repeats = any(many for _, many in verb.arguments)
+    if len(positional) < required:
+        problems.append(f"{shown}: {verb_name} needs {required} argument(s)")
+    elif not repeats and len(positional) > len(verb.arguments):
+        problems.append(f"{shown}: unexpected arguments {positional[len(verb.arguments) :]}")
+    if unknown:
+        inputs = _input_names(positional[0]) if verb_name in _INPUT_VERBS and positional else None
+        flags = {f"--{name.replace('_', '-')}" for name in inputs or ()}
+        if strangers := [option for option in unknown if option not in flags]:
+            problems.append(f"{shown} has unknown flags {strangers}")
+    return problems
 
 
 def _input_names(target: str) -> list[str] | None:
-    """A published workflow's input names, or None for a target that is not one."""
-    import yaml
+    """The input names of a workflow file or a first-party workflow id, from FX's schema of
+    its inputs; None for any other target."""
+    from ._fx import workflow_file
 
-    from gnode import describe
-
-    try:
-        path = describe(target).path
-    except (ValueError, TypeError, OSError):
+    if target.endswith((".yaml", ".yml")):
+        path = Path(target).resolve()
+        if not path.is_file():
+            return None
+    else:
+        try:
+            path = workflow_file(target)
+        except ValueError:
+            return None
+    done = subprocess.run(
+        [sys.executable, "-m", "grida.fx", "schema", path.name],
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=path.parent,
+    )
+    if done.returncode != 0:
         return None
-    document = yaml.safe_load(path.read_text(encoding="utf-8"))
-    return list(document.get("inputs") or {})
+    return list(json.loads(done.stdout).get("properties") or {})
 
 
 def drift(workflows: Sequence[LoadedWorkflow], context: CheckContext) -> list[str]:
@@ -413,11 +532,12 @@ def drift(workflows: Sequence[LoadedWorkflow], context: CheckContext) -> list[st
 
 
 __all__ = [
+    "FX_PROGRAM",
     "CheckContext",
-    "gnode_command_problems",
     "LoadedExample",
     "LoadedWorkflow",
     "drift",
+    "fx_command_problems",
     "game_example",
     "readme_table",
 ]

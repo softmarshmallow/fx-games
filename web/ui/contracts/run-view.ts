@@ -1,10 +1,10 @@
 // Parser for the derived execution-view.json a run view is read from: the one a run
-// persists, or the one `gnode view` keeps in its cache. Wire fields are lower_snake_case;
+// persists, or the one `scripts/view.py` keeps in its cache. Wire fields are lower_snake_case;
 // this adapter is the one place they become camelCase runtime shapes.
 //
-// Any `*-execution-view-v1` envelope at schema 3 is read, and so is gnode's own
-// `gnode-run-view-v1`, which a view joined from a plain gnode plan carries: the engine
-// owns the envelope, so pipeline and game identities are not a registry here. The header
+// Any `*-execution-view-v1` envelope at schema 3 is read, and so is Stage Gen's own
+// `stage-gen-run-view-v1`, which a view projected from an FX run folder carries: the
+// projection owns the envelope, so pipeline and game identities are not a registry here. The header
 // fields a producer adds beside the envelope become the view's subject. Versioning is
 // hard-drop by contract: an unknown envelope is refused with a re-derive instruction,
 // never migrated. The view is derived state — the plan, trace, and sidecars stay
@@ -12,8 +12,8 @@
 
 import { artifactReference, parseArtifactPreview, parseLegacyMotion, type ArtifactPreview, type LegacyMotionPreview } from "./artifact-preview";
 
-/** gnode's own view kind, carried by a view joined from a plain gnode plan and trace. */
-export const GNODE_RUN_VIEW_KIND = "gnode-run-view-v1";
+/** Stage Gen's own view kind, carried by a view projected from an FX run's plan and record. */
+export const RUN_VIEW_KIND = "stage-gen-run-view-v1";
 
 /** Every graph document names its view `<word>-execution-view-v1`. */
 const EXECUTION_VIEW_KIND_PATTERN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*-execution-view-v1$/;
@@ -21,14 +21,14 @@ const EXECUTION_VIEW_KIND_PATTERN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*-execution-vi
 export const EXECUTION_VIEW_SCHEMA_VERSION = 3;
 
 export const EXECUTION_VIEW_REFUSAL =
-  "unsupported execution view: expected a *-execution-view-v1 or gnode-run-view-v1 " +
+  "unsupported execution view: expected a *-execution-view-v1 or stage-gen-run-view-v1 " +
   `document at schema_version ${EXECUTION_VIEW_SCHEMA_VERSION}; derive it again ` +
-  "(gnode view keeps a workflow run's view current)";
+  "(scripts/view.py keeps a workflow run's view current)";
 
 export function isExecutionViewKind(value: unknown): value is string {
   return (
     typeof value === "string" &&
-    (value === GNODE_RUN_VIEW_KIND || EXECUTION_VIEW_KIND_PATTERN.test(value))
+    (value === RUN_VIEW_KIND || EXECUTION_VIEW_KIND_PATTERN.test(value))
   );
 }
 
@@ -123,8 +123,8 @@ export interface ExecutionViewArtifact {
 }
 
 /**
- * Which dedicated view a renderer gives a node. A closed engine vocabulary
- * (gnode's ViewArchetype): one view per archetype, and a new archetype is a
+ * Which dedicated view a renderer gives a node. A closed vocabulary
+ * (stage_gen.runview's ViewArchetype): one view per archetype, and a new archetype is a
  * renderer feature rather than a recipe detail.
  */
 export type ViewArchetype =

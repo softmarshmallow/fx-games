@@ -1,0 +1,8 @@
+# The movie-sprite workflow's home. Its node modules import Stage Gen's movie sprite
+# component, so that counts as its source: fx.lock notices when it changes under a version.
+fx: project/v1
+runs: ../../../../out/runs
+cache: ../../../../out/fx-cache
+sources: [stage_gen]
+routes:
+  video.generate: google/gemini-omni-flash/v1.1/image-to-video@fal

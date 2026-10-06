@@ -48,11 +48,11 @@ const TEMPLATE = `views/${"a".repeat(64)}.html`;
 
 function viewContexts(nodeId: string) {
   return {
-    kind: "gnode-view-contexts-v1",
+    kind: "stage-gen-view-contexts-v1",
     view_origins: [],
     views: [
       {
-        kind: "gnode-view-context-v1",
+        kind: "stage-gen-view-context-v1",
         scope: "node",
         node_id: nodeId,
         template: TEMPLATE,
@@ -145,7 +145,7 @@ describe("run view route", () => {
     const document = pipelineExecutionViewFixture();
     const run = await writeFiles(`run-view-bad-views-${process.pid}`, {
       "execution-view.json": document,
-      "view-contexts.json": { kind: "gnode-view-contexts-v0", views: [] },
+      "view-contexts.json": { kind: "stage-gen-view-contexts-v0", views: [] },
     });
     expect(await page(run)).toContain("unsupported view contexts");
   });
@@ -236,12 +236,12 @@ describe("run view route", () => {
     expect(markup).toContain("scale(1)");
   });
 
-  test("draws a nested run from the view gnode view derived into its cache", async () => {
+  test("draws a nested run from the view scripts/view.py derived into its cache", async () => {
     const run = runOf("review~yuzu~run-01");
     const runDir = runDirFor(run);
     cleanup.push(runDir);
     await mkdir(runDir, { recursive: true });
-    await writeFile(path.join(runDir, "plan.json"), "{}", "utf8");
+    await writeFile(path.join(runDir, "plan.json"), JSON.stringify({ kind: "fx-graph-v1" }), "utf8");
     await writeFile(path.join(runDir, "events.jsonl"), "", "utf8");
     const cached = path.join(process.env.STAGE_GEN_VIEW_CACHE ?? "", viewKey(runDir));
     cleanup.push(cached);
@@ -260,18 +260,18 @@ describe("run view route", () => {
     });
     const markup = await page(run);
     expect(markup).toContain("No run view");
-    expect(markup).toContain("the gnode run that built it");
+    expect(markup).toContain("the FX run that built it");
     expect(markup).toContain("game run");
   });
 
   test("a run without a view says so and how a view is made", async () => {
     const run = await writeFiles("prepared-01", {
-      "plan.json": { gnode: "plan/v1" },
+      "plan.json": { kind: "fx-graph-v1" },
       "events.jsonl": "",
     });
     const markup = await page(run);
     expect(markup).toContain("has no view yet");
-    expect(markup).toContain("gnode view");
+    expect(markup).toContain("scripts/view.py");
     // Asked for the graph, a run without a view refuses instead of guessing.
     expect(await page(run, "graph")).toContain("no execution view to draw");
   });
@@ -287,7 +287,7 @@ describe("run view route", () => {
 
     const markup = await page(run);
     expect(markup).toContain("derive it again");
-    expect(markup).toContain("gnode view keeps a workflow run");
+    expect(markup).toContain("scripts/view.py keeps a workflow run");
     expect(markup).not.toContain("package-resolve");
   });
 });

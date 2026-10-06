@@ -1,8 +1,8 @@
 """Bellweather's asset build: the game's package, read by the game, written as steps.
 
-    gnode plan pipeline/workflow.py:build --arg package=inputs/default
-    gnode run  pipeline/workflow.py:build --arg package=inputs/default --live --max-usd 175 \\
-        --deliver package=../../../out/bellweather/{key}
+    uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs/default
+    uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs/default \\
+        --live --max-usd 175 --deliver package=../../../out/bellweather/{key}
 
 The game's reader resolves its own TOML package, unchanged, and this builder writes one group
 of steps per asset. Each map composes its terrain (a model judged by the game's validator,
@@ -18,7 +18,7 @@ files; the whole build (``all``, the default) ends in one step that lays every p
 out at its runtime path and writes ``manifest.json``. ``godot --path godot/games/bellweather
 -- --run <dir>`` plays the delivered folder.
 
-The package must sit inside this project (the folder holding ``gnode.yaml``): its authored
+The package must sit inside this project (the folder holding ``fx.yaml``): its authored
 references are project files, read by content.
 """
 
@@ -29,6 +29,8 @@ import json
 import re
 from pathlib import Path
 from typing import Any
+
+from grida.fx import Group, StepRef, Workflow
 
 from bellweather_pipeline.briefs import (
     MAP_REVIEW_SYSTEM,
@@ -85,7 +87,6 @@ from demo_game_tools.steps.rebase import add_rebase_steps
 from demo_game_tools.steps.soundtrack import add_track_steps
 from demo_game_tools.steps.terrain_atlas import add_atlas_steps
 from demo_game_tools.steps.ui_atlas import add_ui_sheet_steps
-from gnode import Group, StepRef, Workflow
 from stage_gen.components.sideview_layers.publish import LayerGate
 
 #: The game's node modules, as project paths.
@@ -123,9 +124,9 @@ def _name(value: str) -> str:
 
 def _project_root(package: Path) -> Path:
     for folder in (package, *package.parents):
-        if (folder / "gnode.yaml").is_file():
+        if (folder / "fx.yaml").is_file():
             return folder
-    raise ValueError(f"{package} is not inside a gnode project")
+    raise ValueError(f"{package} is not inside an FX project")
 
 
 def _paint(
@@ -145,9 +146,9 @@ def _paint(
     return group.step(
         "generate",
         title=title,
-        uses="gnode/image.edit@1" if pictures else "gnode/image.generate@1",
+        uses="fx/image.edit@1" if pictures else "fx/image.generate@1",
         with_=with_,
-        requires=["transparent_background"],
+        requires=["alpha"],
         view=True,
     )
 
@@ -188,7 +189,7 @@ class _Build:
         group.step(
             "review",
             title=title,
-            uses="gnode/structured.generate@1",
+            uses="fx/structured.generate@1",
             with_={
                 "prompt": prompt,
                 "system": system,
@@ -274,7 +275,7 @@ class _Build:
         design = part.step(
             "design",
             title="Compose the level",
-            uses="gnode/structured.generate@1",
+            uses="fx/structured.generate@1",
             with_={
                 "prompt": f"{intent}{_TERRAIN_FEEDBACK}\n\nCompose the map.",
                 "system": build_chunk_prompt(profile, profile.geometry.columns),
@@ -817,7 +818,7 @@ class _Build:
         return wf.step(
             "files",
             title="Gather what this part published",
-            uses="gnode/package@1",
+            uses="fx/package@1",
             with_={"files": dict(sorted(self.published.items()))},
         )
 

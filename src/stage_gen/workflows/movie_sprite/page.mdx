@@ -23,11 +23,11 @@ Plan it offline, generate one eight-second 720p take with a $2 limit, and show m
 <Shell>
 
 ```sh
-uv run gnode run movie-sprite --inputs take.yaml --live --max-usd 2
+uv run python -m grida.fx run movie-sprite --inputs take.yaml --live --max-usd 2
 ```
 
 ```sh
-uv run gnode run movie-sprite --inputs take.yaml --live --max-usd 2 \
+uv run python -m grida.fx run movie-sprite --inputs take.yaml --live --max-usd 2 \
   --deliver loop=sprites/idle.mkv --deliver canonical=sprites/idle.png
 ```
 
@@ -149,7 +149,7 @@ Start with `finish.json`:
 Draw the take with a spending ceiling:
 
 ```sh
-uv run gnode run movie-sprite --inputs take.yaml --live --max-usd 2
+uv run python -m grida.fx run movie-sprite --inputs take.yaml --live --max-usd 2
 ```
 
 The application binds fal's Gemini Omni Flash 1.1 image-to-video route. It draws whole seconds
@@ -202,7 +202,7 @@ spec: src/stage_gen/workflows/portrait_motion/inputs/face-four-card.json
 ```
 
 ```sh
-uv run gnode plan portrait-motion --inputs face.yaml
+uv run python -m grida.fx plan portrait-motion --inputs face.yaml
 ```
 
 The portrait-motion workflow's input contracts, generation, validation, budgets and outputs are its

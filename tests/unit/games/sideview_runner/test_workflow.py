@@ -1,6 +1,6 @@
-"""Iron Petal Unit's builder through gnode, offline: the plan, a whole run, resume, the package.
+"""Iron Petal Unit's builder through FX, offline: the plan, a whole run, resume, the package.
 
-Each test copies the game's gnode project (``gnode.yaml``, the lock, ``pipeline/nodes`` and
+Each test copies the game's FX project (``fx.yaml``, the lock, ``pipeline/nodes`` and
 the builder) into a scratch folder and authors a runner package inside it, because a package's
 references are project files. Paid calls are stand-ins that paint what the game's judges
 admit: a cut-out at the concept canvas, one figure per motion cell, a sky that already loops,
@@ -10,7 +10,7 @@ The steps they exercise are described in `godot/games/iron_petal_unit/docs/runne
 
 from __future__ import annotations
 
-import asyncio
+import hashlib
 import io
 import json
 import shutil
@@ -21,22 +21,13 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
+from grida.fx import Answer, CallRefused, FxError, Plan, RunResult, StandInCall
+from grida.fx import plan as plan_fx
+from grida.fx import run as run_fx
 from PIL import Image, ImageDraw
 
 from demo_game_tools.kits.sideview_actor.motion_geometry import DEFAULT_MOTION_ATLAS_GEOMETRY
 from demo_game_tools.kits.sideview_terrain import PAINT_CANVAS_SIZE, terrain_atlas_paint_target
-from gnode import (
-    CallRecord,
-    CallRefused,
-    HostServices,
-    Plan,
-    PlanError,
-    Route,
-    RunOutcome,
-    Store,
-    WorkflowRun,
-    plan_async,
-)
 from iron_petal_unit_pipeline.audio.realizations import (
     GeneratedClipRealization,
     SpokenLineRealization,
@@ -45,6 +36,16 @@ from iron_petal_unit_pipeline.content import declared_motion_states
 from iron_petal_unit_pipeline.manifest import MANIFEST_KIND
 from iron_petal_unit_pipeline.runner_request import resolve_runner_package
 
+from ..._fx import (
+    by_step,
+    ceiling,
+    deliver,
+    failures,
+    finished,
+    first_takes,
+    game_project,
+    instances,
+)
 from ..._runner_fixture import (
     RUNNER_AVATAR,
     RUNNER_AVATAR_NO_SLIDE,
@@ -62,18 +63,10 @@ FFMPEG = shutil.which("ffmpeg")
 needs_ffmpeg = pytest.mark.skipif(FFMPEG is None, reason="the audio judges measure with ffmpeg")
 
 
-def game_project(tmp_path: Path, **options: Any) -> Path:
-    """The game's gnode project in a scratch folder, with a runner package in ``runner-only``."""
+def runner_project(tmp_path: Path, **options: Any) -> Path:
+    """The game's FX project in a scratch folder, with a runner package in ``runner-only``."""
 
-    project = tmp_path / "project"
-    (project / "pipeline").mkdir(parents=True)
-    settings = (GAME / "gnode.yaml").read_text(encoding="utf-8")
-    settings = settings.replace("runs: ../../../out/runs", "runs: runs")
-    settings = settings.replace("cache: ../../../out/gnode-cache", "cache: cache")
-    (project / "gnode.yaml").write_text(settings, encoding="utf-8")
-    shutil.copy(GAME / "gnode.lock", project / "gnode.lock")
-    shutil.copytree(GAME / "pipeline/nodes", project / "pipeline/nodes")
-    shutil.copy(GAME / "pipeline/workflow.py", project / "pipeline/workflow.py")
+    project = game_project("iron_petal_unit", tmp_path)
     runner_only_package(project, **options)
     return project
 
@@ -92,15 +85,19 @@ def structural(project: Path) -> Path:
 
 
 def plan(project: Path, package: str = "runner-only") -> Plan:
-    return asyncio.run(plan_async(BUILDER, cwd=project, arguments={"package": package}))
+    return plan_fx(BUILDER, cwd=project, arguments={"package": package})
 
 
-def first_takes(planned: Plan) -> list[Any]:
-    return [i for i in planned.instances if i.state != "absent" and set(i.takes) <= {1}]
+def inputs_from(row: dict[str, Any]) -> list[str]:
+    """The instances a row reads, needs or waits on."""
+
+    return sorted({*row["reads"], *row["needs"], *row["waiting_on"]} - {row["id"]})
 
 
-def by_step(planned: Plan) -> dict[str, Any]:
-    return {instance.step: instance for instance in first_takes(planned)}
+def file_value(path: Path) -> dict[str, str]:
+    """A file as a plan's ``with`` names it: by its digest."""
+
+    return {"file": hashlib.sha256(path.read_bytes()).hexdigest()}
 
 
 # ------------------------------------------------------------------------------- stand-ins
@@ -202,13 +199,11 @@ class StandIns:
 
     def __init__(
         self,
-        store: Store,
         states: tuple[str, ...],
         *,
         refuse: str | None = None,
         script: Mapping[str, list[bytes]] | None = None,
     ) -> None:
-        self.store = store
         self.states = states
         self.refuse = refuse
         #: Payloads a capability answers with, in order, before its default.
@@ -217,24 +212,24 @@ class StandIns:
         self._atlas: bytes | None = None
         self._audio: dict[tuple[float, float], bytes] = {}
 
-    def services(self) -> HostServices:
-        return HostServices(
-            store=self.store,
-            capabilities={
-                "image.generate": self._image,
-                "image.edit": self._image,
-                "structured.generate": self._structured,
-                "music.generate": self._music,
-                "sound.generate": self._sound,
-                "speech.generate": self._speech,
-            },
-            live=True,
-        )
+    def __call__(self, call: StandInCall) -> Answer:
+        request = call.request
+        if call.capability in ("image.generate", "image.edit"):
+            return self._image(request)
+        if call.capability == "structured.generate":
+            return self._structured()
+        if call.capability == "music.generate":
+            self.calls["track"] += 1
+            return Answer(files={"audio": self._clip(16.0)})
+        if call.capability == "sound.generate":
+            return self._sound(request)
+        if call.capability == "speech.generate":
+            self.calls["line"] += 1
+            scripted = self.script.get("speech")
+            return Answer(files={"audio": scripted.pop(0) if scripted else self._clip(1.0)})
+        raise AssertionError(f"unexpected call: {call!r}")
 
-    def _put(self, data: bytes, kind: str) -> Any:
-        return self.store.put_bytes(data, kind=kind, name=kind.split("/", 1)[0])
-
-    async def _image(self, route: Route, request: Mapping[str, Any], take: int) -> CallRecord:
+    def _image(self, request: Mapping[str, Any]) -> Answer:
         size = str(request.get("size"))
         transparent = request.get("background") == "transparent"
         # Three pictures share the motion canvas: a chunk paints over its guide with the
@@ -242,9 +237,7 @@ class StandIns:
         if transparent and size == DEFAULT_MOTION_ATLAS_GEOMETRY.provider_size:
             if request.get("references"):
                 kind = "chunk"
-                data = painted_over_guide(
-                    self.store.file_path(request["image"].digest).read_bytes()
-                )
+                data = painted_over_guide(request["image"].read_bytes())
             else:
                 kind = "strip"
                 data = _strip()
@@ -265,9 +258,9 @@ class StandIns:
         self.calls[kind] += 1
         if kind == self.refuse:
             raise CallRefused(f"the stand-in refuses every {kind}")
-        return CallRecord({"image": self._put(data, "image/png")}, None, 0.01)
+        return Answer(files={"image": data})
 
-    async def _structured(self, route: Route, request: Mapping[str, Any], take: int) -> CallRecord:
+    def _structured(self) -> Answer:
         self.calls["reading"] += 1
         answer = {
             "baseline_state": "run",
@@ -276,7 +269,7 @@ class StandIns:
                 for state in self.states
             ],
         }
-        return CallRecord({}, {"json": answer}, 0.01)
+        return Answer.json(answer)
 
     def _clip(self, seconds: float, volume: float = 0.5) -> bytes:
         key = (seconds, volume)
@@ -284,11 +277,7 @@ class StandIns:
             self._audio[key] = _mp3(seconds, volume=volume)
         return self._audio[key]
 
-    async def _music(self, route: Route, request: Mapping[str, Any], take: int) -> CallRecord:
-        self.calls["track"] += 1
-        return CallRecord({"audio": self._put(self._clip(16.0), "audio/mpeg")}, None, 0.05)
-
-    async def _sound(self, route: Route, request: Mapping[str, Any], take: int) -> CallRecord:
+    def _sound(self, request: Mapping[str, Any]) -> Answer:
         self.calls["clip"] += 1
         scripted = self.script.get("sound")
         clip = (
@@ -296,39 +285,24 @@ class StandIns:
             if scripted
             else self._clip(float(request["duration"]), 0.0 if self.refuse == "silence" else 0.5)
         )
-        return CallRecord({"audio": self._put(clip, "audio/mpeg")}, None, 0.01)
-
-    async def _speech(self, route: Route, request: Mapping[str, Any], take: int) -> CallRecord:
-        self.calls["line"] += 1
-        scripted = self.script.get("speech")
-        read = scripted.pop(0) if scripted else self._clip(1.0)
-        return CallRecord({"audio": self._put(read, "audio/mpeg")}, None, 0.01)
+        return Answer(files={"audio": clip})
 
 
 def scripted(**script: list[bytes]) -> Any:
-    return lambda store, states: StandIns(store, states, script=script)
+    return lambda states: StandIns(states, script=script)
 
 
-def run(project: Path, stand_ins_for: Any, run_dir: Path) -> tuple[RunOutcome, StandIns]:
-    planned = plan(project)
-    assert planned.ok, planned.problems
+def run(project: Path, stand_ins_for: Any, run_dir: Path) -> tuple[RunResult, StandIns]:
     resolved = resolve_runner_package(project / "runner-only")
-    stand_ins = stand_ins_for(
-        planned.planner.store, declared_motion_states(resolved.runner.avatar.avatar)
-    )
-    outcome = asyncio.run(
-        WorkflowRun(planned, run_dir=run_dir, services=stand_ins.services()).run()
+    stand_ins = stand_ins_for(declared_motion_states(resolved.runner.avatar.avatar))
+    outcome = run_fx(
+        BUILDER,
+        cwd=project,
+        arguments={"package": "runner-only"},
+        run_dir=run_dir,
+        stand_in=stand_ins,
     )
     return outcome, stand_ins
-
-
-def deliver(planned_store: Store, outcome: RunOutcome, folder: Path) -> Path:
-    package = outcome.outputs["package"]
-    for key, file in package.items:
-        target = folder / key
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(planned_store.file_path(file.digest), target)
-    return folder
 
 
 # ------------------------------------------------------------------------------- the plan
@@ -338,17 +312,17 @@ def test_the_shipped_package_plans_inside_its_own_project() -> None:
     planned = plan(GAME, "inputs")
 
     assert planned.ok, planned.problems
-    assert planned.planner.workflow.id == "iron-petal-unit"
-    budget = planned.planner.workflow.budget
-    assert budget is not None and planned.estimate()[1] <= budget.max_usd
+    assert planned.document["workflow"]["id"] == "iron-petal-unit"
+    budget = ceiling(planned)
+    assert budget is not None and planned.estimate()[1] <= budget
 
 
 def test_the_plan_writes_one_group_of_steps_per_asset(tmp_path: Path) -> None:
-    planned = plan(game_project(tmp_path))
+    planned = plan(runner_project(tmp_path))
 
     assert planned.ok, planned.problems
     steps = by_step(planned)
-    calls = Counter(cap for instance in first_takes(planned) for cap in instance.routes)
+    calls = Counter(cap for row in first_takes(planned) for cap in row["routes"])
     # One ground atlas, one layer, one concept, four strips (the duck profile obligates a
     # slide) and two catalog cut-outs; the two rebase readings; two tracks and one clip.
     assert calls == {
@@ -367,38 +341,42 @@ def test_the_plan_writes_one_group_of_steps_per_asset(tmp_path: Path) -> None:
 def test_every_painting_and_draw_is_judged_and_drawn_again_at_most_six_times(
     tmp_path: Path,
 ) -> None:
-    planned = plan(game_project(tmp_path))
+    planned = plan(runner_project(tmp_path))
     paid = [
-        i
-        for i in first_takes(planned)
-        if set(i.routes) & {"image.edit", "music.generate", "sound.generate"}
+        row
+        for row in first_takes(planned)
+        if set(row["routes"]) & {"image.edit", "music.generate", "sound.generate"}
     ]
 
     assert paid
-    for instance in paid:
-        assert instance.judged_by, instance.step
-    takes = Counter(instance.step for instance in planned.instances if instance.state != "absent")
-    assert {takes[instance.step] for instance in paid} == {6}
+    for row in paid:
+        assert row["judged_by"], row["step"]
+    takes = Counter(row["step"] for row in instances(planned) if row["state"] != "absent")
+    assert {takes[row["step"]] for row in paid} == {6}
 
 
 def test_a_transparent_painting_asks_for_a_route_that_paints_alpha(tmp_path: Path) -> None:
-    planned = plan(game_project(tmp_path))
-    document = planned.planner.workflow
+    project = runner_project(tmp_path)
+    settings = project / "fx.yaml"
+    settings.write_text(
+        settings.read_text(encoding="utf-8").replace(
+            "image.edit: gpt-image-2.5-sunburst@openai",
+            "image.edit: openai/gpt-image-2.5-sunburst@openrouter",
+        ),
+        encoding="utf-8",
+    )
 
-    def declared(*path: str) -> Any:
-        steps: Any = document.steps
-        for name in path[:-1]:
-            steps = steps[name].steps
-        return steps[path[-1]]
+    planned = plan(project)
 
-    concept = declared("avatar", "concept", "generate")
-    sky = declared("layers", "meadow_sky", "generate")
-    assert tuple(concept.requires) == ("transparent_background",)
-    assert tuple(sky.requires) == ()
+    # The concept asks for alpha, which the OpenRouter route does not paint; the sky does not.
+    assert not planned.ok
+    found = "\n".join(f"{problem['where']}: {problem['message']}" for problem in planned.problems)
+    assert "avatar.concept.generate" in found and "does not support alpha" in found
+    assert "layers.meadow_sky.generate" not in found
 
 
 def test_a_clip_is_drawn_from_its_authored_prompt_verbatim(tmp_path: Path) -> None:
-    project = game_project(tmp_path)
+    project = runner_project(tmp_path)
     resolved = resolve_runner_package(project / "runner-only")
     (effect,) = resolved.runner.audio.generated_effects()
     clip = effect.realization
@@ -406,14 +384,14 @@ def test_a_clip_is_drawn_from_its_authored_prompt_verbatim(tmp_path: Path) -> No
 
     draw = by_step(plan(project))[f"sounds.{effect.effect_id}.generate"]
 
-    assert draw.with_["prompt"] == clip.prompt
-    assert draw.with_["duration"] == clip.duration_seconds
-    assert draw.with_["loop"] is False
+    assert draw["with"]["prompt"] == clip.prompt
+    assert draw["with"]["duration"] == clip.duration_seconds
+    assert draw["with"]["loop"] is False
 
 
 def test_a_spoken_line_is_read_by_its_cast_voice_and_keyed_on_it(tmp_path: Path) -> None:
-    first = game_project(tmp_path / "first", spoken=True)
-    second = game_project(tmp_path / "second", spoken=True)
+    first = runner_project(tmp_path / "first", spoken=True)
+    second = runner_project(tmp_path / "second", spoken=True)
     voices = second / "runner-only/voices.toml"
     resolved = resolve_runner_package(first / "runner-only")
     (line,) = resolved.runner.audio.spoken_lines()
@@ -430,26 +408,29 @@ def test_a_spoken_line_is_read_by_its_cast_voice_and_keyed_on_it(tmp_path: Path)
     read = by_step(plan(first))[f"lines.{line.effect_id}.generate"]
     recast = by_step(plan(second))[f"lines.{line.effect_id}.generate"]
 
-    assert read.with_["text"] == spoken.text
-    assert read.with_["voice"] == voice.provider.voice
-    assert recast.with_["voice"] == "RecastVoice01"
-    assert read.identity != recast.identity
+    assert read["with"]["text"] == spoken.text
+    assert read["with"]["voice"] == voice.provider.voice
+    assert recast["with"]["voice"] == "RecastVoice01"
+    assert read["identity"] != recast["identity"]
 
 
 def test_a_pinned_take_buys_nothing(tmp_path: Path) -> None:
     take = _mp3(0.8) if FFMPEG else b"ID3" + bytes(64)
-    planned = plan(game_project(tmp_path, spoken=True, pinned_take=take))
+    project = runner_project(tmp_path, spoken=True, pinned_take=take)
+    planned = plan(project)
 
     assert planned.ok, planned.problems
     steps = by_step(planned)
     assert not any(step.startswith("lines.") and step.endswith(".generate") for step in steps)
-    republish = next(i for step, i in steps.items() if step.endswith(".republish"))
-    assert republish.with_["audio"].name == "runner-only/runner/audio/mira_go.mp3"
+    republish = next(row for step, row in steps.items() if step.endswith(".republish"))
+    assert republish["with"]["audio"] == file_value(
+        project / "runner-only/runner/audio/mira_go.mp3"
+    )
 
 
 def test_a_slide_free_avatar_plans_no_slide_strip(tmp_path: Path) -> None:
     planned = plan(
-        game_project(tmp_path, avatar=RUNNER_AVATAR_NO_SLIDE, gameplay=RUNNER_GAMEPLAY_NO_DUCK)
+        runner_project(tmp_path, avatar=RUNNER_AVATAR_NO_SLIDE, gameplay=RUNNER_GAMEPLAY_NO_DUCK)
     )
 
     assert planned.ok, planned.problems
@@ -457,8 +438,8 @@ def test_a_slide_free_avatar_plans_no_slide_strip(tmp_path: Path) -> None:
 
 
 def test_an_edit_to_one_layer_redraws_only_that_layer(tmp_path: Path) -> None:
-    first = game_project(tmp_path / "first")
-    second = game_project(tmp_path / "second")
+    first = runner_project(tmp_path / "first")
+    second = runner_project(tmp_path / "second")
     track = second / "runner-only/runner/track.toml"
     track.write_text(
         track.read_text(encoding="utf-8").replace(
@@ -471,14 +452,14 @@ def test_an_edit_to_one_layer_redraws_only_that_layer(tmp_path: Path) -> None:
 
     changed = sorted(
         step
-        for step, instance in after.items()
-        if instance.identity is not None and instance.identity != before[step].identity
+        for step, row in after.items()
+        if row["identity"] is not None and row["identity"] != before[step]["identity"]
     )
     assert changed == ["layers.meadow_sky.generate"]
 
 
 def test_an_authored_display_scale_is_refused_while_planning(tmp_path: Path) -> None:
-    project = game_project(tmp_path)
+    project = runner_project(tmp_path)
     track = project / "runner-only/runner/track.toml"
     track.write_text(
         track.read_text(encoding="utf-8").replace(
@@ -509,33 +490,33 @@ detail_blur_screen_pixels = 0.0
         encoding="utf-8",
     )
 
-    with pytest.raises(PlanError, match="runner does not draw display_scale yet"):
+    with pytest.raises(FxError, match="runner does not draw display_scale yet"):
         plan(project)
 
 
 def test_the_package_step_reads_the_whole_closure_and_each_reference_once(
     tmp_path: Path,
 ) -> None:
-    project = game_project(tmp_path)
+    project = runner_project(tmp_path)
     resolved = resolve_runner_package(project / "runner-only")
 
     package = by_step(plan(project))["package"]
 
-    assert set(package.with_["package"]) == {entry.path for entry in resolved.package.files}
-    assert package.with_["references"] == ["references/cover.png"]
+    assert set(package["with"]["package"]) == {entry.path for entry in resolved.package.files}
+    assert package["with"]["references"] == ["references/cover.png"]
 
 
 def test_the_avatar_contract_facts_are_in_every_picture_of_it(tmp_path: Path) -> None:
-    steps = by_step(plan(game_project(tmp_path)))
+    steps = by_step(plan(runner_project(tmp_path)))
 
     for step in ("avatar.concept.generate", "avatar.run.generate"):
-        prompt = steps[step].with_["prompt"]
+        prompt = steps[step]["with"]["prompt"]
         assert "age 19" in prompt
         assert "body_kind human" in prompt
         assert "silhouette_mode single_character_v1" in prompt
         assert "proportion_basis character_head_v1" in prompt
         assert "whole character silhouette" in prompt
-    death = steps["avatar.death.generate"].with_["prompt"]
+    death = steps["avatar.death.generate"]["with"]["prompt"]
     assert "fully disconnected" in death
     assert "zero-alpha transparent pixels" in death
     assert "no glow, aura" in death.lower()
@@ -553,15 +534,15 @@ def test_a_visible_rider_machine_slides_and_falls_as_one_secured_actor(tmp_path:
             'proportion_basis = "visible_rider_head_v1"',
         )
     )
-    steps = by_step(plan(game_project(tmp_path, avatar=combined, piloted_heads_tall=4.2)))
+    steps = by_step(plan(runner_project(tmp_path, avatar=combined, piloted_heads_tall=4.2)))
 
-    slide = steps["avatar.slide.generate"].with_["prompt"]
+    slide = steps["avatar.slide.generate"]["with"]["prompt"]
     assert "fully-low held skid" in slide
     assert "held indefinitely while the player ducks" in slide
     assert "below 45 percent of standing run height" in slide
     assert "keeps both hands on the controls" in slide
     assert "baseball-style" not in slide
-    death = steps["avatar.death.generate"].with_["prompt"]
+    death = steps["avatar.death.generate"]["with"]["prompt"]
     assert "height strictly descends" in death
     assert "lowest compact powered-down failure pose" in death
     assert "reactor and headlamp visibly dark" in death
@@ -571,32 +552,33 @@ def test_a_visible_rider_machine_slides_and_falls_as_one_secured_actor(tmp_path:
 def test_structural_ground_paints_each_segment_over_its_guide_and_shares_one_seam(
     tmp_path: Path,
 ) -> None:
-    planned = plan(structural(game_project(tmp_path)))
+    project = structural(runner_project(tmp_path))
+    planned = plan(project)
 
     assert planned.ok, planned.problems
     steps = by_step(planned)
     assert "ground.paint_target" not in steps
     # A reader of a judged painting reads whichever take its judge accepts.
-    bridge = set(steps["ground.seam_bridge"].inputs_from)
+    bridge = set(inputs_from(steps["ground.seam_bridge"]))
     assert "ground.warmup_flat.guide#1" in bridge
     assert "ground.warmup_flat.generate#1" in bridge
     assert not any(read.startswith("ground.first_gap.") for read in bridge)
     for segment in ("warmup_flat", "first_gap"):
         painting = steps[f"ground.{segment}.generate"]
-        assert list(painting.inputs_from) == [f"ground.{segment}.guide#1"]
-        assert "fully transparent with true alpha" in painting.with_["prompt"]
-        assert [reference.name for reference in painting.with_["references"]] == [
-            "runner-only/references/cover.png"
+        assert inputs_from(painting) == [f"ground.{segment}.guide#1"]
+        assert "fully transparent with true alpha" in painting["with"]["prompt"]
+        assert painting["with"]["references"] == [
+            file_value(project / "runner-only/references/cover.png")
         ]
-        published = set(steps[f"ground.{segment}.publish"].inputs_from)
+        published = set(inputs_from(steps[f"ground.{segment}.publish"]))
         assert {f"ground.{segment}.guide#1", "ground.seam_bridge#1"} <= published
-    assert "world/ground/first_gap.png" in steps["package"].with_["published"]
+    assert "world/ground/first_gap.png" in steps["package"]["with"]["published"]
 
 
 def test_an_edit_to_one_segment_repaints_only_that_segment(tmp_path: Path) -> None:
     wider = ["0" * 25] * 5 + ["1" * 25] * 3
     first = structural(
-        game_project(
+        runner_project(
             tmp_path / "first",
             chunks="\n".join(
                 [chunk_toml("alpha", WIDE_FLAT_ROWS), chunk_toml("beta", WIDE_FLAT_ROWS)]
@@ -604,7 +586,7 @@ def test_an_edit_to_one_segment_repaints_only_that_segment(tmp_path: Path) -> No
         )
     )
     second = structural(
-        game_project(
+        runner_project(
             tmp_path / "second",
             chunks="\n".join([chunk_toml("alpha", WIDE_FLAT_ROWS), chunk_toml("beta", wider)]),
         )
@@ -613,15 +595,15 @@ def test_an_edit_to_one_segment_repaints_only_that_segment(tmp_path: Path) -> No
     before, after = by_step(plan(first)), by_step(plan(second))
 
     # A painting is keyed on its guide's bytes and its prompt; the guide is keyed now.
-    assert before["ground.alpha.guide"].identity == after["ground.alpha.guide"].identity
-    assert before["ground.beta.guide"].identity != after["ground.beta.guide"].identity
+    assert before["ground.alpha.guide"]["identity"] == after["ground.alpha.guide"]["identity"]
+    assert before["ground.beta.guide"]["identity"] != after["ground.beta.guide"]["identity"]
     alpha, beta = "ground.alpha.generate", "ground.beta.generate"
-    assert before[alpha].with_["prompt"] == after[alpha].with_["prompt"]
-    assert before[beta].with_["prompt"] != after[beta].with_["prompt"]
+    assert before[alpha]["with"]["prompt"] == after[alpha]["with"]["prompt"]
+    assert before[beta]["with"]["prompt"] != after[beta]["with"]["prompt"]
 
 
 def test_one_source_named_by_two_reference_ids_is_republished_once(tmp_path: Path) -> None:
-    project = game_project(tmp_path)
+    project = runner_project(tmp_path)
     items = project / "runner-only/runner/content/items.toml"
     source = items.read_text(encoding="utf-8")
     items.write_text(
@@ -631,7 +613,7 @@ def test_one_source_named_by_two_reference_ids_is_republished_once(tmp_path: Pat
         encoding="utf-8",
     )
 
-    assert by_step(plan(project))["package"].with_["references"] == ["references/cover.png"]
+    assert by_step(plan(project))["package"]["with"]["references"] == ["references/cover.png"]
 
 
 # -------------------------------------------------------------------------------- a run
@@ -639,11 +621,11 @@ def test_one_source_named_by_two_reference_ids_is_republished_once(tmp_path: Pat
 
 @needs_ffmpeg
 def test_a_whole_run_lays_out_the_package_the_host_reads(tmp_path: Path) -> None:
-    project = game_project(tmp_path)
+    project = runner_project(tmp_path)
 
     outcome, stand_ins = run(project, StandIns, tmp_path / "run")
 
-    assert outcome.ok, outcome.failed
+    assert outcome.ok, failures(outcome)
     assert stand_ins.calls == {
         "atlas": 1,
         "layer": 1,
@@ -654,7 +636,8 @@ def test_a_whole_run_lays_out_the_package_the_host_reads(tmp_path: Path) -> None
         "track": 2,
         "clip": 1,
     }
-    delivered = deliver(plan(project).planner.store, outcome, tmp_path / "package")
+    delivered = tmp_path / "package"
+    deliver(outcome, delivered)
     manifest = json.loads((delivered / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["kind"] == MANIFEST_KIND
     referenced = []
@@ -677,26 +660,26 @@ def test_a_whole_run_lays_out_the_package_the_host_reads(tmp_path: Path) -> None
 
 @needs_ffmpeg
 def test_a_stopped_run_resumes_without_paying_twice(tmp_path: Path) -> None:
-    project = game_project(tmp_path)
+    project = runner_project(tmp_path)
 
     stopped, refusing = run(
-        project, lambda store, states: StandIns(store, states, refuse="strip"), tmp_path / "run"
+        project, lambda states: StandIns(states, refuse="strip"), tmp_path / "run"
     )
     resumed, stand_ins = run(project, StandIns, tmp_path / "run")
 
     assert not stopped.ok
     assert refusing.calls["strip"] == 4
-    assert resumed.ok, resumed.failed
+    assert resumed.ok, failures(resumed)
     # Everything paid for before the stop came from the cache; only the strips were drawn.
     assert stand_ins.calls == {"strip": 4, "reading": 2}
 
 
 @needs_ffmpeg
 def test_a_silent_clip_is_drawn_again_and_then_refused(tmp_path: Path) -> None:
-    project = game_project(tmp_path)
+    project = runner_project(tmp_path)
 
     outcome, stand_ins = run(
-        project, lambda store, states: StandIns(store, states, refuse="silence"), tmp_path / "run"
+        project, lambda states: StandIns(states, refuse="silence"), tmp_path / "run"
     )
 
     assert not outcome.ok
@@ -705,41 +688,43 @@ def test_a_silent_clip_is_drawn_again_and_then_refused(tmp_path: Path) -> None:
 
 @needs_ffmpeg
 def test_a_clip_that_misses_its_authored_length_is_refused(tmp_path: Path) -> None:
-    project = game_project(tmp_path)
+    project = runner_project(tmp_path)
 
     outcome, stand_ins = run(project, scripted(sound=[_mp3(2.0)]), tmp_path / "run")
 
     assert not outcome.ok
     assert stand_ins.calls["clip"] == 1
-    assert "runs 2.0" in str(outcome.results["sounds.run_ended.record#1"].error)
+    assert "runs 2.0" in outcome.failures["sounds.run_ended.record#1"].message
 
 
 @needs_ffmpeg
 def test_an_over_long_read_is_read_again_and_never_trimmed(tmp_path: Path) -> None:
-    project = game_project(tmp_path, spoken=True)
+    project = runner_project(tmp_path, spoken=True)
     fits = _mp3(1.5, volume=0.25)
 
     outcome, stand_ins = run(
         project, scripted(speech=[_mp3(4.0, volume=0.25), fits]), tmp_path / "run"
     )
 
-    assert outcome.ok, outcome.failed
+    assert outcome.ok, failures(outcome)
     assert stand_ins.calls["line"] == 2
-    assert "ceiling" in str(outcome.results["lines.mira_go.admit#1"].facts["errors"])
-    delivered = deliver(plan(project).planner.store, outcome, tmp_path / "package")
+    assert "ceiling" in str(finished(outcome, "lines.mira_go.admit#1")["facts"]["errors"])
+    delivered = tmp_path / "package"
+    deliver(outcome, delivered)
     assert (delivered / "audio/mira_go.mp3").read_bytes() == fits
 
 
 @needs_ffmpeg
 def test_a_pinned_take_is_republished_verbatim_with_its_sidecar(tmp_path: Path) -> None:
     take = _mp3(1.0, volume=0.25)
-    project = game_project(tmp_path, spoken=True, pinned_take=take)
+    project = runner_project(tmp_path, spoken=True, pinned_take=take)
 
     outcome, stand_ins = run(project, StandIns, tmp_path / "run")
 
-    assert outcome.ok, outcome.failed
+    assert outcome.ok, failures(outcome)
     assert stand_ins.calls["line"] == 0
-    delivered = deliver(plan(project).planner.store, outcome, tmp_path / "package")
+    delivered = tmp_path / "package"
+    deliver(outcome, delivered)
     assert (delivered / "audio/mira_go.mp3").read_bytes() == take
     sidecar = project / "runner-only/runner/audio/mira_go.mp3.meta.json"
     assert (delivered / "audio/mira_go.mp3.meta.json").read_bytes() == sidecar.read_bytes()
@@ -748,11 +733,11 @@ def test_a_pinned_take_is_republished_verbatim_with_its_sidecar(tmp_path: Path) 
 
 
 def test_a_silent_contract_plans_no_speech(tmp_path: Path) -> None:
-    assert not any(step.startswith("lines.") for step in by_step(plan(game_project(tmp_path))))
+    assert not any(step.startswith("lines.") for step in by_step(plan(runner_project(tmp_path))))
 
 
 def test_a_portrait_of_an_actor_this_package_does_not_draw_is_refused(tmp_path: Path) -> None:
-    project = game_project(tmp_path)
+    project = runner_project(tmp_path)
     shutil.copytree(GAME / "inputs", project / "shipped")
     fx = project / "shipped/fx.toml"
     fx.write_text(
@@ -762,19 +747,20 @@ def test_a_portrait_of_an_actor_this_package_does_not_draw_is_refused(tmp_path: 
         encoding="utf-8",
     )
 
-    with pytest.raises(PlanError, match="not_a_boss"):
+    with pytest.raises(FxError, match="not_a_boss"):
         plan(project, "shipped")
 
 
 @needs_ffmpeg
 def test_structural_ground_publishes_every_chunk_with_the_shared_seam(tmp_path: Path) -> None:
-    project = structural(game_project(tmp_path))
+    project = structural(runner_project(tmp_path))
 
     outcome, stand_ins = run(project, StandIns, tmp_path / "run")
 
-    assert outcome.ok, outcome.failed
+    assert outcome.ok, failures(outcome)
     assert stand_ins.calls["chunk"] == 2
-    delivered = deliver(plan(project).planner.store, outcome, tmp_path / "package")
+    delivered = tmp_path / "package"
+    deliver(outcome, delivered)
     manifest = json.loads((delivered / "manifest.json").read_text(encoding="utf-8"))
     chunks = manifest["ground"]["chunks"]
     assert [chunk["image"] for chunk in chunks] == [

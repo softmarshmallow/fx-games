@@ -495,8 +495,12 @@ def pinned_audio(package: Path, data: bytes) -> str:
     uses, so what the fixture pins is exactly what a person would pin.
     """
 
-    from gnode import BinaryArtifact, ProvenanceInput, write_artifact_with_provenance
-    from stage_gen.identity import SPEECH_GENERATION_COMPONENT, STAGE_GEN_TOOL
+    from stage_gen.contracts import BinaryArtifact
+    from stage_gen.provenance import (
+        ProvenanceInput,
+        SoftwareIdentity,
+        write_artifact_with_provenance,
+    )
 
     take = package / PINNED_TAKE_SOURCE
     take.parent.mkdir(parents=True, exist_ok=True)
@@ -509,8 +513,8 @@ def pinned_audio(package: Path, data: bytes) -> str:
             prompt="[excited][shouting] よーし、いくよーっ!",
             params={"voice": "voice-fixture-7", "output_format": "mp3", "validated": True},
             validation={"output_nonempty": True, "signature": "matched"},
-            component=SPEECH_GENERATION_COMPONENT,
-            tool=STAGE_GEN_TOOL,
+            component=SoftwareIdentity(name="@stage-gen/speech-generation", version="0.0.0"),
+            tool=SoftwareIdentity(name="stage-gen", version="0.0.0"),
             attempts=1,
         ),
     )

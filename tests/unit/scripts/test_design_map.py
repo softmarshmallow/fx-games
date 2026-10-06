@@ -213,12 +213,9 @@ def test_render_writes_a_png_and_refuses_to_write_into_docs(tmp_path: Path) -> N
 
 
 def test_compile_writes_a_terrain_artifact_the_map_accepts(tmp_path: Path) -> None:
-    run_dir = tmp_path / "run"
-    assert (
-        SCRIPT.main(["compile", "--map", "crowncrag-road", "--example", "--run-dir", str(run_dir)])
-        == 0
-    )
-    artifact = run_dir / "maps/crowncrag-road/terrain.json"
+    out = tmp_path / "terrain"
+    assert SCRIPT.main(["compile", "--map", "crowncrag-road", "--example", "--out", str(out)]) == 0
+    artifact = out / "maps/crowncrag-road/terrain.json"
     assert artifact.is_file()
     terrain = load_prepared_map_terrain_bytes(artifact.read_bytes())
     game_map = _map("crowncrag-road")
@@ -241,8 +238,8 @@ def test_compile_never_writes_into_the_authored_library(tmp_path: Path) -> None:
                 "--map",
                 "crowncrag-road",
                 "--example",
-                "--run-dir",
-                str(tmp_path / "run"),
+                "--out",
+                str(tmp_path / "terrain"),
                 "--input",
                 str(library),
             ]

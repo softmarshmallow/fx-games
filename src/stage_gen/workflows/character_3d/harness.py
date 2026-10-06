@@ -3,7 +3,7 @@ review contract.
 
 A step is a pure function of what it reads. It gets a bench of its own (folders under its
 work directory and the hardened Blender worker client), registers the models it was given
-there, and hands back the files it made. Agents run as gnode agents: every turn is a paid,
+there, and hands back the files it made. Agents run as FX agents: every turn is a paid,
 call-cached call, so a resumed run replays the turns it already paid for.
 """
 
@@ -16,9 +16,9 @@ from pathlib import Path
 from typing import Any
 
 import jsonschema
+from grida.fx import Ctx
 
 import stage_gen
-from gnode import Ctx
 from stage_gen.components.character_3d.io import confined, digest
 from stage_gen.components.character_3d.partitions import apply_partition
 from stage_gen.components.character_3d.quality_bar import check_issue_heights
@@ -187,9 +187,12 @@ class Bench:
         code.mkdir(parents=True, exist_ok=True)
         for script, module in _ENTRY_POINTS.items():
             (code / script).write_text(_bootstrap(module), encoding="utf-8")
+        blender = ctx.tool("blender").executable
+        if blender is None:
+            raise ctx.fail("blender is not installed: install it or set GRIDA_FX_TOOL_BLENDER")
         self.root = root
         self.worker = WorkerClient(
-            blender=Path(ctx.tool("blender").executable),
+            blender=blender,
             package_root=root / "code",
             input_root=root,
             run_root=root / "run",

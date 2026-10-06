@@ -15,6 +15,7 @@ import io
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, cast
 
+from grida.fx import Ctx, Group, StepRef, Tool, ToolInvocationError, ToolResult, node
 from PIL import Image
 
 from demo_game_tools.kits.effects_art.cut_in import (
@@ -57,7 +58,6 @@ from demo_game_tools.kits.effects_art.models import (
     EffectArtwork,
 )
 from demo_game_tools.kits.effects_art.sprite import SPRITE_CANVAS, validate_dust_atlas
-from gnode import Ctx, Group, StepRef, Tool, ToolInvocationError, ToolResult, node
 from stage_gen.canonical import content_sha256
 
 #: Draws a plate gets before the run stops on it.
@@ -273,9 +273,9 @@ def _paint(group: Group, *, prompt: str, pictures: Sequence[Any], size: tuple[in
     return group.step(
         "generate",
         title="Paint the plate",
-        uses="gnode/image.edit@1" if pictures else "gnode/image.generate@1",
+        uses="fx/image.edit@1" if pictures else "fx/image.generate@1",
         with_=with_,
-        requires=["transparent_background"],
+        requires=["alpha"],
         view=True,
     )
 
@@ -285,7 +285,7 @@ def _review(group: Group, *, nodes: str, prompt: str, pictures: Sequence[Any]) -
     return group.step(
         "review",
         title="Review the plate",
-        uses="gnode/structured.generate@1",
+        uses="fx/structured.generate@1",
         with_={
             "prompt": prompt,
             "system": REVIEW_SYSTEM,

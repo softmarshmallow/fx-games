@@ -13,6 +13,8 @@ import base64
 from collections.abc import Mapping
 from typing import Any
 
+from grida.fx import Ctx, Tool, ToolInvocationError, ToolResult, node
+
 from ember_hollow_pipeline.anchor import (
     ANCHOR_MAX_STEPS,
     ANCHOR_SYSTEM,
@@ -24,7 +26,6 @@ from ember_hollow_pipeline.anchor import (
     instructions,
     render,
 )
-from gnode import Ctx, Tool, ToolInvocationError, ToolResult, node
 
 
 def _data_url(data: bytes, media_type: str) -> str:

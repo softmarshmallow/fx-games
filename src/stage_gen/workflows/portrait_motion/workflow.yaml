@@ -1,4 +1,4 @@
-gnode: workflow/v1
+fx: workflow/v1
 id: portrait-motion
 title: Portrait motion
 description: >-
@@ -48,7 +48,7 @@ steps:
     steps:
       locate:
         title: Locate the face
-        uses: gnode/structured.generate@1
+        uses: fx/structured.generate@1
         with:
           prompt: ./prompts/locate.md
           schema: ./schemas/location.json
@@ -83,7 +83,7 @@ steps:
     steps:
       admission:
         title: Decide what can move
-        uses: gnode/structured.generate@1
+        uses: fx/structured.generate@1
         with:
           prompt: ./prompts/admission.md
           schema: ./schemas/admission.json
@@ -118,7 +118,7 @@ steps:
 
       atlas:
         title: Draw the new states
-        uses: gnode/image.edit@1
+        uses: fx/image.edit@1
         with:
           image: ${{ steps.guide.outputs.guide }}
           prompt: ${{ steps.briefs.outputs.atlas }}
@@ -145,7 +145,7 @@ steps:
       geometry:
         title: Outline eyes and mouth
         if: ${{ steps.registration.facts.passed }}
-        uses: gnode/structured.generate@1
+        uses: fx/structured.generate@1
         with:
           prompt: ${{ steps.draw.briefs.outputs.geometry }}
           schema: ./schemas/geometry.json
@@ -183,7 +183,7 @@ steps:
 
       quality:
         title: Review the result
-        uses: gnode/structured.generate@1
+        uses: fx/structured.generate@1
         with:
           prompt: ${{ steps.draw.briefs.outputs.quality }}
           schema: ./schemas/quality.json

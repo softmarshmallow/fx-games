@@ -20,10 +20,7 @@ workflow file's `gnode.lock` (`gnode lock <id> --check`), runs real offline loop
 and movie-sprite runs through `gnode` with their `gnode inspect --verify` (movie-sprite finishes
 its supplied clip, and only plans its paid take, so the gate needs FFmpeg), the universe plan
 (both phases and their ceilings, offline),
-`scripts/catalog.py --check --allow-missing-examples`, and `gnode --help`. It also checks gnode's published document schemas
-(`scripts/write_gnode_schemas.py --check`) and runs the
-[conformance suite](tests/conformance/README.md) through the `gnode` command only: the
-cases any gnode implementation must pass.
+`scripts/catalog.py --check --allow-missing-examples`, and `gnode --help`.
 
 ## Web
 

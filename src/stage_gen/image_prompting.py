@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
 
-from gnode import CancellationToken, StructuredGenerationRequest, StructuredOutputSchema
 from stage_gen.image_style import (
     STYLE_ANCHOR_RENDERER_VERSION,
     STYLE_COMPILER_VERSION,
@@ -16,12 +15,10 @@ from stage_gen.image_style import (
     ImageAssetKind,
     ImageStyleVocabulary,
     StyleModeSelection,
-    canonical_style_anchor_digest,
 )
 from stage_gen.resources import image_style_skill_path, image_style_vocabulary_path
 
 IMAGE_STYLE_SKILL_NAME = "anchor-image-style"
-IMAGE_STYLE_SELECTION_SCHEMA = "image_style_selection_v1"
 
 _EXPECTED_STYLE_MODES = {
     "cel_shaded_anime_2d",
@@ -172,43 +169,22 @@ def materialize_style_anchor(
     )
 
 
-def image_style_compiler_cache_key(
+def image_style_question(
     prompt: str,
     asset_kinds: Sequence[ImageAssetKind],
     *,
     resources: ImageStyleResources | None = None,
-) -> str:
-    """Return the resource-bound identity for a pre-image style decision."""
+) -> tuple[str, str]:
+    """The question the style compiler asks the edge model: ``(edge_prompt, system)``.
 
-    loaded = resources or load_image_style_resources()
-    kinds = _validated_asset_kinds(asset_kinds)
-    return _canonical_digest(
-        {
-            "asset_kinds": sorted(kinds),
-            "compiler_version": STYLE_COMPILER_VERSION,
-            "compiler_sha256": loaded.compiler_sha256,
-            "prompt_sha256": sha256(prompt.encode("utf-8")).hexdigest(),
-            "resource_sha256": loaded.resource_sha256,
-        }
-    )
-
-
-def build_image_style_compiler_request(
-    *,
-    prompt: str,
-    artifact_path: str | Path,
-    asset_kinds: Sequence[ImageAssetKind],
-    resources: ImageStyleResources | None = None,
-    timeout_seconds: float | None = None,
-    cancellation: CancellationToken | None = None,
-) -> StructuredGenerationRequest[CanonicalStyleAnchor]:
-    """Build the only edge-model operation used by the style compiler."""
+    The answer is a :class:`StyleModeSelection`; :func:`materialize_style_anchor` turns it into
+    the canonical anchor.
+    """
 
     if not prompt.strip():
         raise ValueError("style compiler prompt must be non-empty")
     loaded = resources or load_image_style_resources()
     kinds = _validated_asset_kinds(asset_kinds)
-    cache_key = image_style_compiler_cache_key(prompt, kinds, resources=loaded)
     system = (
         f"{loaded.skill.body.rstrip()}\n\n"
         "The following JSON vocabulary is trusted and exhaustive.\n"
@@ -219,52 +195,7 @@ def build_image_style_compiler_request(
         f"ASSET_KINDS_JSON: {json.dumps(sorted(kinds), separators=(',', ':'))}\n"
         f"CREATIVE_BRIEF_JSON_STRING: {json.dumps(prompt, ensure_ascii=False)}"
     )
-
-    def parse(value: object) -> CanonicalStyleAnchor:
-        selection = StyleModeSelection.model_validate(value)
-        return materialize_style_anchor(selection, loaded)
-
-    def validate(anchor: CanonicalStyleAnchor) -> dict[str, object]:
-        for asset_kind in kinds:
-            if asset_kind not in anchor.asset_treatments:
-                raise ValueError(f"selected style lacks treatment for {asset_kind!r}")
-        return {
-            "anchor_sha256": canonical_style_anchor_digest(anchor),
-            "asset_kinds": sorted(kinds),
-            "compiler_version": STYLE_COMPILER_VERSION,
-            "compiler_sha256": loaded.compiler_sha256,
-            "resource_sha256": loaded.resource_sha256,
-            "skill_sha256": loaded.skill.sha256,
-            "vocabulary_sha256": loaded.vocabulary_sha256,
-        }
-
-    return StructuredGenerationRequest(
-        prompt=edge_prompt,
-        artifact_path=artifact_path,
-        schema=StructuredOutputSchema(
-            name=IMAGE_STYLE_SELECTION_SCHEMA,
-            json_schema=StyleModeSelection.model_json_schema(),
-            description="Select exactly one approved image style mode.",
-            strict=True,
-        ),
-        parse=parse,
-        system=system,
-        metadata={
-            "cache_key": cache_key,
-            "compiler_sha256": loaded.compiler_sha256,
-            "compiler_version": STYLE_COMPILER_VERSION,
-            "renderer_version": STYLE_ANCHOR_RENDERER_VERSION,
-            "resource_sha256": loaded.resource_sha256,
-            "skill_name": loaded.skill.name,
-            "skill_sha256": loaded.skill.sha256,
-            "vocabulary_sha256": loaded.vocabulary_sha256,
-        },
-        timeout_seconds=timeout_seconds,
-        cancellation=cancellation,
-        artifact_value=lambda anchor: anchor.model_dump(mode="json"),
-        validate=validate,
-        provenance_schema_version=2,
-    )
+    return edge_prompt, system
 
 
 def _validated_asset_kinds(
@@ -292,12 +223,10 @@ def _canonical_digest(value: object) -> str:
 
 
 __all__ = [
-    "IMAGE_STYLE_SELECTION_SCHEMA",
     "IMAGE_STYLE_SKILL_NAME",
     "ImageStyleResources",
     "ImageStyleSkill",
-    "build_image_style_compiler_request",
-    "image_style_compiler_cache_key",
+    "image_style_question",
     "load_image_style_resources",
     "load_image_style_skill",
     "materialize_style_anchor",

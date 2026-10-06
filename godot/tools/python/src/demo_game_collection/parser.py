@@ -20,8 +20,8 @@ def build_parser() -> argparse.ArgumentParser:
         prog="demo-games",
         description="repository game preparation and regression tooling",
         epilog=(
-            "Every game's assets build with gnode from the game's own folder: "
-            "cd godot/games/<game> && gnode plan pipeline/workflow.py:build ..."
+            "Every game's assets build with Grida FX from the game's own folder: "
+            "cd godot/games/<game> && uv run python -m grida.fx plan pipeline/workflow.py:build ..."
         ),
     )
     commands = parser.add_subparsers(dest="command", required=True)
@@ -30,7 +30,7 @@ def build_parser() -> argparse.ArgumentParser:
         "dialogue-scene",
         description=(
             "Review one non-explicit visual-novel dialogue-scene bundle; the scene builds "
-            "with gnode from its game folder (pipeline/workflow.py:scene)"
+            "with Grida FX from its game folder (pipeline/workflow.py:scene)"
         ),
     )
     dialogue_commands = dialogue_parser.add_subparsers(dest="dialogue_command", required=True)

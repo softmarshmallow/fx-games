@@ -1,5 +1,5 @@
 # Only what the workflow file cannot say. Steps, titles and the sample plan come from
-# workflow.yaml through gnode.
+# workflow.yaml through FX.
 schema_version = 1
 kind = "stage-gen-workflow-v1"
 id = "portrait-motion"
@@ -14,9 +14,9 @@ related = ["movie-sprite"]
 [try]
 input = "An original geometric character, as a full sprite and as an opaque portrait, with the inputs that use them, written by uv run python src/stage_gen/workflows/portrait_motion/inputs/make_inputs.py out/portrait-motion-input. The run is paid: it needs OpenRouter and OpenAI keys, and --live"
 commands = [
-  "gnode plan portrait-motion --inputs out/portrait-motion-input/face.yaml",
-  "gnode run portrait-motion --inputs out/portrait-motion-input/face.yaml --live --max-usd 5",
-  "gnode inspect portrait-motion",
+  "uv run python -m grida.fx plan portrait-motion --inputs out/portrait-motion-input/face.yaml",
+  "uv run python -m grida.fx run portrait-motion --inputs out/portrait-motion-input/face.yaml --live --max-usd 5",
+  "uv run python -m grida.fx inspect portrait-motion",
 ]
 
 [[outputs]]

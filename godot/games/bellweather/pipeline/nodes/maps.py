@@ -12,6 +12,8 @@ from __future__ import annotations
 import json
 from typing import Any, cast
 
+from grida.fx import Ctx, node
+
 from bellweather_pipeline.assets import (
     MapAsset,
     canonicalize_map_presentation,
@@ -31,7 +33,6 @@ from demo_game_tools.kits.sideview_map_design import (
     expand_design,
     rejection_feedback,
 )
-from gnode import Ctx, node
 
 _MAP = {"map": dict}
 _ASSET: dict[str, Any] = {
@@ -54,8 +55,7 @@ def _design(ctx: Ctx, game_map: PreparedGameMap) -> tuple[Any, list[str]]:
 def terrain_schema(ctx: Ctx) -> dict[str, Any]:
     """The composition's shape: the chunk grammar this map's capabilities allow."""
 
-    schema = build_chunk_schema(terrain_profile(_map(ctx)))
-    return {"schema": ctx.out.json(schema.json_schema)}
+    return {"schema": ctx.out.json(build_chunk_schema(terrain_profile(_map(ctx))))}
 
 
 @node("check_terrain", inputs={"design": "json"}, params=_MAP, judge=True, version=1)

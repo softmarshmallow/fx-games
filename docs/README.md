@@ -21,10 +21,9 @@ both phases and their graphs.
 
 ## Authoring and inspection
 
-- [The gnode guide](guide/README.md): write, plan, run and inspect your own workflows and node
-  types, with example projects.
+- [The FX guide](https://github.com/gridaco/fx/blob/main/docs/guide/README.md): write, plan,
+  run and inspect your own workflows and node types, with example projects.
 - [Components](../src/stage_gen/components/README.md): the component table and the component contract.
-- [GNode rings](spec/gnode-rings.md): engine and provider ownership.
 - [Viewer](viewer.md): `gnode view`, the local read-only client over run folders.
 - [Site](site.md): the static landing and documentation site, built by `scripts/site.py` from the catalog and the example store.
 - [Providers](models/providers.md): bindings, credentials and live-operation boundaries.

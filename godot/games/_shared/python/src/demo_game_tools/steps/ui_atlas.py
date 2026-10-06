@@ -11,6 +11,8 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, cast
 
+from grida.fx import Ctx, Group, StepRef, node
+
 from demo_game_tools.kits.ui_art.models import UiArtwork
 from demo_game_tools.kits.ui_art.nodes import (
     NINE_SLICE_FAMILY,
@@ -20,7 +22,6 @@ from demo_game_tools.kits.ui_art.nodes import (
     sheet_family,
     ui_atlas_review_schema,
 )
-from gnode import Ctx, Group, StepRef, node
 
 #: Paintings a sheet gets before the run stops on it.
 SHEET_TAKES = 6
@@ -126,7 +127,7 @@ def add_ui_sheet_steps(
     painting = group.step(
         "generate",
         title=f"Paint the {role.role} sheet",
-        uses="gnode/image.edit@1",
+        uses="fx/image.edit@1",
         with_={
             "image": pictures[0],
             "references": pictures[1:],
@@ -134,7 +135,7 @@ def add_ui_sheet_steps(
             "size": f"{role.canvas[0]}x{role.canvas[1]}",
             "background": "transparent",
         },
-        requires=["transparent_background"],
+        requires=["alpha"],
         view=True,
     )
     group.step(
@@ -191,7 +192,7 @@ def _review(
     return group.step(
         "review",
         title=f"Review the {role.role} sheet",
-        uses="gnode/structured.generate@1",
+        uses="fx/structured.generate@1",
         with_={
             "prompt": prompt,
             "system": REVIEW_SYSTEM,

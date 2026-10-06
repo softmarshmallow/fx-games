@@ -49,7 +49,10 @@ class Outcome:
 
 def environment() -> dict[str, str]:
     result = {key: value for key, value in os.environ.items() if key not in CREDENTIALS}
-    result["_STAGE_GEN_DISABLE_DOTENV"] = "1"
+    # Afterlight's voice suite runs FX on stand-ins: offline, without a .env, with this interpreter.
+    result["GRIDA_FX_PYTHON"] = sys.executable
+    result["GRIDA_FX_DISABLE_DOTENV"] = "1"
+    result["GRIDA_FX_NETWORK"] = "off"
     return result
 
 

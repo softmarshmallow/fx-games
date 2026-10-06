@@ -30,8 +30,8 @@
         "try": {
           "input": "src/stage_gen/workflows/swatch_sheet/inputs/slate",
           "commands": [
-            "uv run gnode plan swatch-sheet --inputs src/stage_gen/workflows/swatch_sheet/inputs/slate.yaml",
-            "uv run gnode run swatch-sheet --inputs src/stage_gen/workflows/swatch_sheet/inputs/slate.yaml"
+            "uv run python -m grida.fx plan swatch-sheet --inputs src/stage_gen/workflows/swatch_sheet/inputs/slate.yaml",
+            "uv run python -m grida.fx run swatch-sheet --inputs src/stage_gen/workflows/swatch_sheet/inputs/slate.yaml"
           ]
         },
         "examples": [
@@ -57,7 +57,7 @@
       "no_importer": null,
       "identity": {
         "graph_kinds": [
-          "gnode-graph-v2"
+          "fx-graph-v1"
         ],
         "node_types": [
           [
@@ -110,7 +110,7 @@
         }
       ],
       "sample_plan": {
-        "kind": "gnode-graph-v2",
+        "kind": "fx-graph-v1",
         "topology_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
         "operation_counts": {
           "image_generation": 1,
@@ -191,7 +191,7 @@
               "out/swatch-sheet-slate-01/sheet.png": "6666666666666666666666666666666666666666666666666666666666666666"
             },
             "status": "succeeded",
-            "graph_kind": "gnode-graph-v2",
+            "graph_kind": "fx-graph-v1",
             "graph_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
             "inputs": {
               "brief": {

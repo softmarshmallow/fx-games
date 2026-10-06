@@ -11,7 +11,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from gnode import Ctx, node
+from grida.fx import Ctx, node
+
 from stage_gen.workflows.character_3d.harness import Bench
 
 BLENDER = ["blender"]

@@ -10,8 +10,8 @@ separate surface: it documents workflows and shows their examples, and it never 
 ## Start it
 
 ```sh
-uv run gnode view out
-uv run gnode view out path/to/more-runs --port 3100 --no-open
+uv run python scripts/view.py out/runs
+uv run python scripts/view.py out/runs path/to/more-runs --port 3100 --no-open
 ```
 
 `gnode view [runs]... [--port 3000] [--no-open]` shows the runs under each folder you name, or
@@ -52,7 +52,7 @@ four folders below each root. A run's own folders are not searched again, hidden
 `node_modules` are skipped, symlinked folders are not followed out of the root, and the example
 store at the top of a root (`out/examples`) is not a run
 ([`lib/shell/runs.ts`](../web/viewer/lib/shell/runs.ts)). gnode finds the workflow runs whose
-views it keeps by the same rules ([`gnode/workflow/dashboard.py`](../src/gnode/workflow/dashboard.py)).
+views it keeps by the same rules ([`stage_gen/runview/refresh.py`](../src/stage_gen/runview/refresh.py)).
 
 The view a run page draws is the run's own `execution-view.json`, or the one kept in the view
 cache, whichever is newer. Kept views are written only under

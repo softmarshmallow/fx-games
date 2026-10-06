@@ -256,28 +256,28 @@ RETIRED_FAMILIES: tuple[tuple[str, str], ...] = (
     ("prepared-game-execution-view", "renamed with the node ABI"),
     (
         "sideview-runner-execution-graph",
-        "the runner builds through gnode; its plan is a `gnode-graph`",
+        "the runner builds through Grida FX; its plan is an `fx-graph`",
     ),
-    ("sideview-runner-nodes", "retired with the runner's execution graph; gnode keeps one cache"),
+    ("sideview-runner-nodes", "retired with the runner's execution graph; FX keeps one cache"),
     (
         "sideview-platformer-execution-graph",
-        "the platformer builds through gnode; its plan is a `gnode-graph`",
+        "the platformer builds through Grida FX; its plan is an `fx-graph`",
     ),
     ("sideview-platformer-world", "retired with the platformer's execution graph"),
     ("sideview-platformer-content", "retired with the platformer's execution graph"),
     (
         "pointclick-room-execution-graph",
-        "the room builds through gnode; its plan is a `gnode-graph`",
+        "the room builds through Grida FX; its plan is an `fx-graph`",
     ),
     ("pointclick-room-nodes", "retired with the room's execution graph"),
     (
         "dialogue-scene-execution-graph",
-        "the scene builds through gnode; its plan is a `gnode-graph`",
+        "the scene builds through Grida FX; its plan is an `fx-graph`",
     ),
     ("dialogue-scene-nodes", "retired with the scene's execution graph"),
     (
         "oblique-survival-execution-graph",
-        "the survival world builds through gnode; its plan is a `gnode-graph`",
+        "the survival world builds through Grida FX; its plan is an `fx-graph`",
     ),
     ("oblique-survival-nodes", "retired with the survival world's execution graph"),
 )

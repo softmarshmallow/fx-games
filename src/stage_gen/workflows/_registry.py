@@ -27,8 +27,8 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol
 from pydantic import BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
-    from gnode import NodeType
     from stage_gen.examples import ExampleImporter, FiguresLedger, WorkflowExample
+    from stage_gen.runview import ViewArchetype
 
 WORKFLOWS_PACKAGE = "stage_gen.workflows"
 MANIFEST_FILE = "workflow.toml"
@@ -45,6 +45,26 @@ def folder_of(workflow_id: str) -> str:
 
 
 # ---------------------------------------------------------------- code facts
+
+
+@dataclass(frozen=True, slots=True)
+class NodeType:
+    """One catalog type: a leaf step of a workflow, as readers and the identity fixture see it.
+
+    ``contract_version`` is the type identity FX resolves the step's ``uses`` to (a
+    built-in's carries its minor version); ``archetype`` picks the view a renderer gives its
+    instances.
+    """
+
+    type_id: str
+    title: str
+    archetype: ViewArchetype
+    operation: str
+    contract_version: str
+
+    @property
+    def cache_identity(self) -> str:
+        return self.type_id
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,7 +100,7 @@ class PlannedNode(Protocol):
 
 
 class PlannedSample(Protocol):
-    """A workflow's offline sample plan: a gnode ``Graph``, or a workflow file's plan."""
+    """A workflow's offline sample plan: the plan of its workflow file."""
 
     @property
     def kind(self) -> str: ...
@@ -141,12 +161,6 @@ class WorkflowCode:
 
     def node_types(self) -> dict[str, NodeType]:
         return {m.type_id: m for step in self.steps for m in step.members}
-
-    def graph_kinds(self) -> frozenset[str]:
-        kinds = self.identity().get("graph_kinds", [])
-        if not isinstance(kinds, list):
-            raise TypeError("identity()['graph_kinds'] must be a list")
-        return frozenset(str(kind) for kind in kinds)
 
 
 def node_type_inventory(types: Iterable[NodeType]) -> list[list[str]]:
@@ -328,6 +342,7 @@ __all__ = [
     "ExampleEntry",
     "Identity",
     "LibraryReader",
+    "NodeType",
     "OutputNote",
     "PlannedNode",
     "PlannedSample",

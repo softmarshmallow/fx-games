@@ -8,7 +8,6 @@ the fixture. A failure names what moved and what it costs; re-pin a section with
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 
 import pytest
@@ -20,7 +19,6 @@ from scripts.write_workflow_identity import (
     SECTIONS,
     differences,
 )
-from tests.support.cache_key_golden import assert_cache_keys_match
 
 GOLDEN = json.loads(GOLDEN_PATH.read_text(encoding="utf-8"))
 
@@ -30,13 +28,6 @@ COSTS = {
         "a persisted identity moved: runs, caches and consumers that read it back stop matching"
     ),
 }
-
-
-@pytest.fixture(autouse=True)
-def _no_stage_gen_environment(monkeypatch: pytest.MonkeyPatch) -> None:
-    for name in tuple(os.environ):
-        if name.startswith("STAGE_GEN_"):
-            monkeypatch.delenv(name)
 
 
 def test_the_golden_pins_every_section_and_plan() -> None:
@@ -68,10 +59,6 @@ def test_section_is_pinned(section: str, tmp_path: Path) -> None:
 
 @pytest.mark.parametrize("name", sorted(CACHE_KEY_PLANS))
 def test_cache_keys_are_pinned(name: str, tmp_path: Path) -> None:
-    built = CACHE_KEY_PLANS[name](tmp_path)
     label = f"workflow-identity.json cache_keys.{name}"
-    if isinstance(built, dict):
-        moved = differences(GOLDEN["cache_keys"][name], built, label)
-        assert not moved, "\n".join([f"{label} moved: paid calls and results re-bill", *moved])
-        return
-    assert_cache_keys_match(built, GOLDEN["cache_keys"][name], label=label)
+    moved = differences(GOLDEN["cache_keys"][name], CACHE_KEY_PLANS[name](tmp_path), label)
+    assert not moved, "\n".join([f"{label} moved: paid calls and results re-bill", *moved])

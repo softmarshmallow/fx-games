@@ -2,10 +2,10 @@
 
 ``uv run python make_inputs.py out/movie-sprite-input`` writes there:
 
-- ``character.png`` and ``take.yaml``, to plan the paid take: ``gnode plan movie-sprite
-  --inputs <dir>/take.yaml``;
-- ``actor.mkv``, ``finish.json`` and ``clip.yaml``, to finish that clip for free: ``gnode
-  run movie-sprite --inputs <dir>/clip.yaml`` (the clip needs FFmpeg).
+- ``character.png`` and ``take.yaml``, to plan the paid take: ``uv run python -m grida.fx plan
+  movie-sprite --inputs <dir>/take.yaml``;
+- ``actor.mkv``, ``finish.json`` and ``clip.yaml``, to finish that clip for free: ``uv run
+  python -m grida.fx run movie-sprite --inputs <dir>/clip.yaml`` (the clip needs FFmpeg).
 """
 
 from __future__ import annotations

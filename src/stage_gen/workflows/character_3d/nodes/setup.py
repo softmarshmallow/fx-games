@@ -9,7 +9,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from gnode import Ctx, node
+from grida.fx import Ctx, node
+
 from stage_gen.components.character_3d.quality_bar import quality_bar, upstream_policy
 from stage_gen.workflows.character_3d.harness import (
     LANES,

@@ -180,24 +180,15 @@ pacer. This keeps each service's ownership explicit instead of implying that a
 shared resource ID alone merges adapter instances.
 
 Review every node type with its settings and the routes that serve it, without loading
-provider credentials; `gnode doctor <workflow>` names the keys, tools and routes one workflow
-needs:
+provider credentials; `uv run python -m grida.fx doctor <workflow>` names the keys, tools and
+routes one workflow needs:
 
 ```sh
-uv run gnode nodes
+uv run python -m grida.fx nodes
 ```
 
-Before changing a product, route, capability, price, or policy, check the packaged
-snapshot, then rewrite it and read the diff of `src/stage_gen/model_policy_snapshot.json`:
-
-```sh
-uv run python scripts/write_model_policy_snapshot.py
-uv run python scripts/write_model_policy_snapshot.py --write
-```
-
-Both are offline and read only local files. The games are not part of it: each binds
-its routes in its own `gnode.yaml`, and a route without a feature a step requires is
-refused when that game plans.
+Both are offline and read only local files. Each game binds its routes in its own `fx.yaml`,
+and a route without a feature a step requires is refused when that game plans.
 
 All image routes are the Sunburst variant at `quality="max"`. Flare, the bare
 `gpt-image-2.5` name, dated aliases, and arbitrary model overrides are closed.
@@ -509,8 +500,8 @@ outputs:
 ```
 
 ```sh
-uv run gnode run clip-audition.yaml --live --max-usd 5
-uv run gnode view
+uv run python -m grida.fx run clip-audition.yaml --live --max-usd 5
+uv run python scripts/view.py
 ```
 
 The dashboard plays the four takes side by side. `gnode pick <run> film 3` makes the third
@@ -535,7 +526,7 @@ No workflow removes a background today, so no route serves `gnode/background.rem
 Prepared-game planning is separate and provider-free:
 
 ```sh
-(cd godot/games/bellweather && uv run gnode plan pipeline/workflow.py:build --arg package=inputs/default)
+(cd godot/games/bellweather && uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs/default)
 ```
 
 The runner and the platformer build with gnode from their game folders. Each

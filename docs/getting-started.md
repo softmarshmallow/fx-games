@@ -7,8 +7,8 @@ Stage Gen runs from a source checkout. You need Python 3.12 or newer and
 
 ```sh
 uv sync --frozen
-uv run gnode schema movie-sprite
-uv run gnode nodes
+uv run python -m grida.fx schema movie-sprite
+uv run python -m grida.fx nodes
 ```
 
 The installed workflows are listed in the [README](../README.md#workflows) and on the site, each
@@ -26,9 +26,9 @@ command plans and runs it. A committed script writes two original layers and the
 
 ```sh
 uv run python src/stage_gen/workflows/looping_parallax/inputs/supplied_layers/make_inputs.py out/looping-parallax-input
-uv run gnode plan looping-parallax --inputs out/looping-parallax-input/inputs.yaml
-uv run gnode run looping-parallax --inputs out/looping-parallax-input/inputs.yaml --deliver manifest=out/looping-parallax-try/manifest.json
-uv run gnode inspect looping-parallax --verify
+uv run python -m grida.fx plan looping-parallax --inputs out/looping-parallax-input/inputs.yaml
+uv run python -m grida.fx run looping-parallax --inputs out/looping-parallax-input/inputs.yaml --deliver manifest=out/looping-parallax-try/manifest.json
+uv run python -m grida.fx inspect looping-parallax --verify
 ```
 
 `plan` prints each phase the run would execute and its price, before any spend. `run` writes
@@ -45,7 +45,7 @@ and they need your own provider keys. Read [provider setup](models/providers.md)
 
 ```sh
 (cd web && bun install --frozen-lockfile)
-uv run gnode view
+uv run python scripts/view.py
 ```
 
 The [viewer](viewer.md) lists every run under `out/runs/` (or the folders you name), grouped by
@@ -63,5 +63,5 @@ uv run python scripts/site.py serve --port 8790
 
 Your own workflow is a gnode workflow file, or a Python builder for a graph that a file cannot
 state; `gnode plan` and `gnode run` take either, with the same cache, takes and run record the
-installed workflows use. The [gnode guide](guide/README.md) shows how, from a first workflow to
+installed workflows use. The [FX guide](https://github.com/gridaco/fx/blob/main/docs/guide/README.md) shows how, from a first workflow to
 your own node types, and the [glossary](glossary.md) names the parts.

@@ -1,8 +1,9 @@
 """Ember Hollow's asset build: every picture, sound and record the survival host reads.
 
-    gnode plan pipeline/workflow.py:build --arg package=inputs --arg scope=minimal
-    gnode run  pipeline/workflow.py:build --arg package=inputs --live --max-usd 40 \\
-        --deliver package=../../../out/ember-hollow/{key}
+    uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs \\
+        --arg scope=minimal
+    uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs \\
+        --live --max-usd 40 --deliver package=../../../out/ember-hollow/{key}
 
 The game's own reader resolves the package, unchanged, and refuses an incomplete world
 while planning. A scope is one rung of a ladder (minimal, props, actors, full) that selects
@@ -12,7 +13,7 @@ judge and drawn again when it fails; auditioned takes are adopted through the sa
 Reviews are evidence, never gates. The last step lays the published files out at the
 paths the manifest names and writes ``manifest.json``.
 
-A package must sit inside this project (the folder holding ``gnode.yaml``): its authored
+A package must sit inside this project (the folder holding ``fx.yaml``): its authored
 references and takes are project files, read by content.
 """
 
@@ -22,6 +23,8 @@ import re
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
+
+from grida.fx import Group, StepRef, Workflow
 
 from demo_game_tools.kits.screen_art.layouts import CUTOUT_ALPHA_POLICY
 from demo_game_tools.kits.ui_art.nodes import document_roles
@@ -53,7 +56,6 @@ from ember_hollow_pipeline.shell.nodes import (
     shell_typeface_ref,
 )
 from ember_hollow_pipeline.survival_request import load_package
-from gnode import Group, StepRef, Workflow
 
 #: The game's node modules, as project paths.
 PICTURES = "./pipeline/nodes/pictures.py"
@@ -92,9 +94,9 @@ def _name(value: str) -> str:
 
 def _project_root(package: Path) -> Path:
     for folder in (package, *package.parents):
-        if (folder / "gnode.yaml").is_file():
+        if (folder / "fx.yaml").is_file():
             return folder
-    raise ValueError(f"{package} is not inside a gnode project")
+    raise ValueError(f"{package} is not inside an FX project")
 
 
 def _head(kind: str, **fields: object) -> dict[str, object]:
@@ -185,9 +187,9 @@ class _Build:
         painting = group.step(
             "generate",
             title=title,
-            uses="gnode/image.edit@1" if pictures else "gnode/image.generate@1",
+            uses="fx/image.edit@1" if pictures else "fx/image.generate@1",
             with_=with_,
-            requires=["transparent_background"] if transparent else [],
+            requires=["alpha"] if transparent else [],
             view=True,
         )
         judged: dict[str, Any] = {"image": painting.outputs.image, "gate": gate, "args": args}
@@ -949,7 +951,7 @@ class _Build:
                 args={},
                 take=track.take,
                 generate={
-                    "uses": "gnode/music.generate@1",
+                    "uses": "fx/music.generate@1",
                     "with_": {"prompt": prompts.music_prompt(track)},
                 },
                 head=_head(
@@ -975,7 +977,7 @@ class _Build:
                 args={"duration_seconds": clip.duration_seconds},
                 take=clip.take,
                 generate={
-                    "uses": "gnode/sound.generate@1",
+                    "uses": "fx/sound.generate@1",
                     "with_": {
                         "prompt": clip.prompt,
                         "duration": clip.duration_seconds,
@@ -1112,7 +1114,7 @@ class _Build:
                     args={"duration_seconds": cue.duration_seconds},
                     take=None,
                     generate={
-                        "uses": "gnode/sound.generate@1",
+                        "uses": "fx/sound.generate@1",
                         "with_": {
                             "prompt": cue.prompt,
                             "duration": cue.duration_seconds,
@@ -1150,7 +1152,7 @@ class _Build:
             answer = review_group.step(
                 "judge",
                 title=f"Judge the {family} set",
-                uses="gnode/structured.generate@1",
+                uses="fx/structured.generate@1",
                 with_={
                     "prompt": prompts.family_review_prompt(family, labels, package.ground_contact),
                     "system": REVIEW_SYSTEM,
@@ -1225,9 +1227,9 @@ class _Build:
             painting = role_group.step(
                 "generate",
                 title=f"Draw the {role.screen} screen's {role.role} plate",
-                uses="gnode/image.edit@1" if references else "gnode/image.generate@1",
+                uses="fx/image.edit@1" if references else "fx/image.generate@1",
                 with_=with_,
-                requires=["transparent_background"] if transparent else [],
+                requires=["alpha"] if transparent else [],
                 view=True,
             )
             role_group.step(
@@ -1289,7 +1291,7 @@ class _Build:
                 filmed = role_group.step(
                     "generate",
                     title=f"Film the opening's {clip_role.shot_id} shot",
-                    uses="gnode/video.generate@1",
+                    uses="fx/video.generate@1",
                     with_={
                         "prompt": prompts.shell_plate_prompt(package, clip_content_task(clip_role)),
                         "first_frame": references[0],
@@ -1398,7 +1400,7 @@ class _Build:
         answer = group.step(
             "review",
             title=f"Review the {role} {'shot' if clip else 'plate'}",
-            uses="gnode/structured.generate@1",
+            uses="fx/structured.generate@1",
             with_={
                 "prompt": str(asked.outputs.brief.prompt),
                 "system": REVIEW_SYSTEM,

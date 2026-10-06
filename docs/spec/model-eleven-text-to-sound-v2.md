@@ -1,6 +1,6 @@
 # Sound-effect model adapter contract
 
-> **Checked by:** `tests/contract/test_current_game_docs.py`, `tests/live/test_sound_effect_generation.py`.
+> **Checked by:** `tests/contract/test_current_game_docs.py`.
 
 Request surface verified against ElevenLabs' published API reference on
 2026-09-02. Behavioural findings below were measured in this repository over

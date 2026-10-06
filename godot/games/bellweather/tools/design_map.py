@@ -15,7 +15,7 @@ declares rather than a copy that can drift.
     uv run python godot/games/bellweather/tools/design_map.py render \
         --map crowncrag-road --example --out /tmp/road.png
     uv run python godot/games/bellweather/tools/design_map.py compile \
-        --map crowncrag-road --example --run-dir out/<run>
+        --map crowncrag-road --example --out /tmp/terrain
 """
 
 from __future__ import annotations
@@ -201,7 +201,8 @@ def run_render(args: argparse.Namespace) -> int:
 def run_compile(args: argparse.Namespace) -> int:
     """Expand a design into the terrain artifact a run consumes.
 
-    This writes an artifact into a run directory. It never touches the authored library.
+    This writes the artifact under ``--out``, a folder of its own (an FX run folder belongs to
+    the engine). It never touches the authored library.
     """
 
     game_map = load_map(args.input_root, args.map_id)
@@ -212,7 +213,7 @@ def run_compile(args: argparse.Namespace) -> int:
         return 1
     terrain = compile_terrain(designed, game_map)
     validate_generated_terrain(game_map, terrain)
-    out = args.run_dir / terrain_artifact_path(args.map_id)
+    out = args.out / terrain_artifact_path(args.map_id)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_bytes(canonical_prepared_map_terrain_json(terrain))
     print(describe(designed, profile))
@@ -251,7 +252,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_common(compiler)
     _add_source(compiler)
-    compiler.add_argument("--run-dir", type=Path, required=True)
+    compiler.add_argument("--out", type=Path, required=True)
     compiler.set_defaults(handler=run_compile)
     return parser
 

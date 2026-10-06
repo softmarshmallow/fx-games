@@ -13,7 +13,8 @@ from __future__ import annotations
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from gnode import Ctx, node
+from grida.fx import Ctx, node
+
 from stage_gen.media import probe_audio, validate_music_payload
 from the_grain_pipeline.dialogue_scene.build import (
     canonical_sprite,
@@ -174,7 +175,9 @@ async def admit_scene_track(ctx: Ctx) -> dict[str, Any]:
     try:
         facts = validate_music_payload(ctx.read.bytes("audio"))
         probe = await probe_audio(
-            ctx.inputs["audio"].path, ffprobe=ctx.tool("ffprobe").executable, timeout_seconds=120
+            ctx.inputs["audio"].path,
+            ffprobe=str(ctx.tool("ffprobe").executable),
+            timeout_seconds=120,
         )
         if probe.duration_seconds < MINIMUM_TRACK_SECONDS:
             raise ValueError(
@@ -243,7 +246,7 @@ async def scene_package(ctx: Ctx) -> dict[str, Any]:
         target.write_bytes(data)
     _lay_out(run, {"assets/style-plate.png": scene_files[plate.source]})
     bundle = await dialogue_bundle(
-        run, tag=resolved.scene_id, ffprobe=ctx.tool("ffprobe").executable
+        run, tag=resolved.scene_id, ffprobe=str(ctx.tool("ffprobe").executable)
     )
     bound = {
         "request.json",

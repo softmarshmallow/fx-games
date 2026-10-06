@@ -1,4 +1,4 @@
-"""Make a portrait-motion example from the gnode run that animated a sprite's face.
+"""Make a portrait-motion example from the FX run that animated a sprite's face.
 
 The face is shown the way a game drives it: the rest state, and each eye and the mouth as
 its own patch at one offset. Before anything is exported, every combination the run
@@ -16,15 +16,15 @@ from PIL import Image, ImageChops
 
 from stage_gen.examples import (
     Delivered,
-    GnodeRun,
+    FxRun,
     ImportRequest,
     Media,
     RecordingReader,
     WorkflowExample,
-    import_gnode_run,
+    import_fx_run,
     sha256,
 )
-from stage_gen.workflows._gnode import GnodeWorkflow
+from stage_gen.workflows._fx import FxWorkflow
 
 
 def _rgba(reader: RecordingReader, path: Path) -> Image.Image:
@@ -118,7 +118,7 @@ def _window(manifest: dict[str, Any], size: tuple[int, int]) -> tuple[int, int, 
     )
 
 
-def deliver(run: GnodeRun) -> Delivered:
+def deliver(run: FxRun) -> Delivered:
     """The sprite, the face on its timeline and, with a face crop, the rig a game drives."""
 
     reader, media = run.request.reader, run.request.media
@@ -187,7 +187,7 @@ def deliver(run: GnodeRun) -> Delivered:
 
 
 def import_example(request: ImportRequest) -> WorkflowExample:
-    workflow = GnodeWorkflow.read(__package__ or "stage_gen.workflows.portrait_motion")
-    return import_gnode_run(
+    workflow = FxWorkflow.read(__package__ or "stage_gen.workflows.portrait_motion")
+    return import_fx_run(
         request, type_of=lambda step: workflow.types[step].type_id, deliver=deliver
     )

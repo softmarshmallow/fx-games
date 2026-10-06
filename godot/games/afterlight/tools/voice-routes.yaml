@@ -1,0 +1,10 @@
+# The built-in ElevenLabs v3 speech route, priced by the characters a line sends: the
+# published $0.0001 per character, reserved at twice that. Everything else restates the
+# built-in entry exactly, so the route keeps its fingerprint and its adapter.
+fx: routes/v1
+routes:
+  - capability: speech.generate
+    route: eleven_v3@elevenlabs
+    price: { unit: 1k_chars, low_usd: 0.1, high_usd: 0.2, max_units: 5000 }
+    features: [audio_tags, stability]
+    contract: { adapter: elevenlabs-speech, adapter_behavior: 1 }

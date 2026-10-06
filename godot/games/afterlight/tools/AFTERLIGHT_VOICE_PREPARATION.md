@@ -5,8 +5,8 @@ program supplies the read-only review/voice inventory. This tool owns explicit
 recording preparation only; playing, compiling narrative, restoring a checkpoint
 or activating content does not request new speech. See the [game guide](../README.md).
 
-[prepare_afterlight_voice.py](prepare_afterlight_voice.py) is a local preparation
-command for the P95/P96 voice pass. Godot never imports it or requests speech
+[voice.yaml](voice.yaml), with its nodes in [voice_nodes.py](voice_nodes.py), is a local
+preparation workflow for the P95/P96 voice pass. Godot never imports it or requests speech
 generation. Later wording or casting changes require an explicit manual refresh;
 launching, playing, changing language, and inspecting voice status spend nothing.
 This is not a new generation package, provider adapter, or background sync service.
@@ -38,14 +38,14 @@ Godot --headless --path godot/games/afterlight --script res://voice/export_inven
 Inspect preparation and cost without credentials, network access, or writes:
 
 ```sh
-.venv/bin/python godot/games/afterlight/tools/prepare_afterlight_voice.py --inventory /tmp/afterlight-voice-inventory.json --quote godot/games/command_link/art/voiceovers-p95/quote.json
+(cd godot/games/afterlight && uv run python -m grida.fx plan afterlight-voice --inventory /tmp/afterlight-voice-inventory.json --prepared voice/manifest.json --installed 'voice/clips/*/*.mp3')
 ```
 
-Paid dispatch is a separate explicit action. It uses the existing allowlisted
-provider-key loader and requires both flags:
+Paid dispatch is a separate explicit action. It needs the ElevenLabs key and
+requires `--live` with a ceiling:
 
 ```sh
-.venv/bin/python godot/games/afterlight/tools/prepare_afterlight_voice.py --inventory godot/games/command_link/art/voiceovers-p95/inventory.json --quote godot/games/command_link/art/voiceovers-p95/quote.json --live --yes
+(cd godot/games/afterlight && uv run python -m grida.fx run afterlight-voice --inventory /tmp/afterlight-voice-inventory.json --prepared voice/manifest.json --installed 'voice/clips/*/*.mp3' --live --max-usd 10 --deliver 'files={key}')
 ```
 
 The default pass directory is `art/voiceovers-p95/`; generated MP3s and their
@@ -98,6 +98,14 @@ an atomic bundle. The helper admits reuse only when the source fields, artifact
 hash and length, provider/model/voice/settings, and provenance agree, and a fresh
 decode succeeds. A valid bundle recovered after interruption is reused without
 another provider call. A corrupt bundle is reported for reconciliation.
+
+On FX, `--prepared` is checked against `--installed` (the installed clips): a
+ready record at the line's revisions is kept only when its clip sits at the
+record's path, hashes to its `audio_sha256` and decodes again as a playable,
+unclipped read. A missing clip (a fresh clone, where the manifest is tracked and
+the clips are not) is spoken again. A clip that is present but disagrees fails
+the plan, naming the line for reconciliation; it is never spoken again
+automatically. `--prepared` without `--installed` is refused.
 
 Ready manifest records contain the host source revision, preparation revision,
 audio/provenance hashes, original provenance path, decoded duration, actual

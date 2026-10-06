@@ -1,4 +1,4 @@
-"""Make a character-3d example from the gnode run that built a character, or from a library one.
+"""Make a character-3d example from the FX run that built a character, or from a library one.
 
 A run delivers the character (a GLB), the result that admitted it, the canonical reference
 picture and the labeled atlas of every pose its rig reviewer judged; the page shows the
@@ -20,7 +20,7 @@ from PIL import Image
 from stage_gen.examples import (
     Delivered,
     FiguresLedger,
-    GnodeRun,
+    FxRun,
     ImportRequest,
     MadeBy,
     RecordingReader,
@@ -30,11 +30,11 @@ from stage_gen.examples import (
     display_names,
     has_alpha,
     hex_colour,
-    import_gnode_run,
+    import_fx_run,
     sha256,
     sha256_bytes,
 )
-from stage_gen.workflows._gnode import GnodeWorkflow
+from stage_gen.workflows._fx import FxWorkflow
 
 WORKFLOW_ID = "character-3d"
 
@@ -76,7 +76,7 @@ def _glb_contents(
     return [a.get("name", "") for a in document.get("animations", [])], parts
 
 
-def _pose_rows(run: GnodeRun) -> int | None:
+def _pose_rows(run: FxRun) -> int | None:
     """How many atlas pictures are pose rows; the face strip and torso images follow them.
 
     The rig review's own evidence counts its rows; every review in a run judges the same
@@ -95,7 +95,7 @@ def _pose_rows(run: GnodeRun) -> int | None:
     return len(review["initial_evidence"]["rows"])
 
 
-def deliver(run: GnodeRun) -> Delivered:
+def deliver(run: FxRun) -> Delivered:
     """The brief or parts it started from, and the character it delivered, posed."""
 
     reader, media = run.request.reader, run.request.media
@@ -146,8 +146,8 @@ def deliver(run: GnodeRun) -> Delivered:
 
 
 def import_example(request: ImportRequest) -> WorkflowExample:
-    workflow = GnodeWorkflow.read(__package__ or "stage_gen.workflows.character_3d")
-    return import_gnode_run(
+    workflow = FxWorkflow.read(__package__ or "stage_gen.workflows.character_3d")
+    return import_fx_run(
         request, type_of=lambda step: workflow.types[step].type_id, deliver=deliver
     )
 

@@ -10,7 +10,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from gnode import Ctx, node
+from grida.fx import Ctx, node
+
 from iron_petal_unit_pipeline.admission import (
     admit_catalog_candidate,
     admit_transparent_sprite,

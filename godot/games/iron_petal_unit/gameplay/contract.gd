@@ -24,7 +24,7 @@ const RUNTIME_SCHEMA_VERSION := 13
 ## A player who sees this refusal needs the command, not the version number.
 const UNSUPPORTED := (
 	"unsupported sideview-runner manifest; rebuild this track from the game's folder "
-	+ "(gnode run pipeline/workflow.py:build --arg package=inputs)"
+	+ "(uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs)"
 )
 
 ## Every block this build reads, and the version it reads it at.

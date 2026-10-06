@@ -30,7 +30,7 @@ plan|run character-3d` plans and runs it. Its inputs:
 | Responsibility | Owner |
 | --- | --- |
 | Steps, takes, rebuilds, routes, the call cache, ceilings and resume | gnode |
-| Reference design, part layout, assembly choices and semantic reviews | Agents on the `agent.turn` route ([`gnode.yaml`](gnode.yaml)) |
+| Reference design, part layout, assembly choices and semantic reviews | Agents on the `agent.turn` route ([`fx.yaml`](fx.yaml)) |
 | Textured geometry | `mesh.generate` on Tripo |
 | Skeleton and skin weights on the provider lane | `mesh.rig` on Tripo |
 | Measurements, fitting, preservation checks, renders and exports | The contained local Blender worker, a declared tool (`gnode doctor`) |
@@ -166,14 +166,14 @@ separate, paid evidence.
 
 ## Graph
 
-gnode plans the committed brief offline; this is the shape of that plan.
+FX plans the committed brief offline; this is the shape of that plan.
 `scripts/write_workflow_contracts.py --write` regenerates the block, and the check above fails
 when it drifts:
 
 <!-- pipeline-graph-contract:start -->
 ```json
 {
-  "graph_kind": "gnode-graph-v2",
+  "graph_kind": "fx-graph-v1",
   "topology_sha256": "613df246bdd6f2570e0379b6df9a4d478eea37ba5860f07bf86c934419df5763",
   "node_count": 36,
   "operation_counts": {

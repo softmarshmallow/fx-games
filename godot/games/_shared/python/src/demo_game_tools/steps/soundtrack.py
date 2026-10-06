@@ -10,7 +10,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from gnode import Ctx, Group, StepRef, node
+from grida.fx import Ctx, Group, StepRef, node
+
 from stage_gen.media import probe_audio, validate_music_payload
 
 #: Draws a track gets before the run stops on it.
@@ -52,7 +53,7 @@ async def record_track(ctx: Ctx) -> dict[str, Any]:
     """Measure the track, refuse one too short to loop, and record it against the brief."""
 
     probe = await probe_audio(
-        ctx.inputs["audio"].path, ffprobe=ctx.tool("ffprobe").executable, timeout_seconds=120
+        ctx.inputs["audio"].path, ffprobe=str(ctx.tool("ffprobe").executable), timeout_seconds=120
     )
     if probe.duration_seconds < MINIMUM_TRACK_SECONDS:
         raise ctx.fail(
@@ -94,7 +95,7 @@ def add_track_steps(
     draw = group.step(
         "generate",
         title="Compose the track",
-        uses="gnode/music.generate@1",
+        uses="fx/music.generate@1",
         with_={"prompt": prompt},
         view=True,
     )

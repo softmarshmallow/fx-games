@@ -64,9 +64,6 @@ from demo_game_tools.kits.ui_art.models import (
 from stage_gen.components._game_input import SNAKE_ID_PATTERN
 from stage_gen.contracts import PersistedContractModel
 
-IMAGE_FEATURES = ("transparent_background", "reference_images")
-STRUCTURED_FEATURES = ("structured_output", "image_input")
-
 #: The generate node's cache contract: what the model is asked to paint. Bumping it
 #: re-bills every sheet, so measured facts that only the local gate reads live under
 #: the validation version below instead.
@@ -666,8 +663,6 @@ __all__ = [
     "CursorSetLayout",
     "IconCellLayout",
     "IconSetLayout",
-    "IMAGE_FEATURES",
-    "STRUCTURED_FEATURES",
     "UI_SHEET_ROLES",
     "UI_ATLAS_CONTRACT_VERSION",
     "UI_ATLAS_EVIDENCE_KIND",

@@ -11,8 +11,8 @@ This note has two deliberately separate status classes:
 - **Future proposal**: a reusable semantic-review capability and broader semantic criteria.
 
 Status (2026-09-04): the "current implementation" below describes the layout of
-August 2026. Structured generation has since moved to `src/gnode/modalities/structured/`
-over `src/gnode/providers/openrouter/structured.py`, and the recipe modules named
+August 2026. Structured generation has since moved to Grida FX's built-in
+`structured.generate` step and its OpenRouter adapter, and the recipe modules named
 here were folded into `src/stage_gen/media/` and the recipe's `motion_contract.py`.
 There is still no semantic_review package and no review.py provider module; those
 names appear only in the future section.

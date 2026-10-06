@@ -6,7 +6,7 @@ description: Author or extend an asset workflow with gnode (a workflow file or a
 # Asset Pipeline Authoring
 
 Read [AGENTS.md](../../../AGENTS.md), [architecture](../../../ARCHITECTURE.md), and
-[the gnode guide](../../../docs/guide/README.md). Begin with explicit inputs, output
+[the FX guide](https://github.com/gridaco/fx/blob/main/docs/guide/README.md). Begin with explicit inputs, output
 artifacts and the judges that admit them. A node type performs one capability; a workflow
 composes a bounded asset result. A game is a consumer with its own code and rules.
 
@@ -20,7 +20,7 @@ game. It never needs to describe combat, quests, camera controllers or complete 
 
 Study [looping-parallax](../../../src/stage_gen/workflows/looping_parallax/page.mdx) for a
 provider-free end-to-end workflow, and the guide's
-[example projects](../../../docs/guide/README.md#example-projects) for the patterns. Keep
+[example projects](https://github.com/gridaco/fx/blob/main/docs/guide/README.md#example-projects) for the patterns. Keep
 runnable samples beside their owner. Plan before any spend (`gnode plan --check`); a live run
 needs `--live`, a ceiling (`--max-usd`) and the owner's go. Choose takes with `gnode reroll`
 and `gnode pick`, and copy results out with `--deliver`.

@@ -1,0 +1,71 @@
+fx: workflow/v1
+id: afterlight-voice
+title: Afterlight voice preparation
+description: >-
+  The exported voice inventory in; each generated line spoken once by its cast voice, admitted
+  as a playable, unclipped read, and laid out at its game path with a manifest. A line the
+  installed manifest already holds at the same revisions is kept, never spoken again, when its
+  installed clip still hashes and decodes as recorded.
+
+inputs:
+  inventory:
+    type: file
+    kind: json
+    description: The inventory voice/export_inventory.gd exports
+  prepared:
+    type: file
+    kind: json
+    optional: true
+    description: >-
+      The installed voice/manifest.json; its ready lines at the same revisions are kept when
+      their installed clips back them. Give it with installed.
+  installed:
+    type: files
+    kind: audio
+    glob: true
+    optional: true
+    description: >-
+      The installed clips, voice/clips/*/*.mp3. A kept line's clip must hash to its record's
+      audio_sha256 and decode; a missing clip is spoken again, a disagreeing one fails the plan
+
+budget: { max_usd: 10 }
+
+steps:
+  lines:
+    title: Read the inventory
+    uses: ./tools/voice_nodes.py#voiced_lines
+    at: plan
+    with:
+      inventory: ${{ inputs.inventory }}
+      prepared: ${{ inputs.prepared }}
+      installed: ${{ inputs.installed }}
+  line:
+    for_each: ${{ steps.lines.outputs.lines.generate }}
+    key: ${{ item.key }}
+    steps:
+      speak:
+        title: Speak the line
+        uses: fx/speech.generate@1
+        requires: [audio_tags, stability]
+        with:
+          text: ${{ item.text }}
+          voice: ${{ item.voice }}
+          stability: ${{ item.stability }}
+          language_code: ${{ item.language_code }}
+      admit:
+        title: Admit the read
+        uses: ./tools/voice_nodes.py#admit_line
+        judges: speak
+        with:
+          audio: ${{ steps.speak.outputs.audio }}
+        on_reject: { regenerate: { max: 3, then: fail } }
+  layout:
+    title: Lay out the clips and the manifest
+    uses: ./tools/voice_nodes.py#layout
+    with:
+      lines: ${{ steps.lines.outputs.lines }}
+      clips: ${{ steps.line.*.speak.outputs.audio }}
+
+outputs:
+  files: ${{ steps.layout.outputs.files }}
+  manifest: ${{ steps.layout.outputs.manifest }}

@@ -12,9 +12,9 @@ import pytest
 from demo_game_collection.cli import build_parser, main
 
 
-def test_cli_help_names_the_gnode_build_and_no_generation_of_its_own() -> None:
+def test_cli_help_names_the_fx_build_and_no_generation_of_its_own() -> None:
     help_text = " ".join(build_parser().format_help().split())
-    assert "build with gnode from the game's own folder" in help_text
+    assert "build with Grida FX from the game's own folder" in help_text
     for retired in ("generate", "export-view", "doctor", "models"):
         assert f"{{{retired}," not in help_text and f",{retired}," not in help_text
         assert f",{retired}}}" not in help_text

@@ -1,5 +1,5 @@
 # Only what the workflow file cannot say. Steps, titles and the sample plan come from
-# workflow.yaml through gnode.
+# workflow.yaml through FX.
 schema_version = 1
 kind = "stage-gen-workflow-v1"
 id = "movie-sprite"
@@ -14,9 +14,9 @@ related = ["portrait-motion"]
 [try]
 input = "An original geometric actor, as a still and as a lossless clip, with the inputs that use them, written by uv run python src/stage_gen/workflows/movie_sprite/inputs/supplied_clip/make_inputs.py out/movie-sprite-input (the clip needs FFmpeg)"
 commands = [
-  "gnode plan movie-sprite --inputs out/movie-sprite-input/take.yaml",
-  "gnode run movie-sprite --inputs out/movie-sprite-input/clip.yaml --deliver loop=out/movie-sprite-try/loop.mkv --deliver canonical=out/movie-sprite-try/canonical.png",
-  "gnode inspect movie-sprite --verify",
+  "uv run python -m grida.fx plan movie-sprite --inputs out/movie-sprite-input/take.yaml",
+  "uv run python -m grida.fx run movie-sprite --inputs out/movie-sprite-input/clip.yaml --deliver loop=out/movie-sprite-try/loop.mkv --deliver canonical=out/movie-sprite-try/canonical.png",
+  "uv run python -m grida.fx inspect movie-sprite --verify",
 ]
 
 [[tools]]

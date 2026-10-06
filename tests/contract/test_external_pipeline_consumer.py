@@ -1,9 +1,8 @@
-"""An installed product executes arbitrary external Python without importing demo packages."""
+"""An installed product imports and collects its tests without importing demo packages."""
 
 # test-owner: product
 from __future__ import annotations
 
-import json
 import os
 import subprocess
 import sys
@@ -38,127 +37,6 @@ def _install_wheel(repository: Path, tmp_path: Path, environment: dict[str, str]
     return installed
 
 
-WORKFLOW = """\
-gnode: workflow/v1
-id: swatches
-title: Swatches
-inputs:
-  palette: { type: file, kind: json }
-steps:
-  swatch:
-    uses: ./nodes/swatch.py#swatch
-    with: { palette: "${{ inputs.palette }}" }
-  small:
-    uses: gnode/image.resize@1
-    with: { image: "${{ steps.swatch.outputs.image }}", longest_side: 8 }
-outputs:
-  swatch: ${{ steps.small.outputs.image }}
-"""
-
-NODE = """\
-import io
-
-from PIL import Image
-
-from gnode import Ctx, node
-
-
-@node("swatch", inputs={"palette": "json"}, outputs={"image": "image/png"})
-def swatch(ctx: Ctx) -> dict:
-    color = ctx.read.json("palette")["color"]
-    if not all(0 <= channel <= 255 for channel in color):
-        raise ctx.fail(f"color {color} is outside 0..255")
-    out = io.BytesIO()
-    Image.new("RGB", (16, 16), tuple(color)).save(out, format="PNG")
-    return {"image": ctx.out.bytes(out.getvalue(), "image/png")}
-"""
-
-
-def test_an_installed_wheel_plans_runs_reuses_and_inspects_an_outside_project(
-    tmp_path: Path,
-) -> None:
-    repository = Path(__file__).resolve().parents[2]
-    environment = os.environ.copy()
-    for key in (
-        "OPENAI_API_KEY",
-        "OPENROUTER_API_KEY",
-        "FAL_KEY",
-        "ELEVENLABS_API_KEY",
-        "PYTHONPATH",
-    ):
-        environment.pop(key, None)
-    installed = _install_wheel(repository, tmp_path, environment)
-    consumer = tmp_path / "consumer"
-    (consumer / "nodes").mkdir(parents=True)
-    (consumer / "gnode.yaml").write_text("gnode: project/v1\n", encoding="utf-8")
-    (consumer / "swatches.yaml").write_text(WORKFLOW, encoding="utf-8")
-    (consumer / "nodes/swatch.py").write_text(NODE, encoding="utf-8")
-    (consumer / "palette.json").write_text('{"color": [24, 48, 72]}', encoding="utf-8")
-    (consumer / "inputs.yaml").write_text("palette: palette.json\n", encoding="utf-8")
-    bootstrap = """
-import importlib.abc
-import sys
-from pathlib import Path
-sys.path.insert(0, sys.argv.pop(1))
-class NoOptionalConsumers(importlib.abc.MetaPathFinder):
-    def find_spec(self, fullname, path=None, target=None):
-        if fullname.split('.')[0] in {
-            'demo_game_collection',
-            'demo_game_tools',
-            'iron_petal_unit_pipeline',
-            'bellweather_pipeline',
-            'stage_gen_legacy',
-            'ember_hollow_pipeline',
-            'the_grain_pipeline',
-        }:
-            raise AssertionError('The installed product imported an optional consumer: ' + fullname)
-sys.meta_path.insert(0, NoOptionalConsumers())
-import gnode
-from gnode import cli
-assert Path(gnode.__file__).is_relative_to(Path(sys.path[0]))
-raise SystemExit(cli.main())
-"""
-
-    def gnode_cli(*arguments: str) -> subprocess.CompletedProcess[str]:
-        return subprocess.run(
-            [sys.executable, "-I", "-c", bootstrap, str(installed), *arguments],
-            cwd=consumer,
-            env=environment,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-
-    planned = gnode_cli("plan", "swatches", "--inputs", "inputs.yaml")
-    assert planned.returncode == 0, planned.stderr
-    first = gnode_cli(
-        "run", "swatches", "--inputs", "inputs.yaml", "--deliver", "swatch=delivered/swatch.png"
-    )
-    assert first.returncode == 0, first.stderr
-    assert (consumer / "delivered/swatch.png").read_bytes().startswith(b"\x89PNG")
-    second = gnode_cli("run", "swatches", "--inputs", "inputs.yaml")
-    assert second.returncode == 0, second.stderr
-    inspected = gnode_cli("inspect", "swatches", "--verify", "--json")
-    assert inspected.returncode == 0, inspected.stderr
-    record = json.loads(inspected.stdout)
-    assert record["verification"]["verified"]
-    assert {node["cache"] for node in record["view"]["nodes"]} == {"hit"}
-
-    (consumer / "palette.json").write_text('{"color": [999, 0, 0]}', encoding="utf-8")
-    failed = gnode_cli("run", "swatches", "--inputs", "inputs.yaml")
-    assert failed.returncode == 1, failed.stderr
-    failure = json.loads(gnode_cli("inspect", "swatches", "--json").stdout)
-    assert failure["view"]["run_state"] == "failed"
-
-    (consumer / "broken.yaml").write_text(
-        WORKFLOW.replace("id: swatches", "id: broken").replace("#swatch", "#missing"),
-        encoding="utf-8",
-    )
-    refused = gnode_cli("plan", "broken", "--inputs", "inputs.yaml", "--check")
-    assert refused.returncode != 0
-    assert "missing is not declared with @node" in refused.stdout
-
-
 def test_public_modules_and_components_import_without_optional_consumers() -> None:
     program = """
 import importlib
@@ -178,10 +56,8 @@ class NoConsumers(importlib.abc.MetaPathFinder):
         }:
             raise AssertionError('Public surface imported optional consumer: ' + fullname)
 sys.meta_path.insert(0, NoConsumers())
-import gnode
-import gnode_std
+import stage_gen.runview
 import stage_gen.viewer
-import stage_gen.orchestration.gnode_plugin
 import stage_gen.application
 import stage_gen.components
 for module in pkgutil.iter_modules(stage_gen.components.__path__):
@@ -214,7 +90,7 @@ def test_selected_product_tests_collect_using_only_the_installed_core(tmp_path: 
         "PYTHONPATH",
     ):
         environment.pop(key, None)
-    environment["_STAGE_GEN_DISABLE_DOTENV"] = "1"
+    environment["GRIDA_FX_DISABLE_DOTENV"] = "1"
     installed = _install_wheel(repository, tmp_path, environment)
     program = """
 import importlib.abc

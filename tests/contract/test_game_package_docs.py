@@ -33,7 +33,7 @@ def test_game_input_document_matches_current_prepared_contracts() -> None:
         assert input_root in document
         built = repository / "godot/games" / game
         assert (built / "pipeline/prepare.py").is_file() or (
-            (built / "gnode.yaml").is_file() and (built / "pipeline/workflow.py").is_file()
+            (built / "fx.yaml").is_file() and (built / "pipeline/workflow.py").is_file()
         )
     assert "explicit collection CLI `--input`" in document
     assert "scripts separately default to planning and require `--live`" in document

@@ -1,7 +1,7 @@
-"""The Grain's scene builder through gnode, offline: the plan, whole runs, the judges, reuse.
+"""The Grain's scene builder through FX, offline: the plan, whole runs, the judges, reuse.
 
 Each run builds the small two-actor package from ``package.py`` inside a scratch copy of the
-game's gnode project. Paid calls are answered by the stand-ins in ``tests.unit.games._grain``.
+game's FX project. Paid calls are answered by the stand-ins in ``tests.unit.games._grain``.
 The build is documented in ``godot/games/the_grain/docs/dialogue-scene-assets.md``.
 """
 
@@ -15,23 +15,19 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from grida.fx import FxError
 from PIL import Image
 
-from gnode import PlanError
+from tests.unit._fx import calls_of, ceiling, deliver, failures, first_takes, problems
 from tests.unit.games._grain import (
     GAME,
     SCENE,
     StandIns,
-    calls_of,
     cover_digest,
-    deliver,
-    failures,
-    first_takes,
     grain_project,
     keyed,
     plan,
     run,
-    stand_ins_for,
 )
 from the_grain_pipeline.dialogue_scene.models import DialogueBundle
 
@@ -56,11 +52,12 @@ def build_scene(
 
     project = grain_project(root)
     write(project / PACKAGE, **options)
-    stand_ins = stand_ins_for(project, SCENE, PACKAGE)
+    stand_ins = StandIns()
     outcome = run(project, SCENE, PACKAGE, stand_ins)
     assert outcome.ok, failures(outcome)
     shutil.copytree(project / PACKAGE, root / "package")
-    return deliver(stand_ins.store, outcome, root / "run"), stand_ins
+    deliver(outcome, root / "run")
+    return root / "run", stand_ins
 
 
 def _bind_an_identity_plate(package: Path) -> bytes:
@@ -94,16 +91,16 @@ def test_the_shipped_scene_plans_inside_the_game_project() -> None:
     planned = plan(GAME, SCENE, PACKAGE)
 
     assert planned.ok, planned.problems
-    assert planned.planner.workflow.id == "the-grain-scene"
-    budget = planned.planner.workflow.budget
-    assert budget is not None and planned.estimate()[1] <= budget.max_usd
+    assert planned.document["workflow"]["id"] == "the-grain-scene"
+    budget = ceiling(planned)
+    assert budget is not None and planned.estimate()[1] <= budget
 
 
 def test_several_scenarios_plan_the_union_of_their_art_once(tmp_path: Path) -> None:
     one = plan(scene_project(tmp_path / "one"), SCENE, PACKAGE)
     two = plan(scene_project(tmp_path / "two", second_scenario=True), SCENE, PACKAGE)
-    steps_one = {instance.step for instance in first_takes(one)}
-    steps_two = {instance.step for instance in first_takes(two)}
+    steps_one = {row["step"] for row in first_takes(one)}
+    steps_two = {row["step"] for row in first_takes(two)}
 
     # The second scenario shares both actors and one stage: it adds the one backdrop
     # nobody had drawn, and nothing else.
@@ -119,13 +116,13 @@ def test_several_scenarios_plan_the_union_of_their_art_once(tmp_path: Path) -> N
 def test_ai_transparency_is_refused_while_planning(tmp_path: Path) -> None:
     project = scene_project(tmp_path, transparency_mode="ai")
 
-    with pytest.raises(PlanError, match=r"background\.remove"):
+    with pytest.raises(FxError, match=r"background\.remove"):
         plan(project, SCENE, PACKAGE)
 
 
 def test_native_faces_are_refused_on_a_route_without_transparency(tmp_path: Path) -> None:
     project = scene_project(tmp_path, transparency_mode="native")
-    settings = project / "gnode.yaml"
+    settings = project / "fx.yaml"
     settings.write_text(
         settings.read_text(encoding="utf-8").replace(
             "image.edit: gpt-image-2.5-sunburst@openai",
@@ -137,7 +134,7 @@ def test_native_faces_are_refused_on_a_route_without_transparency(tmp_path: Path
     planned = plan(project, SCENE, PACKAGE)
 
     assert not planned.ok
-    assert "transparent_background" in "; ".join(problem.message for problem in planned.problems)
+    assert "does not support alpha" in problems(planned)
 
 
 # ------------------------------------------------------------------------------- whole runs
@@ -223,14 +220,14 @@ def test_the_base_face_is_drawn_against_the_plates_and_every_other_face_edits_it
 
 
 @needs_ffprobe
-def test_a_draft_outside_the_frame_and_a_refused_face_are_asked_again(tmp_path: Path) -> None:
-    project = scene_project(tmp_path)
-    stand_ins = stand_ins_for(project, SCENE, PACKAGE, refuse={"plan": 1, "face": 1})
+def test_a_face_without_native_alpha_is_drawn_again(tmp_path: Path) -> None:
+    project = scene_project(tmp_path, transparency_mode="native")
+    stand_ins = StandIns(refuse={"face": 1})
 
     outcome = run(project, SCENE, PACKAGE, stand_ins)
 
     assert outcome.ok, failures(outcome)
-    assert stand_ins.calls["plan"] == 3
+    assert stand_ins.calls["plan"] == 2
     assert stand_ins.calls["face"] == 9
 
 
@@ -240,7 +237,7 @@ def test_a_draft_outside_the_frame_and_a_refused_face_are_asked_again(tmp_path: 
 @needs_ffprobe
 def test_rewording_a_line_bills_nothing(tmp_path: Path) -> None:
     project = scene_project(tmp_path)
-    assert run(project, SCENE, PACKAGE, stand_ins_for(project, SCENE, PACKAGE), "first").ok
+    assert run(project, SCENE, PACKAGE, StandIns(), "first").ok
 
     script = project / PACKAGE / "scenarios/after_seminar.scenario"
     script.write_text(
@@ -251,7 +248,7 @@ def test_rewording_a_line_bills_nothing(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     repoint_digests(project / PACKAGE)
-    second = stand_ins_for(project, SCENE, PACKAGE)
+    second = StandIns()
     outcome = run(project, SCENE, PACKAGE, second, "second")
 
     assert outcome.ok, failures(outcome)
@@ -261,10 +258,10 @@ def test_rewording_a_line_bills_nothing(tmp_path: Path) -> None:
 @needs_ffprobe
 def test_binding_a_scenario_with_the_same_cast_bills_only_its_new_stage(tmp_path: Path) -> None:
     project = scene_project(tmp_path)
-    assert run(project, SCENE, PACKAGE, stand_ins_for(project, SCENE, PACKAGE), "first").ok
+    assert run(project, SCENE, PACKAGE, StandIns(), "first").ok
 
     write_scene_package(project / PACKAGE, second_scenario=True)
-    second = stand_ins_for(project, SCENE, PACKAGE)
+    second = StandIns()
     outcome = run(project, SCENE, PACKAGE, second, "second")
 
     assert outcome.ok, failures(outcome)

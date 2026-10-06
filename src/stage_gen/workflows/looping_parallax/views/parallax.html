@@ -16,8 +16,8 @@
 </form>
 <script type="module">
   // The compose step's view: its manifest places its layers, which scroll at their own
-  // parallax. gnode-view-context-v1 gives the manifest inline and each layer's URL.
-  import { context as read } from "/_gnode/view.js";
+  // parallax. stage-gen-view-context-v1 gives the manifest inline and each layer's URL.
+  import { context as read } from "/_views/view.js";
   const context = await read();
   const manifest = context.outputs.manifest.value;
   const files = context.inputs.layers;

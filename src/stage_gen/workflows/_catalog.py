@@ -1,8 +1,7 @@
 """The catalog: one JSON document that says what every installed workflow is and shows.
 
 ``scripts/catalog.py`` writes ``catalog.json`` (``stage-gen-catalog-v1``) from the
-installed workflows and the example store, and ``cli.json``, the ``gnode`` command line the
-site's CLI reference is written from, beside it. Per workflow it holds the manifest, the steps
+installed workflows and the example store. Per workflow it holds the manifest, the steps
 with their node titles, the persisted identities, the offline sample plan, and each pinned
 example with its derived currency. It also lists examples the games made, the landing cards
 in their declared order, and model display names. The catalog is derived and never
@@ -42,7 +41,6 @@ from stage_gen.examples import (
 from stage_gen.fs import atomic_write_bytes
 
 from ._checks import CheckContext, LoadedExample, LoadedWorkflow, drift, game_example
-from ._reference import CLI_REFERENCE_FILE, command_reference
 from ._registry import (
     DiscoveredWorkflow,
     ExampleEntry,
@@ -63,7 +61,6 @@ class ExportResult:
     catalog: dict[str, Any]
     problems: tuple[str, ...]
     path: Path | None
-    reference: Path | None = None
 
     @property
     def workflows(self) -> int:
@@ -118,9 +115,7 @@ def load_example(
         figures=figures,
         missing=missing,
         problems=tuple(problems),
-        currency=None
-        if document is None
-        else currency(document, code.type_ids(), code.graph_kinds()),
+        currency=None if document is None else currency(document, code.type_ids()),
     )
 
 
@@ -401,8 +396,7 @@ def export(
     allow_missing_examples: bool = False,
     check: bool = False,
 ) -> ExportResult:
-    """Build the catalog and, unless only checking or something drifted, write it and the
-    command-line reference beside it."""
+    """Build the catalog and, unless only checking or something drifted, write it."""
     catalog, problems = build(
         examples_dir=examples_dir, allow_missing_examples=allow_missing_examples
     )
@@ -412,10 +406,7 @@ def export(
     out_dir.mkdir(parents=True, exist_ok=True)
     payload = json.dumps(catalog, indent=2, ensure_ascii=False) + "\n"
     atomic_write_bytes(path, payload.encode(), mode=0o644)
-    reference = out_dir / CLI_REFERENCE_FILE
-    payload = json.dumps(command_reference(), indent=2, ensure_ascii=False) + "\n"
-    atomic_write_bytes(reference, payload.encode(), mode=0o644)
-    return ExportResult(catalog, (), path, reference)
+    return ExportResult(catalog, (), path)
 
 
 __all__ = [

@@ -9,9 +9,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from grida.fx import Ctx, node
 from pydantic import ValidationError
 
-from gnode import Ctx, node
 from stage_gen.workflows.universe import models
 from stage_gen.workflows.universe.medium import forbidden_terms_present, medium_contract
 

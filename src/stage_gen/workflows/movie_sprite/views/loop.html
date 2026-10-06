@@ -21,7 +21,7 @@
   // The finish step's view. Browsers cannot play the lossless Matroska loop with its
   // transparency, so the preview plays (over a dark ground) and the contact sheet shows
   // the alpha; the manifest and the processing report give the rest.
-  import { context as read } from "/_gnode/view.js";
+  import { context as read } from "/_views/view.js";
   const context = await read();
   const { preview, contact_sheet: sheet, manifest, report } = context.outputs;
   document.title = context.step.title;

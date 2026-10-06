@@ -9,6 +9,8 @@ import { href } from "@/lib/media";
 import type { Card } from "@/lib/pages";
 
 const LINK = "underline decoration-zinc-300 underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100";
+// The engine's own guide: how a workflow is written, planned, run and cached.
+const FX_GUIDE = "https://github.com/gridaco/fx/tree/main/docs/guide";
 
 function CardBody({ card }: { card: Card }): ReactElement {
   const ground =
@@ -63,19 +65,19 @@ export default function Landing({ cards }: { cards: readonly Card[] }): ReactEle
           Asset workflows you can plan offline, run, inspect and cache.
         </h1>
         <p className="mt-3 max-w-2xl text-lg text-zinc-600 dark:text-zinc-400">
-          Stage Gen is a set of asset workflows that run on gnode, a command line and Python SDK. Each workflow is a long chain of models,
+          Stage Gen is a set of asset workflows that run on Grida FX, a workflow engine with a command line and a Python SDK. Each workflow is a long chain of models,
           local tools and checks, held as one graph that turns a small input into a named deliverable. Every picture
           below is from a real run.
         </p>
         <pre className="mt-6 max-w-2xl overflow-x-auto rounded-md border border-zinc-200 bg-zinc-50 p-4 font-mono text-[13px] leading-relaxed text-zinc-800 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
-          {"uv sync --frozen\nuv run gnode plan universe \\\n  --inputs src/stage_gen/workflows/universe/inputs/lantern_ferry/inputs.yaml"}
+          {"uv sync --frozen\nuv run python third_party/fx/tools/build_engine.py\nuv run python -m grida.fx plan universe \\\n  --inputs src/stage_gen/workflows/universe/inputs/lantern_ferry/inputs.yaml"}
         </pre>
         <p className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-sm">
           <a className={LINK} href={href("/docs/getting-started/")}>
             Get started
           </a>
-          <a className={LINK} href={href("/docs/cli/")}>
-            Command line
+          <a className={LINK} href={FX_GUIDE}>
+            The FX guide
           </a>
           <a className={LINK} href={`${href("/docs/")}#workflows`}>
             All workflows

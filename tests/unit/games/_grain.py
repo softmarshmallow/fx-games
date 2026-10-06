@@ -1,7 +1,7 @@
-"""The Grain's gnode project in a scratch folder, and stand-ins for every paid call it makes.
+"""The Grain's FX project in a scratch folder, and stand-ins for every paid call it makes.
 
 A package's references are project files, so each test copies the game's project
-(``gnode.yaml``, the lock, ``pipeline/nodes`` and the builders) and puts the package it
+(``fx.yaml``, the lock, ``pipeline/nodes`` and the builders) and puts the package it
 builds inside it. Paid calls are answered offline with what the game's judges admit,
 recognised by what they were asked for: an interface sheet by the template among its
 pictures, a cut-out or a face by its transparent background, a chroma face by its canvas,
@@ -10,22 +10,22 @@ and a structured answer by the fields its schema declares.
 
 from __future__ import annotations
 
-import asyncio
 import hashlib
 import io
-import json
 import re
-import shutil
 from collections import Counter
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from grida.fx import Answer, InputFile, Plan, RunResult, StandInCall
+from grida.fx import plan as plan_fx
+from grida.fx import run as run_fx
 from PIL import Image
 
 from demo_game_collection.resources import bundled_music_path
 from demo_game_tools.kits.ui_art.nodes import UI_SHEET_ROLES, sheet_family
-from gnode import CallRecord, HostServices, Plan, Route, RunOutcome, Store, WorkflowRun, plan_async
+from tests.unit._fx import game_project, schema_of
 from tests.unit._ui_atlas_fixture import ui_sheet
 
 REPOSITORY = Path(__file__).resolve().parents[3]
@@ -37,36 +37,19 @@ _NARRATION_ID = re.compile(r'- id "([a-z0-9_-]+)"')
 
 
 def grain_project(tmp_path: Path) -> Path:
-    """The game's gnode project in a scratch folder, with no package in it yet."""
+    """The game's FX project in a scratch folder, with no package in it yet."""
 
-    project = tmp_path / "project"
-    (project / "pipeline").mkdir(parents=True)
-    settings = (GAME / "gnode.yaml").read_text(encoding="utf-8")
-    settings = settings.replace("runs: ../../../out/runs", "runs: runs")
-    settings = settings.replace("cache: ../../../out/gnode-cache", "cache: cache")
-    (project / "gnode.yaml").write_text(settings, encoding="utf-8")
-    shutil.copy(GAME / "gnode.lock", project / "gnode.lock")
-    shutil.copytree(GAME / "pipeline/nodes", project / "pipeline/nodes")
-    shutil.copy(GAME / "pipeline/workflow.py", project / "pipeline/workflow.py")
-    return project
+    return game_project("the_grain", tmp_path)
 
 
 def plan(project: Path, builder: str, package: str) -> Plan:
-    return asyncio.run(plan_async(builder, cwd=project, arguments={"package": package}))
-
-
-def first_takes(planned: Plan) -> list[Any]:
-    return [i for i in planned.instances if i.state != "absent" and set(i.takes) <= {1}]
+    return plan_fx(builder, cwd=project, arguments={"package": package})
 
 
 def cover_digest(path: Path) -> str:
     """A package file's digest, as a request names a picture."""
 
     return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
-def calls_of(planned: Plan) -> Counter[str]:
-    return Counter(route for instance in first_takes(planned) for route in instance.routes)
 
 
 # ------------------------------------------------------------------------------- pictures
@@ -105,19 +88,25 @@ def keyed(size: str) -> bytes:
     return png(image)
 
 
+def solid(size: str) -> bytes:
+    """An alpha channel with no transparent pixel: FX admits it, a cut-out judge does not."""
+
+    return png(Image.new("RGBA", _size(size), (180, 140, 60, 255)))
+
+
 # ------------------------------------------------------------------------------- stand-ins
 
 
 class StandIns:
     """Every paid call a room or scene build makes, answered offline.
 
-    ``refuse`` names kinds of answer (``cutout``, ``face``, ``backdrop``, ``plan``,
-    ``narration``) and how many times each is answered wrongly before it is answered
-    right, so a test can watch a judge send a take back.
+    ``refuse`` names kinds of answer (``cutout``, ``face``, ``narration``) and how many times
+    each is answered wrongly before it is answered right, so a test can watch a judge send a
+    take back. A wrong picture passes FX's own checks (the asked size, an alpha channel) and
+    is refused by the game's judge: a cut-out, or a native face, with no transparent pixel.
     """
 
-    def __init__(self, store: Store, *, refuse: Mapping[str, int] | None = None) -> None:
-        self.store = store
+    def __init__(self, *, refuse: Mapping[str, int] | None = None) -> None:
         self.calls: Counter[str] = Counter()
         self.requests: dict[str, list[Mapping[str, Any]]] = {}
         self.refuse: Counter[str] = Counter(refuse or {})
@@ -126,17 +115,15 @@ class StandIns:
             for name, role in UI_SHEET_ROLES.items()
         }
 
-    def services(self) -> HostServices:
-        return HostServices(
-            store=self.store,
-            capabilities={
-                "image.generate": self._image,
-                "image.edit": self._image,
-                "structured.generate": self._structured,
-                "music.generate": self._music,
-            },
-            live=True,
-        )
+    def __call__(self, call: StandInCall) -> Answer:
+        if call.capability in ("image.generate", "image.edit"):
+            return self._image(call.request)
+        if call.capability == "structured.generate":
+            return self._structured(call)
+        if call.capability == "music.generate":
+            self._note("track", call.request)
+            return Answer(files={"audio": bundled_music_path().read_bytes()})
+        raise AssertionError(f"unexpected call: {call!r}")
 
     def _note(self, kind: str, request: Mapping[str, Any]) -> bool:
         """Count the call; true when this one is to be answered wrongly."""
@@ -150,7 +137,7 @@ class StandIns:
 
     def pictures(self, request: Mapping[str, Any]) -> list[str]:
         values = [request.get("image"), *(request.get("references") or [])]
-        return [value.digest for value in values if value is not None]
+        return [value.digest for value in values if isinstance(value, InputFile)]
 
     def _paint(self, request: Mapping[str, Any]) -> tuple[str, bytes]:
         size = str(request["size"])
@@ -165,16 +152,17 @@ class StandIns:
             return "backdrop", opaque(size)
         return "face", cutout(size) if transparent else keyed(size)
 
-    async def _image(self, route: Route, request: Mapping[str, Any], take: int) -> CallRecord:
+    def _image(self, request: Mapping[str, Any]) -> Answer:
         kind, data = self._paint(request)
         if self._note(kind, request):
-            data = opaque("64x64")
-        stored = self.store.put_bytes(data, kind="image/png", name="image")
-        return CallRecord({"image": stored}, None, 0.01)
+            if request.get("background") != "transparent" or kind not in ("cutout", "face"):
+                raise AssertionError(f"a {kind} cannot be answered wrongly past FX's checks")
+            data = solid(str(request["size"]))
+        return Answer(files={"image": data})
 
-    async def _structured(self, route: Route, request: Mapping[str, Any], take: int) -> CallRecord:
-        schema = json.loads(self.store.file_path(request["schema"].digest).read_text())
-        fields = set(schema.get("properties") or {})
+    def _structured(self, call: StandInCall) -> Answer:
+        request = call.request
+        fields = set(schema_of(call).get("properties") or {})
         prompt = str(request["prompt"])
         answer: dict[str, Any]
         if "style_mode" in fields:
@@ -191,12 +179,13 @@ class StandIns:
                 "narrations": [{"id": found, "text": f"A line for {found}."} for found in ids]
             }
         elif "shared_locks" in fields:
-            wrong = self._note("plan", request)
-            locks = {
-                key: f"Stand-in {key} lock."
-                for key in ("identity", "wardrobe", "pose", "lighting", "style")
+            self._note("plan", request)
+            answer = {
+                "shared_locks": {
+                    key: f"Stand-in {key} lock."
+                    for key in ("identity", "wardrobe", "pose", "lighting", "style")
+                }
             }
-            answer = {"shared_locks": {**locks, "pose": ""} if wrong else locks}
         elif "verdict" in fields:
             self._note("review", request)
             answer = {
@@ -208,41 +197,16 @@ class StandIns:
             }
         else:
             raise AssertionError(f"unexpected structured schema: {sorted(fields)}")
-        return CallRecord({}, {"json": answer}, 0.01)
-
-    async def _music(self, route: Route, request: Mapping[str, Any], take: int) -> CallRecord:
-        self._note("track", request)
-        audio = self.store.put_bytes(
-            bundled_music_path().read_bytes(), kind="audio/mpeg", name="audio"
-        )
-        return CallRecord({"audio": audio}, None, 0.05)
-
-
-def stand_ins_for(project: Path, builder: str, package: str, **options: Any) -> StandIns:
-    return StandIns(plan(project, builder, package).planner.store, **options)
+        return Answer.json(answer)
 
 
 def run(
     project: Path, builder: str, package: str, stand_ins: StandIns, name: str = "run"
-) -> RunOutcome:
-    planned = plan(project, builder, package)
-    assert planned.ok, planned.problems
-    stand_ins.store = planned.planner.store
-    return asyncio.run(
-        WorkflowRun(planned, run_dir=project / name, services=stand_ins.services()).run()
+) -> RunResult:
+    return run_fx(
+        builder,
+        cwd=project,
+        arguments={"package": package},
+        run_dir=project / name,
+        stand_in=stand_ins,
     )
-
-
-def deliver(store: Store, outcome: RunOutcome, folder: Path, output: str = "package") -> Path:
-    for key, file in outcome.outputs[output].items:
-        target = folder / key
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(store.file_path(file.digest), target)
-    return folder
-
-
-def failures(outcome: RunOutcome) -> dict[str, str]:
-    return {
-        step: str(getattr(outcome.results.get(step), "error", None) or "")
-        for step in outcome.failed
-    } or {"stopped": str(outcome.stopped)}

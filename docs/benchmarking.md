@@ -4,7 +4,7 @@ Benchmarking belongs to the authoritative Python headless package, not the
 optional web preview. The public entry point is:
 
 ```sh
-uv run gnode --help
+uv run python -m grida.fx --help
 ```
 
 Use the CLI help as the source of truth for currently implemented pipeline and
@@ -14,7 +14,7 @@ The offline evidence a change is expected to produce is the plan, provider-free,
 the builder's own tests, which run a whole build on stand-in calls:
 
 ```sh
-(cd godot/games/bellweather && uv run gnode plan pipeline/workflow.py:build --arg package=inputs/default)
+(cd godot/games/bellweather && uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs/default)
 uv run pytest tests/unit/games/sideview_platformer/test_workflow.py
 ```
 

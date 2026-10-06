@@ -9,7 +9,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from gnode import Ctx, node
+from grida.fx import Ctx, node
+
 from stage_gen.components.character_3d.studio import Studio
 from stage_gen.components.character_3d.worker_client import WorkerRefusal
 from stage_gen.workflows.character_3d.harness import (

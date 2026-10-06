@@ -106,10 +106,13 @@ web_modules/
 out
 next-env.d.ts
 
-# run outputs (gnode runs land under <repo-root>/out/runs)
+# run outputs (FX runs land under <repo-root>/out/runs, its store under out/fx-cache)
 /out/
-# A gnode project's cache, wherever gnode was run (`.gnode/cache` beside its gnode.yaml)
-.gnode/
+# An FX project's default store, wherever FX ran without a cache setting (.fx/cache beside fx.yaml)
+.fx/
+# Personal picks on the first-party sample workflows (by id from the root, or by path)
+/*.takes.yaml
+/src/stage_gen/workflows/**/*.takes.yaml
 codex-session-*.md
 /tmp/
 

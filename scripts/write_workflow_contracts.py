@@ -31,7 +31,7 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from scripts.graph_contracts import document_contract, write_contract
-from stage_gen.workflows._gnode import SamplePlan
+from stage_gen.workflows._fx import SamplePlan
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 

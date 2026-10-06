@@ -13,7 +13,8 @@ import json
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from gnode import Ctx, node
+from grida.fx import Ctx, node
+
 from iron_petal_unit_pipeline.manifest import build_manifest
 from iron_petal_unit_pipeline.runner_request import resolve_runner_package
 

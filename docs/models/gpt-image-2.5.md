@@ -1,10 +1,6 @@
 # GPT Image 2.5 provider contract
 
-> **Checked by:** `tests/unit/gnode/providers/test_openai_image.py`,
-> `tests/unit/gnode/providers/test_fal_image.py`,
-> `tests/unit/gnode/providers/test_openrouter_image.py`,
-> `tests/unit/test_model_routes.py`, and
-> `tests/unit/orchestration/test_image_routing.py`.
+> **Checked by:** none.
 
 OpenAI released GPT Image 2.5 on 2026-09-08 as two distinct models:
 `gpt-image-2.5-sunburst` and `gpt-image-2.5-flare`. There is no documented bare

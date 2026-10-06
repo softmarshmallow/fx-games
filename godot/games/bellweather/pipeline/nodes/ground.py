@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from grida.fx import Ctx, node
+
 from bellweather_pipeline.assets import ground_evidence as compose_evidence
 from demo_game_tools.steps.painted_terrain import (
     admit_painted,
@@ -18,7 +20,6 @@ from demo_game_tools.steps.painted_terrain import (
     painted_guide,
 )
 from demo_game_tools.steps.terrain_atlas import admit_atlas, assemble_atlas, atlas_paint_target
-from gnode import Ctx, node
 
 
 @node(

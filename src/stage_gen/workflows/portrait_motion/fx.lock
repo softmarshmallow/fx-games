@@ -1,0 +1,16 @@
+# fx.lock: the source behind each versioned node type; commit it
+fx: lock/v1
+nodes:
+  nodes/face.py#crop@1: 9bff608c71cec39235c12c6dd76b91ed5109d2aaad24080daad8c3948e01e93a
+  nodes/face.py#located@1: 9bff608c71cec39235c12c6dd76b91ed5109d2aaad24080daad8c3948e01e93a
+  nodes/face.py#render@1: 9bff608c71cec39235c12c6dd76b91ed5109d2aaad24080daad8c3948e01e93a
+  nodes/motion.py#admitted@1: 71f5c393e1b7d5262a864c0a159aa0b63aa05ab38a006eb819c334c13f2593e8
+  nodes/motion.py#briefs@1: 71f5c393e1b7d5262a864c0a159aa0b63aa05ab38a006eb819c334c13f2593e8
+  nodes/motion.py#check@1: 71f5c393e1b7d5262a864c0a159aa0b63aa05ab38a006eb819c334c13f2593e8
+  nodes/motion.py#composition@1: 71f5c393e1b7d5262a864c0a159aa0b63aa05ab38a006eb819c334c13f2593e8
+  nodes/motion.py#geometry_ok@1: 71f5c393e1b7d5262a864c0a159aa0b63aa05ab38a006eb819c334c13f2593e8
+  nodes/motion.py#guide@1: 71f5c393e1b7d5262a864c0a159aa0b63aa05ab38a006eb819c334c13f2593e8
+  nodes/motion.py#keep@1: 71f5c393e1b7d5262a864c0a159aa0b63aa05ab38a006eb819c334c13f2593e8
+  nodes/motion.py#quality_ok@1: 71f5c393e1b7d5262a864c0a159aa0b63aa05ab38a006eb819c334c13f2593e8
+  nodes/motion.py#registration@1: 71f5c393e1b7d5262a864c0a159aa0b63aa05ab38a006eb819c334c13f2593e8
+  nodes/motion.py#result@1: 71f5c393e1b7d5262a864c0a159aa0b63aa05ab38a006eb819c334c13f2593e8

@@ -32,7 +32,8 @@ from ember_hollow_pipeline.models import (
 )
 from ember_hollow_pipeline.survival_prompts import actor_concept_prompt
 from ember_hollow_pipeline.survival_request import load_package
-from tests.unit.games.oblique_survival._ember import ember_project, first_takes, plan
+from tests.unit._fx import first_takes
+from tests.unit.games.oblique_survival._ember import ember_project, plan
 from tests.unit.games.oblique_survival._survival_fixture import write_fixture
 
 PACKAGE: Final = Path("godot/games/ember_hollow/inputs")
@@ -595,7 +596,7 @@ def test_swapping_the_appearance_picture_moves_every_node_drawn_against_it(
 
     def identities(project: Path) -> dict[str, str]:
         wanted = ("actors.wren.concept.generate", "shell.opening_the_cold.adopt")
-        found = {i.step: i.identity for i in first_takes(plan(project, "actors"))}
+        found = {row["step"]: row["identity"] for row in first_takes(plan(project, "actors"))}
         return {step: found[step] for step in wanted}
 
     project = ember_project(tmp_path, takes=True)

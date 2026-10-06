@@ -1,12 +1,11 @@
-"""Export the catalog the site and the viewer read, and the ``gnode`` command-line reference.
+"""Export the catalog the site and the viewer read.
 
     uv run python scripts/catalog.py --out DIR [--examples DIR] [--allow-missing-examples]
     uv run python scripts/catalog.py --out DIR --check
 
 Writes ``catalog.json`` (every installed workflow, its steps, identities, offline sample plan
-and pinned examples) and ``cli.json`` (the ``gnode`` argparse tree) into ``--out``, unless
-``--check`` asks only for the drift checks or something drifted. Prints a JSON summary and
-exits 1 when any drift problem is found.
+and pinned examples) into ``--out``, unless ``--check`` asks only for the drift checks or
+something drifted. Prints a JSON summary and exits 1 when any drift problem is found.
 """
 
 from __future__ import annotations
@@ -21,10 +20,10 @@ from typing import TextIO
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="scripts/catalog.py", description="write catalog.json and cli.json, or check drift"
+        prog="scripts/catalog.py", description="write catalog.json, or check drift"
     )
     parser.add_argument(
-        "--out", type=Path, required=True, dest="out_dir", help="folder to write them into"
+        "--out", type=Path, required=True, dest="out_dir", help="folder to write it into"
     )
     parser.add_argument("--examples", type=Path, dest="examples_dir", help="the example store")
     parser.add_argument(
@@ -52,7 +51,6 @@ def main(argv: Sequence[str] | None = None, *, stdout: TextIO | None = None) -> 
             {
                 "workflows": result.workflows,
                 "catalog": None if result.path is None else str(result.path),
-                "cli": None if result.reference is None else str(result.reference),
                 "problems": list(result.problems),
             },
             indent=2,

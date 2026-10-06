@@ -119,9 +119,10 @@ the one thing the route holds steady. Whether a draw *lands* is a person's
 call, and nothing else tries to decide for them.
 
 **A take** is one draw of exactly this request. The build draws take 1;
-`gnode reroll <run> "lines.<effect_id>.generate"` draws the next take of that
-one line and leaves every other step a cache hit, and `gnode pick` keeps one.
-The pick is written to `pipeline/workflow.takes.yaml` beside the builder, which
+`uv run python -m grida.fx reroll <run> "lines.<effect_id>.generate"` draws the next
+take of that one line and leaves every other step a cache hit, and
+`uv run python -m grida.fx pick` keeps one. The pick is written to
+`pipeline/iron-petal-unit.takes.yaml` beside the builder, which
 every run reads; the authored `take` field stays 1, and the build refuses
 another with a notice naming that file.
 
@@ -223,8 +224,8 @@ is drawn and billed.
 
 ```sh
 cd godot/games/iron_petal_unit
-uv run gnode run pipeline/workflow.py:build --arg package=inputs --live --max-usd 2
-uv run gnode view
+uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs --live --max-usd 2
+(cd ../../.. && uv run python scripts/view.py out/runs)
 ```
 
 The line plays in the dashboard after the level and length gates a build
@@ -234,7 +235,7 @@ applies. Reroll it for another read, or redirect it and run again.
 
 ```sh
 uv run --group games demo-games package validate --input godot/games/iron_petal_unit/inputs
-(cd godot/games/iron_petal_unit && uv run gnode plan pipeline/workflow.py:build --arg package=inputs)
+(cd godot/games/iron_petal_unit && uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs)
 ```
 
 Contract validity proves the cast resolves and the plan is sound, not the

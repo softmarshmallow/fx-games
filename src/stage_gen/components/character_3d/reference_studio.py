@@ -20,9 +20,9 @@ from pathlib import Path
 from typing import Any, cast
 
 import jsonschema
+from grida.fx import Tool, ToolInvocationError, ToolResult
 from PIL import Image
 
-from gnode import Tool, ToolInvocationError, ToolResult
 from stage_gen.components.character_3d.io import (
     canonical_digest,
     confined,

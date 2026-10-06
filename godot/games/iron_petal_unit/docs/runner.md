@@ -669,8 +669,8 @@ group of steps per asset. Planning never spends; a live run needs `--live` and a
 
 ```sh
 cd godot/games/iron_petal_unit
-gnode plan pipeline/workflow.py:build --arg package=inputs
-gnode run pipeline/workflow.py:build --arg package=inputs --live --max-usd 80 \
+uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs
+uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs --live --max-usd 80 \
   --deliver package=../../../out/iron-petal/{key}
 ```
 
@@ -716,7 +716,7 @@ track or an effect moves it. Regenerate with
 <!-- pipeline-graph-contract:start -->
 ```json
 {
-  "kind": "sideview-runner-gnode-plan-contract-v1",
+  "kind": "sideview-runner-fx-plan-contract-v1",
   "fixture_ref": "godot/games/iron_petal_unit/inputs",
   "builder": "pipeline/workflow.py:build",
   "workflow_id": "iron-petal-unit",
@@ -767,10 +767,10 @@ track or an effect moves it. Regenerate with
     "./pipeline/nodes/rebase.py#rebase_verify_record",
     "./pipeline/nodes/soundtrack.py#admit_track",
     "./pipeline/nodes/soundtrack.py#record_track",
-    "gnode/image.edit@1",
-    "gnode/music.generate@1",
-    "gnode/sound.generate@1",
-    "gnode/structured.generate@1"
+    "fx/image.edit@1",
+    "fx/music.generate@1",
+    "fx/sound.generate@1",
+    "fx/structured.generate@1"
   ]
 }
 ```

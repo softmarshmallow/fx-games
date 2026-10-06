@@ -1,0 +1,13 @@
+# Afterlight's voice preparation (tools/voice.yaml): one explicit, manual pass that reads the
+# exported line inventory and speaks each generated line once. Its node module imports Stage
+# Gen's speech admission and audio measuring, so that counts as its source: fx.lock notices
+# when it changes. Its node module lives in tools/, so that is the folder fx.lock scans. Runs
+# and the store stay under the repository's out/.
+fx: project/v1
+runs: ../../../out/runs
+cache: ../../../out/fx-cache
+workflows: [tools]
+nodes: tools
+sources: [stage_gen]
+routes: { speech.generate: eleven_v3@elevenlabs }
+route_tables: [tools/voice-routes.yaml]

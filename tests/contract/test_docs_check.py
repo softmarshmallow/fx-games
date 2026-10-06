@@ -8,7 +8,6 @@ from pathlib import Path
 from types import ModuleType
 
 from demo_game_collection.identities import current_versions
-from gnode import ArtifactResult
 
 
 def _load_docs_checker() -> ModuleType:
@@ -36,7 +35,6 @@ def _minimal_repository(root: Path) -> None:
     """The files the docs gate reads unconditionally, all empty."""
     for relative in (
         ".env.example",
-        "src/stage_gen/config.py",
         "web/viewer/lib/shell/runs.ts",
         "README.md",
         "docs/generated-media-publication.md",
@@ -98,7 +96,7 @@ def test_a_user_skill_names_nothing_in_this_repository(tmp_path: Path) -> None:
         "---\nname: game-concept-studio\n---\n"
         "Draw with `grida-fx run workflows/concept-image.yaml`.\n"
         "Read `docs/models/providers.md`, then run `stage-gen-concept check`.\n"
-        "Import stage_gen.media, or use the gnode guide.\n",
+        "Import stage_gen.media.\n",
         encoding="utf-8",
     )
     (skill / "agents/openai.yaml").write_text(
@@ -113,7 +111,6 @@ def test_a_user_skill_names_nothing_in_this_repository(tmp_path: Path) -> None:
         "(`docs/models/providers.md`)",
         "skills/example/SKILL.md:5: a user skill names this repository (stage-gen)",
         "skills/example/SKILL.md:6: a user skill names this repository (stage_gen)",
-        "skills/example/SKILL.md:6: a user skill names this repository (gnode)",
         "skills/example/agents/openai.yaml:1: a user skill names this repository "
         "(`.agents/skills/asset-pipeline/SKILL.md`)",
     ]
@@ -145,31 +142,18 @@ def test_web_text_walk_reads_git_files_and_the_viewer_shell_may_not_spawn(
 
 def test_every_environment_name_the_viewer_shell_reads_is_documented(tmp_path: Path) -> None:
     """Any viewer shell module, not only runs.ts, may read the environment that
-    ``gnode view`` sets through the viewer; each name it reads must be in ``.env.example``."""
+    ``scripts/view.py`` sets through the viewer; each name it reads must be in ``.env.example``."""
     _minimal_repository(tmp_path)
     (tmp_path / "web/viewer/lib/shell/catalog.ts").write_text(
         "const file = process.env.STAGE_GEN_CATALOG;\n", encoding="utf-8"
     )
 
     failures = _load_docs_checker().run_docs_check(tmp_path).failures
-    assert ".env.example: missing Python/web config name STAGE_GEN_CATALOG" in failures
+    assert ".env.example: missing viewer config name STAGE_GEN_CATALOG" in failures
 
     (tmp_path / ".env.example").write_text("STAGE_GEN_CATALOG=\n", encoding="utf-8")
     failures = _load_docs_checker().run_docs_check(tmp_path).failures
     assert not any("STAGE_GEN_CATALOG" in failure for failure in failures)
-
-
-def test_component_contract_artifact_example_runs() -> None:
-    """Execute the documented result example against the public Python API."""
-
-    document = Path(__file__).parents[2] / "src/stage_gen/components/README.md"
-    section = document.read_text(encoding="utf-8").split("## Artifact result\n", 1)[1]
-    section = section.split("\n## ", 1)[0]
-    examples = re.findall(r"```python\n(.*?)\n```", section, re.DOTALL)
-    assert len(examples) == 1
-    namespace: dict[str, object] = {}
-    exec(compile(examples[0], str(document), "exec"), namespace)
-    assert isinstance(namespace["result"], ArtifactResult)
 
 
 def test_every_spec_names_a_true_checker(tmp_path: Path) -> None:
@@ -192,7 +176,7 @@ def test_every_spec_names_a_true_checker(tmp_path: Path) -> None:
     spec("honest", "none.")
     spec("missing", "`tests/contract/test_absent.py`.")
     spec("borrowed", "`tests/contract/test_silent.py`.")
-    spec("source", "`src/stage_gen/config.py`.")
+    spec("source", "`src/stage_gen/fs.py`.")
     (spec_dir / "silent.md").write_text("# silent\n\nNo line at all.\n", encoding="utf-8")
 
     failures = checker.check_spec_checkers(tmp_path)
@@ -201,7 +185,7 @@ def test_every_spec_names_a_true_checker(tmp_path: Path) -> None:
         "which never names the spec",
         "docs/spec/game/missing.md: Checked by names missing test `tests/contract/test_absent.py`",
         "docs/spec/game/silent.md: no `> **Checked by:**` line",
-        "docs/spec/game/source.md: Checked by names a non-test `src/stage_gen/config.py`",
+        "docs/spec/game/source.md: Checked by names a non-test `src/stage_gen/fs.py`",
     ]
 
 
@@ -324,7 +308,7 @@ def test_game_contract_authorities_are_discoverable_and_match_the_live_models() 
     for required in (
         "demo-games package validate",
         "demo-games package digest",
-        "gnode plan pipeline/workflow.py:build",
+        "python -m grida.fx plan pipeline/workflow.py:build",
         "godot/games/bellweather/inputs/default",
         "godot/games/iron_petal_unit/inputs",
         _current("game-contract"),

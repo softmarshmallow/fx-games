@@ -6,7 +6,6 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
-from gnode import canonicalize_strict_json_schema
 from the_grain_pipeline.dialogue_scene.models import DialogueScenePlanDraft
 
 # These are JSON Schema vocabulary, not application-owned persisted keys. Their
@@ -79,7 +78,11 @@ _SNAKE_CASE = re.compile(r"^[a-z][a-z0-9_]*$")
 
 
 def dialogue_plan_json_schema() -> dict[str, Any]:
-    """Return the exact strict plan schema sent to and persisted for the service."""
+    """Return the plan schema sent to and persisted for the service, as authored.
+
+    FX's structured adapter inlines and canonicalizes it when it sends it, and checks the
+    answer against it as written (providers.md section 9.2).
+    """
 
     raw = DialogueScenePlanDraft.model_json_schema()
     definitions = raw.get("$defs", {})
@@ -91,7 +94,7 @@ def dialogue_plan_json_schema() -> dict[str, Any]:
     normalized = _normalize_schema(raw, definition_names=names)
     if not isinstance(normalized, dict):
         raise TypeError("dialogue plan schema must normalize to an object")
-    return canonicalize_strict_json_schema(normalized)
+    return normalized
 
 
 def _normalize_schema(value: object, *, definition_names: Mapping[str, str]) -> object:

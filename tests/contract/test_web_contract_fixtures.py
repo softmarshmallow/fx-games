@@ -2,7 +2,7 @@
 
 The TypeScript parsers in ``web/ui`` read these fixtures in their Bun tests. Here the same
 files are held to the Python side of each contract, so neither half can drift unseen: the run
-view against gnode's ``RunView`` (schema 3), the example and its
+view against ``stage_gen.runview.RunView`` (schema 3), the example and its
 ledger against ``stage_gen.examples``, and the catalog against the structure
 ``scripts/catalog.py`` actually writes, built here over a store holding the fixture's
 game example.
@@ -17,7 +17,6 @@ from typing import Any
 
 import pytest
 
-from gnode import RunView
 from stage_gen.examples import (
     ENTRY_FILE,
     EXAMPLE_FILE,
@@ -26,6 +25,7 @@ from stage_gen.examples import (
     GameExampleEntry,
     WorkflowExample,
 )
+from stage_gen.runview import RUN_VIEW_KIND, RunView
 from stage_gen.workflows._catalog import CATALOG_KIND, build
 from stage_gen.workflows._registry import ExampleEntry, WorkflowManifest
 
@@ -61,7 +61,7 @@ def test_run_view_fixture_is_a_workflow_run_view() -> None:
     raw = (CONTRACTS / "run-view.fixture.json").read_bytes()
     view = RunView.model_validate_json(raw)
     assert view.schema_version == 3
-    assert view.kind == "gnode-run-view-v1"
+    assert view.kind == RUN_VIEW_KIND == "stage-gen-run-view-v1"
     # Every edge and card reference names a node the document declares.
     declared = {node.node_id for node in view.nodes}
     for node in view.nodes:

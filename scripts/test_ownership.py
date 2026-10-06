@@ -126,7 +126,6 @@ def test_owners(root: Path) -> dict[str, TestOwner]:
         for path in sorted(files)
         if any(path.is_relative_to(root / folder) for folder in ("tests", *CONSUMER_TEST_ROOTS))
         and path.name.startswith("test_")
-        and not path.is_relative_to(root / "tests/live")
     }
 
 

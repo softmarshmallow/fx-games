@@ -1,4 +1,4 @@
-gnode: workflow/v1
+fx: workflow/v1
 id: universe
 title: Universe
 description: >-
@@ -70,12 +70,12 @@ steps:
 
       poster_small:
         title: Reduce the poster
-        uses: gnode/image.resize@1
+        uses: fx/image.resize@1
         with: { image: "${{ inputs.poster }}", longest_side: 1600 }
 
       propose:
         title: Propose the world
-        uses: gnode/structured.generate@1
+        uses: fx/structured.generate@1
         with:
           prompt: ./prompts/propose.md
           system: ./prompts/system.md
@@ -104,7 +104,7 @@ steps:
 
       plan:
         title: Plan the gallery as a set
-        uses: gnode/structured.generate@1
+        uses: fx/structured.generate@1
         with:
           prompt: ./prompts/plan.md
           system: ./prompts/system.md
@@ -123,7 +123,7 @@ steps:
 
       review:
         title: Review the world independently
-        uses: gnode/structured.generate@1
+        uses: fx/structured.generate@1
         with:
           prompt: ./prompts/review.md
           system: ./prompts/system.md
@@ -162,7 +162,7 @@ steps:
 
       grammar:
         title: Compile the grammar
-        uses: gnode/structured.generate@1
+        uses: fx/structured.generate@1
         with:
           prompt: ./prompts/direction-global.md
           system: ./prompts/system.md
@@ -188,7 +188,7 @@ steps:
     description: >-
       Each admitted entity is directed, drawn fresh with no references, and reviewed against
       its record. A rejected image stays in the gallery, marked; a new take is drawn only when
-      asked for (gnode reroll).
+      asked for (a reroll).
     for_each: ${{ steps.world.admit.outputs.universe.plan.plans }}
     key: ${{ item.entity_id }}
     max: ${{ inputs.census.max_entities }}
@@ -202,7 +202,7 @@ steps:
 
       direct:
         title: Direct the image
-        uses: gnode/structured.generate@1
+        uses: fx/structured.generate@1
         with:
           prompt: ./prompts/direction-entity.md
           system: ./prompts/system.md
@@ -236,7 +236,7 @@ steps:
 
       draw:
         title: Draw the concept image
-        uses: gnode/image.generate@1
+        uses: fx/image.generate@1
         with:
           prompt: ${{ steps.brief.outputs.prompt }}
           size: ${{ lookup(tables.size_by_mode, item.concept_mode) }}
@@ -253,7 +253,7 @@ steps:
 
       review:
         title: Review the image
-        uses: gnode/structured.generate@1
+        uses: fx/structured.generate@1
         with:
           prompt: ./prompts/review-image.md
           system: ./prompts/system.md
@@ -280,7 +280,7 @@ steps:
     description: >-
       The admitted world and every entity's image, record and readable page, laid out as one
       folder beside a manifest of each entity's status and the rights the run was given.
-    uses: gnode/package@1
+    uses: fx/package@1
     with:
       files:
         "universe.json": ${{ steps.world.admit.outputs.universe }}

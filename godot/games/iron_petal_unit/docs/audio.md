@@ -131,10 +131,11 @@ post-processing.
 
 The route has no seed and a person picks the winner, so a generated clip is
 chosen the way a spoken line is (see [game-voice.md](voices.md) for the full
-account). The build draws take 1; `gnode reroll <run> "sounds.<effect_id>.generate"`
-draws the next take of that one clip, and `gnode pick` keeps one. The pick is
-written to `pipeline/workflow.takes.yaml` beside the builder, which every run
-reads; the authored `take` field stays 1, and the build refuses another with a
+account). The build draws take 1;
+`uv run python -m grida.fx reroll <run> "sounds.<effect_id>.generate"` draws the
+next take of that one clip, and `uv run python -m grida.fx pick` keeps one. The
+pick is written to `pipeline/iron-petal-unit.takes.yaml` beside the builder,
+which every run reads; the authored `take` field stays 1, and the build refuses another with a
 notice naming that file. `[effects.realization.pinned]` instead commits a
 reviewed take into the package by digest, sidecar and all, republished through
 the same gates with no provider call:
@@ -240,8 +241,8 @@ back from the call cache, so only the changed clip is drawn and billed.
 
 ```sh
 cd godot/games/iron_petal_unit
-uv run gnode run pipeline/workflow.py:build --arg package=inputs --live --max-usd 2
-uv run gnode view
+uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs --live --max-usd 2
+(cd ../../.. && uv run python scripts/view.py out/runs)
 ```
 
 The clip's step plays in the dashboard after the same admission a build applies.
@@ -251,7 +252,7 @@ Reroll it for another take, or reword it and run again.
 
 ```sh
 uv run --group games demo-games package validate --input godot/games/iron_petal_unit/inputs
-(cd godot/games/iron_petal_unit && uv run gnode plan pipeline/workflow.py:build --arg package=inputs)
+(cd godot/games/iron_petal_unit && uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs)
 ```
 
 Contract validity proves the closure and the plan, not the sound. Generated

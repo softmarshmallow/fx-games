@@ -3,7 +3,7 @@
 
 These executable contracts belong to the game-owned builders. New asset
 pipelines do not inherit their gameplay stages or fixture requirements. A game
-built with gnode pins the plan of its builder over its own package: every planned
+built on FX pins the plan of its builder over its own package: every planned
 step instance (later takes included) and what each reads.
 
     python godot/tools/write_game_graph_contract.py
@@ -13,7 +13,6 @@ step instance (later takes included) and what each reads.
 from __future__ import annotations
 
 import argparse
-import asyncio
 import hashlib
 import json
 import sys
@@ -25,33 +24,35 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
     sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
-from gnode import plan_async
+from grida.fx import plan
+
 from scripts.graph_contracts import document_contract, write_contract
+from stage_gen.workflows._fx import declared_outputs, instances
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-#: Every gnode game's builder, planned from its own folder.
+#: Every game's builder, planned from its own folder.
 BUILDER = "pipeline/workflow.py:build"
 PLATFORMER_GAME = "godot/games/bellweather"
 PIPELINE_DOCUMENT = REPOSITORY_ROOT / PLATFORMER_GAME / "docs/generation-pipeline.md"
-CONTRACT_KIND = "sideview-platformer-gnode-plan-contract-v1"
+CONTRACT_KIND = "sideview-platformer-fx-plan-contract-v1"
 FIXTURE_REF = f"{PLATFORMER_GAME}/inputs/default"
 RUNNER_GAME = "godot/games/iron_petal_unit"
 RUNNER_FIXTURE_REF = f"{RUNNER_GAME}/inputs"
 RUNNER_PIPELINE_DOCUMENT = REPOSITORY_ROOT / RUNNER_GAME / "docs/runner.md"
-RUNNER_CONTRACT_KIND = "sideview-runner-gnode-plan-contract-v1"
+RUNNER_CONTRACT_KIND = "sideview-runner-fx-plan-contract-v1"
 GRAIN_GAME = "godot/games/the_grain"
 ROOM_DOCUMENT = REPOSITORY_ROOT / GRAIN_GAME / "docs/pointclick-room.md"
-ROOM_CONTRACT_KIND = "pointclick-room-gnode-plan-contract-v1"
+ROOM_CONTRACT_KIND = "pointclick-room-fx-plan-contract-v1"
 SCENE_DOCUMENT = REPOSITORY_ROOT / GRAIN_GAME / "docs/dialogue-scene-assets.md"
-SCENE_CONTRACT_KIND = "dialogue-scene-gnode-plan-contract-v1"
+SCENE_CONTRACT_KIND = "dialogue-scene-fx-plan-contract-v1"
 SURVIVAL_GAME = "godot/games/ember_hollow"
 OBLIQUE_SURVIVAL_DOCUMENT = REPOSITORY_ROOT / SURVIVAL_GAME / "docs/generation-v1.md"
 OBLIQUE_SURVIVAL_FIXTURE_REF = f"{SURVIVAL_GAME}/inputs"
-OBLIQUE_SURVIVAL_CONTRACT_KIND = "oblique-survival-gnode-plan-contract-v1"
+OBLIQUE_SURVIVAL_CONTRACT_KIND = "oblique-survival-fx-plan-contract-v1"
 OBLIQUE_SURVIVAL_SCOPE = "full"
 
 
-def _gnode_plan_contract(
+def _fx_plan_contract(
     *,
     kind: str,
     game: str,
@@ -60,45 +61,44 @@ def _gnode_plan_contract(
     repo: Path,
     arguments: dict[str, str] | None = None,
 ) -> dict[str, Any]:
-    """Derive a gnode game's contract from the plan its builder makes of its package."""
+    """Derive a game's contract from the plan its builder makes of its package."""
 
     asked = {"package": package, **(arguments or {})}
-    planned = asyncio.run(plan_async(builder, cwd=repo / game, arguments=asked))
+    folder = repo / game
+    planned = plan(builder, cwd=folder, arguments=asked)
     if not planned.ok:
-        problems = "; ".join(f"{p.where}: {p.message}" for p in planned.problems)
+        problems = "; ".join(f"{p['where']}: {p['message']}" for p in planned.problems)
         raise ValueError(f"the {game} builder does not plan: {problems}")
-    live = [instance for instance in planned.instances if instance.state != "absent"]
+    live = [instance for instance in instances(planned) if instance.state != "absent"]
     ids = {instance.id for instance in live}
     topology = sorted(
         [instance.id, sorted(dep for dep in instance.inputs_from if dep in ids)]
         for instance in live
     )
     operations = Counter(
-        ",".join(sorted(instance.routes)) or "local"
-        for instance in live
-        if not instance.take or instance.take == 1
+        ",".join(sorted(instance.routes)) or "local" for instance in live if instance.take == 1
     )
     return {
         "kind": kind,
         "fixture_ref": f"{game}/{package}",
         "builder": builder,
         **({"arguments": dict(sorted(arguments.items()))} if arguments else {}),
-        "workflow_id": planned.planner.workflow.id,
+        "workflow_id": planned.document["workflow"]["id"],
         "topology_sha256": hashlib.sha256(
             json.dumps(topology, separators=(",", ":")).encode("utf-8")
         ).hexdigest(),
         "node_count": len(live),
         "step_count": len({instance.step for instance in live}),
         "first_take_operation_counts": dict(sorted(operations.items())),
-        "outputs": sorted(planned.planner.workflow.outputs),
+        "outputs": sorted(declared_outputs(builder, cwd=folder, arguments=asked)),
         "type_ids": sorted({instance.uses for instance in live}),
     }
 
 
 def build_graph_contract(repo: Path = REPOSITORY_ROOT) -> dict[str, Any]:
-    """Derive Bellweather's contract from the plan its gnode builder makes of its package."""
+    """Derive Bellweather's contract from the plan its builder makes of its package."""
 
-    return _gnode_plan_contract(
+    return _fx_plan_contract(
         kind=CONTRACT_KIND,
         game=PLATFORMER_GAME,
         package="inputs/default",
@@ -108,9 +108,9 @@ def build_graph_contract(repo: Path = REPOSITORY_ROOT) -> dict[str, Any]:
 
 
 def build_runner_graph_contract(repo: Path = REPOSITORY_ROOT) -> dict[str, Any]:
-    """Derive the runner's contract from the plan its gnode builder makes of its package."""
+    """Derive the runner's contract from the plan its builder makes of its package."""
 
-    return _gnode_plan_contract(
+    return _fx_plan_contract(
         kind=RUNNER_CONTRACT_KIND, game=RUNNER_GAME, package="inputs", builder=BUILDER, repo=repo
     )
 
@@ -118,7 +118,7 @@ def build_runner_graph_contract(repo: Path = REPOSITORY_ROOT) -> dict[str, Any]:
 def build_room_graph_contract(repo: Path = REPOSITORY_ROOT) -> dict[str, Any]:
     """Derive The Grain's room contract from the plan its builder makes of the window room."""
 
-    return _gnode_plan_contract(
+    return _fx_plan_contract(
         kind=ROOM_CONTRACT_KIND,
         game=GRAIN_GAME,
         package="inputs/rooms/window",
@@ -130,7 +130,7 @@ def build_room_graph_contract(repo: Path = REPOSITORY_ROOT) -> dict[str, Any]:
 def build_scene_graph_contract(repo: Path = REPOSITORY_ROOT) -> dict[str, Any]:
     """Derive The Grain's scene contract from the plan its builder makes of the scene."""
 
-    return _gnode_plan_contract(
+    return _fx_plan_contract(
         kind=SCENE_CONTRACT_KIND,
         game=GRAIN_GAME,
         package="inputs",
@@ -145,7 +145,7 @@ def build_oblique_survival_graph_contract(repo: Path = REPOSITORY_ROOT) -> dict[
     The scope rides the contract because it genuinely selects a subset of the steps.
     """
 
-    return _gnode_plan_contract(
+    return _fx_plan_contract(
         kind=OBLIQUE_SURVIVAL_CONTRACT_KIND,
         game=SURVIVAL_GAME,
         package="inputs",

@@ -1,6 +1,6 @@
 """The Grain's case: prove it, bind its leaves, and publish it over the leaves' runs.
 
-The rooms and the scene build with gnode from the game's folder
+The rooms and the scene build with Grida FX from the game's folder
 (``pipeline/workflow.py:room`` and ``:scene``); this checks the case they are played in and,
 with ``--bundle``, publishes ``case.json`` naming the delivered folder each beat plays.
 Nothing here is generated and no provider is reached.

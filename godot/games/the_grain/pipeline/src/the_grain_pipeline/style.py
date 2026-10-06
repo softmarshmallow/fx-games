@@ -9,11 +9,10 @@ the shared style compiler's; this module only states them as a build's steps nee
 from __future__ import annotations
 
 from collections.abc import Sequence
-from pathlib import Path
 from typing import Any
 
 from stage_gen.image_prompting import (
-    build_image_style_compiler_request,
+    image_style_question,
     load_image_style_resources,
     materialize_style_anchor,
 )
@@ -28,12 +27,7 @@ from stage_gen.image_style import (
 def style_question(brief: str, asset_kinds: Sequence[ImageAssetKind]) -> tuple[str, str]:
     """The prompt and the system prompt the style selection is asked with."""
 
-    request = build_image_style_compiler_request(
-        prompt=brief, artifact_path=Path("style-anchor.json"), asset_kinds=asset_kinds
-    )
-    if request.system is None:
-        raise ValueError("the style compiler asks with a system prompt")
-    return request.prompt, request.system
+    return image_style_question(brief, asset_kinds)
 
 
 def style_schema() -> dict[str, Any]:

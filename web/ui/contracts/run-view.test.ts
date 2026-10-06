@@ -114,17 +114,22 @@ describe("parseExecutionView", () => {
     );
   });
 
-  test("isExecutionViewKind reads any execution-view envelope and gnode's own", () => {
+  test("isExecutionViewKind reads any execution-view envelope and Stage Gen's own", () => {
     for (const kind of [
       "sideview-platformer-execution-view-v1",
       "dialogue-scene-execution-view-v1",
       "universe-execution-view-v1",
       "a-producer-this-build-never-heard-of-execution-view-v1",
-      "gnode-run-view-v1",
+      "stage-gen-run-view-v1",
     ]) {
       expect(isExecutionViewKind(kind)).toBe(true);
     }
-    for (const kind of ["someone-elses-view-v1", "execution-view-v1", "Upper-execution-view-v1", 3]) {
+    for (const kind of [
+      "someone-elses-view-v1",
+      "execution-view-v1",
+      "Upper-execution-view-v1",
+      3,
+    ]) {
       expect(isExecutionViewKind(kind)).toBe(false);
     }
   });
@@ -156,7 +161,7 @@ describe("parseExecutionView", () => {
     expect(view.subject.fields.universe_id).toBe("lantern_ferry");
   });
 
-  test("labels by ids, not counts, and reads a joined gnode view by its graph kind", () => {
+  test("labels by ids, not counts, and reads a projected run view by its graph kind", () => {
     const sample = parseExecutionView({
       ...executionViewFixture(),
       kind: "sample-execution-view-v1",
@@ -167,7 +172,7 @@ describe("parseExecutionView", () => {
     expect(subjectLabel(sample.subject)).toBe("quiet_orbit");
     expect(sample.subject.fields.item_count).toBe(4);
 
-    const joined = { ...executionViewFixture(), kind: "gnode-run-view-v1" } as Record<string, unknown>;
+    const joined = { ...executionViewFixture(), kind: "stage-gen-run-view-v1" } as Record<string, unknown>;
     delete joined.game_id;
     joined.graph_kind = "contained-character-parts-to-rig-v1";
     const view = parseExecutionView(joined);
@@ -381,10 +386,10 @@ describe("runLiveness", () => {
 
 describe("the shared run-view fixture", () => {
   // The same document tests/contract/test_web_contract_fixtures.py validates against the
-  // engine's RunView, so the parser and the producer read one wire format.
+  // projection's RunView, so the parser and the producer read one wire format.
   test("parses as a workflow run with its cards, sidecars and artifacts", () => {
     const view = parseExecutionView(structuredClone(runViewFixture));
-    expect(subjectLabel(view.subject)).toBe("gnode-run-view-v1");
+    expect(subjectLabel(view.subject)).toBe("stage-gen-run-view-v1");
     expect(view.runState).toBe("succeeded");
     expect(view.nodes.map((node) => node.nodeId)).toEqual(["brief", "draw", "check"]);
     const draw = view.nodes[1];

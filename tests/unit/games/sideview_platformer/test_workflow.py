@@ -1,6 +1,6 @@
-"""Bellweather's builder through gnode, offline: the plan, its parts, a whole run, the package.
+"""Bellweather's builder through FX, offline: the plan, its parts, a whole run, the package.
 
-Each run test copies the game's gnode project (``gnode.yaml``, the lock, ``pipeline/nodes`` and
+Each run test copies the game's FX project (``fx.yaml``, the lock, ``pipeline/nodes`` and
 the builder) and the default package into a scratch folder, because a package's references are
 project files. Paid calls are stand-ins that answer what the game's judges admit, recognised
 by the brief they were sent: cut-outs, one figure per motion or portrait cell, a climbing
@@ -11,7 +11,6 @@ map's validator accepts, and an accepting review.
 
 from __future__ import annotations
 
-import asyncio
 import hashlib
 import io
 import json
@@ -23,6 +22,9 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
+from grida.fx import Answer, FxError, InputFile, Plan, RunResult, StandInCall
+from grida.fx import plan as plan_fx
+from grida.fx import run as run_fx
 from PIL import Image, ImageDraw
 
 from bellweather_pipeline.briefs import EDITABLE_SPAN
@@ -38,16 +40,14 @@ from demo_game_tools.media.ui import (
     INVENTORY_PANEL_TOP,
     INVENTORY_PANEL_WIDTH,
 )
-from gnode import (
-    CallRecord,
-    HostServices,
-    Plan,
-    PlanError,
-    Route,
-    RunOutcome,
-    Store,
-    WorkflowRun,
-    plan_async,
+from tests.unit._fx import (
+    ceiling,
+    deliver,
+    failures,
+    first_takes,
+    game_project,
+    instances,
+    schema_of,
 )
 from tests.unit._ui_atlas_fixture import ui_sheet
 
@@ -114,34 +114,20 @@ DESIGNS: dict[str, dict[str, object]] = {
 }
 
 
-def game_project(tmp_path: Path) -> Path:
-    """The game's gnode project in a scratch folder, with the default package in ``inputs``."""
+def bellweather_project(tmp_path: Path) -> Path:
+    """The game's FX project in a scratch folder, with the default package in ``inputs``."""
 
-    project = tmp_path / "project"
-    (project / "pipeline").mkdir(parents=True)
-    settings = (GAME / "gnode.yaml").read_text(encoding="utf-8")
-    settings = settings.replace("runs: ../../../out/runs", "runs: runs")
-    settings = settings.replace("cache: ../../../out/gnode-cache", "cache: cache")
-    (project / "gnode.yaml").write_text(settings, encoding="utf-8")
-    shutil.copy(GAME / "gnode.lock", project / "gnode.lock")
-    shutil.copytree(GAME / "pipeline/nodes", project / "pipeline/nodes")
-    shutil.copy(GAME / "pipeline/workflow.py", project / "pipeline/workflow.py")
+    project = game_project("bellweather", tmp_path)
     shutil.copytree(GAME / "inputs/default", project / "inputs/default")
     return project
 
 
 def plan(project: Path, package: str = "inputs/default", **arguments: str) -> Plan:
-    return asyncio.run(
-        plan_async(BUILDER, cwd=project, arguments={"package": package, **arguments})
-    )
-
-
-def first_takes(planned: Plan) -> list[Any]:
-    return [i for i in planned.instances if i.state != "absent" and set(i.takes) <= {1}]
+    return plan_fx(BUILDER, cwd=project, arguments={"package": package, **arguments})
 
 
 def steps_of(planned: Plan) -> set[str]:
-    return {instance.step for instance in first_takes(planned)}
+    return {row["step"] for row in first_takes(planned)}
 
 
 # ------------------------------------------------------------------------------- stand-ins
@@ -249,12 +235,12 @@ def _inventory() -> bytes:
 class StandIns:
     """Every paid call the default package makes, answered offline."""
 
-    def __init__(self, store: Store, project: Path, *, rejected_designs: int = 0) -> None:
-        self.store = store
+    def __init__(self, project: Path, *, rejected_designs: int = 0) -> None:
         self.package = resolve_game_package(project / "inputs/default")
         self.calls: Counter[str] = Counter()
         self.prompts: dict[str, list[str]] = {}
-        #: How many compositions the validator refuses before the stored one is answered.
+        #: How many compositions of a map with climbables the validator refuses before the
+        #: stored one is answered.
         self.rejected_designs = rejected_designs
         self._atlas: bytes | None = None
         self._templates = {
@@ -262,20 +248,17 @@ class StandIns:
             for name, role in UI_SHEET_ROLES.items()
         }
 
-    def services(self) -> HostServices:
-        return HostServices(
-            store=self.store,
-            capabilities={
-                "image.generate": self._image,
-                "image.edit": self._image,
-                "structured.generate": self._structured,
-                "music.generate": self._music,
-            },
-            live=True,
-        )
-
-    def _put(self, data: bytes, kind: str) -> Any:
-        return self.store.put_bytes(data, kind=kind, name=kind.split("/", 1)[0])
+    def __call__(self, call: StandInCall) -> Answer:
+        if call.capability in ("image.generate", "image.edit"):
+            kind, data = self._paint(call.request)
+            self._note(kind, str(call.request["prompt"]))
+            return Answer(files={"image": data})
+        if call.capability == "structured.generate":
+            return self._structured(call)
+        if call.capability == "music.generate":
+            self._note("track", str(call.request["prompt"]))
+            return Answer(files={"audio": bundled_music_path().read_bytes()})
+        raise AssertionError(f"unexpected call: {call!r}")
 
     def _note(self, kind: str, prompt: str) -> None:
         self.calls[kind] += 1
@@ -286,10 +269,12 @@ class StandIns:
         size = str(request["size"])
         pictures = [request.get("image"), *(request.get("references") or [])]
         roles = {
-            self._templates.get(picture.digest) for picture in pictures if picture is not None
+            self._templates.get(picture.digest)
+            for picture in pictures
+            if isinstance(picture, InputFile)
         } - {None}
         if request.get("mask") is not None:
-            return "loop", self.store.file_path(request["image"].digest).read_bytes()
+            return "loop", request["image"].read_bytes()
         if size == PAINT_CANVAS_SIZE:
             self._atlas = self._atlas or _atlas()
             return "atlas", self._atlas
@@ -316,20 +301,14 @@ class StandIns:
             return "layer", _layer(size, transparent=transparent)
         return "cutout", _cutout(size)
 
-    async def _image(self, route: Route, request: Mapping[str, Any], take: int) -> CallRecord:
-        kind, data = self._paint(request)
-        self._note(kind, str(request["prompt"]))
-        return CallRecord({"image": self._put(data, "image/png")}, None, 0.01)
-
-    async def _structured(self, route: Route, request: Mapping[str, Any], take: int) -> CallRecord:
-        schema = json.loads(self.store.file_path(request["schema"].digest).read_text())
-        fields = set(schema.get("properties") or {})
-        prompt = str(request["prompt"])
+    def _structured(self, call: StandInCall) -> Answer:
+        fields = set(schema_of(call).get("properties") or {})
+        prompt = str(call.request["prompt"])
         if "chunks" in fields:
             self._note("design", prompt)
             game_map = next(m for m in self.package.maps if m.terrain.brief in prompt)
             answer: dict[str, Any] = dict(DESIGNS[game_map.map_id])
-            if self.rejected_designs:
+            if self.rejected_designs and game_map.climbable is not None:
                 self.rejected_designs -= 1
                 # A level that leaves a declared climbable unplaced breaks the map's own rules.
                 answer = {**answer, "chunks": [{"kind": "run", "len": 4}] * 3}
@@ -347,41 +326,17 @@ class StandIns:
                     for state in states
                 ],
             }
-        return CallRecord({}, {"json": answer}, 0.01)
-
-    async def _music(self, route: Route, request: Mapping[str, Any], take: int) -> CallRecord:
-        self._note("track", str(request["prompt"]))
-        audio = self._put(bundled_music_path().read_bytes(), "audio/mpeg")
-        return CallRecord({"audio": audio}, None, 0.05)
+        return Answer.json(answer)
 
 
-def run(project: Path, stand_ins: StandIns, name: str = "run", **arguments: str) -> RunOutcome:
-    planned = plan(project, **arguments)
-    assert planned.ok, planned.problems
-    stand_ins.store = planned.planner.store
-    return asyncio.run(
-        WorkflowRun(planned, run_dir=project / name, services=stand_ins.services()).run()
+def run(project: Path, stand_ins: StandIns, name: str = "run", **arguments: str) -> RunResult:
+    return run_fx(
+        BUILDER,
+        cwd=project,
+        arguments={"package": "inputs/default", **arguments},
+        run_dir=project / name,
+        stand_in=stand_ins,
     )
-
-
-def deliver(store: Store, outcome: RunOutcome, folder: Path, output: str = "package") -> Path:
-    for key, file in outcome.outputs[output].items:
-        target = folder / key
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(store.file_path(file.digest), target)
-    return folder
-
-
-def failures(outcome: RunOutcome) -> dict[str, str]:
-    return {
-        step: str(getattr(outcome.results.get(step), "error", None) or "")
-        for step in outcome.failed
-    } or {"stopped": str(outcome.stopped)}
-
-
-def stand_ins_for(project: Path, **options: Any) -> StandIns:
-    store = plan(project).planner.store
-    return StandIns(store, project, **options)
 
 
 # ------------------------------------------------------------------------------- the plan
@@ -392,15 +347,15 @@ def test_each_shipped_package_plans_inside_its_own_project(variant: str) -> None
     planned = plan(GAME, f"inputs/{variant}")
 
     assert planned.ok, planned.problems
-    assert planned.planner.workflow.id == "bellweather"
-    budget = planned.planner.workflow.budget
-    assert budget is not None and planned.estimate()[1] <= budget.max_usd
+    assert planned.document["workflow"]["id"] == "bellweather"
+    budget = ceiling(planned)
+    assert budget is not None and planned.estimate()[1] <= budget
 
 
 def test_the_plan_draws_what_the_package_declares_once_each() -> None:
     planned = plan(GAME)
     package = resolve_game_package(GAME / "inputs/default")
-    calls = Counter(cap for instance in first_takes(planned) for cap in instance.routes)
+    calls = Counter(cap for row in first_takes(planned) for cap in row["routes"])
     strips = sum(len(player.motions) for player in package.player.players)
     strips += sum(len(mob.motions) for mob in package.mobs.mobs)
     actors = len(package.player.players) + len(package.mobs.mobs) + len(package.npcs.npcs)
@@ -412,7 +367,7 @@ def test_the_plan_draws_what_the_package_declares_once_each() -> None:
         (game_map.portal is not None) + (game_map.climbable is not None)
         for game_map in package.maps
     )
-    repaints = [i for i in first_takes(planned) if i.step.endswith(".loop") and i.routes]
+    repaints = [i for i in first_takes(planned) if i["step"].endswith(".loop") and i["routes"]]
     # Every concept, strip, NPC world sprite, dialogue atlas, catalog subject, layer, ground
     # atlas, climbable and portal sheet, the inventory panel and each interface sheet; and a
     # seam repaint for each layer whose construction paints one.
@@ -439,26 +394,28 @@ def test_the_plan_draws_what_the_package_declares_once_each() -> None:
 
 def test_every_painting_is_judged_and_drawn_again_at_most_six_times() -> None:
     planned = plan(GAME)
-    takes = Counter(instance.step for instance in planned.instances if instance.state != "absent")
-    painted = [i for i in first_takes(planned) if set(i.routes) & {"image.edit", "music.generate"}]
+    takes = Counter(row["step"] for row in instances(planned) if row["state"] != "absent")
+    painted = [
+        row for row in first_takes(planned) if set(row["routes"]) & {"image.edit", "music.generate"}
+    ]
 
     assert painted
-    for instance in painted:
-        if instance.step.endswith(".loop"):
+    for row in painted:
+        if row["step"].endswith(".loop"):
             continue  # a seam repaint is one edit inside its step, refused into a fallback
-        assert instance.judged_by, instance.step
-        assert takes[instance.step] == 6, instance.step
-    designs = [i for i in first_takes(planned) if i.step.endswith(".terrain.design")]
-    assert len(designs) == 2 and {takes[i.step] for i in designs} == {3}
+        assert row["judged_by"], row["step"]
+        assert takes[row["step"]] == 6, row["step"]
+    designs = [row for row in first_takes(planned) if row["step"].endswith(".terrain.design")]
+    assert len(designs) == 2 and {takes[row["step"]] for row in designs} == {3}
 
 
 def test_a_seam_repaint_is_briefed_for_the_canvas_it_will_see() -> None:
     planned = plan(GAME)
-    loops = [i for i in first_takes(planned) if i.step.endswith(".loop")]
+    loops = [row for row in first_takes(planned) if row["step"].endswith(".loop")]
 
     assert loops
-    for instance in loops:
-        assert EDITABLE_SPAN in instance.with_["prompt"], instance.step
+    for row in loops:
+        assert EDITABLE_SPAN in row["with"]["prompt"], row["step"]
 
 
 def test_each_part_builds_its_slice_and_reviews_can_be_left_out() -> None:
@@ -476,16 +433,16 @@ def test_each_part_builds_its_slice_and_reviews_can_be_left_out() -> None:
 
 
 def test_a_part_that_does_not_exist_is_refused() -> None:
-    with pytest.raises(PlanError, match="part is one of all, world, content, soundtrack"):
+    with pytest.raises(FxError, match="part is one of all, world, content, soundtrack"):
         plan(GAME, part="maps")
 
 
 def test_the_package_step_publishes_exactly_the_runtime_closure() -> None:
     planned = plan(GAME)
-    (package_step,) = [i for i in first_takes(planned) if i.step == "package"]
+    (package_step,) = [row for row in first_takes(planned) if row["step"] == "package"]
     package = resolve_game_package(GAME / "inputs/default")
 
-    assert set(package_step.with_["published"]) == set(runtime_artifact_paths(package))
+    assert set(package_step["with"]["published"]) == set(runtime_artifact_paths(package))
 
 
 # ------------------------------------------------------------------------------- a whole run
@@ -493,13 +450,14 @@ def test_the_package_step_publishes_exactly_the_runtime_closure() -> None:
 
 @needs_ffprobe
 def test_a_whole_build_runs_offline_into_a_runtime_the_manifest_verifies(tmp_path: Path) -> None:
-    project = game_project(tmp_path)
-    stand_ins = stand_ins_for(project)
+    project = bellweather_project(tmp_path)
+    stand_ins = StandIns(project)
 
     outcome = run(project, stand_ins)
 
     assert outcome.ok, failures(outcome)
-    folder = deliver(stand_ins.store, outcome, tmp_path / "runtime")
+    folder = tmp_path / "runtime"
+    deliver(outcome, folder)
     verified = verify_prepared_runtime(folder)
     assert verified["valid"] is True and verified["game_id"] == "bellweather"
     manifest = json.loads((folder / "manifest.json").read_text(encoding="utf-8"))
@@ -511,8 +469,8 @@ def test_a_whole_build_runs_offline_into_a_runtime_the_manifest_verifies(tmp_pat
 
 @needs_ffprobe
 def test_a_rejected_composition_is_composed_again_told_what_failed(tmp_path: Path) -> None:
-    project = game_project(tmp_path)
-    stand_ins = stand_ins_for(project, rejected_designs=1)
+    project = bellweather_project(tmp_path)
+    stand_ins = StandIns(project, rejected_designs=1)
 
     outcome = run(project, stand_ins, part="world", reviews="no")
 
@@ -531,8 +489,8 @@ def test_an_edit_no_drawing_depends_on_redraws_nothing(tmp_path: Path) -> None:
     the loop alone, and playback and a projectile's magnitude by local steps and reviews.
     """
 
-    project = game_project(tmp_path)
-    assert run(project, stand_ins_for(project)).ok
+    project = bellweather_project(tmp_path)
+    assert run(project, StandIns(project)).ok
     package = project / "inputs/default"
     for member, old, new in (
         (
@@ -552,7 +510,7 @@ def test_an_edit_no_drawing_depends_on_redraws_nothing(tmp_path: Path) -> None:
         text = path.read_text(encoding="utf-8")
         assert old in text, (member, old)
         path.write_text(text.replace(old, new, 1), encoding="utf-8")
-    again = stand_ins_for(project)
+    again = StandIns(project)
 
     outcome = run(project, again, "again")
 

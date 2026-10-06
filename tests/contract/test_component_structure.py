@@ -79,18 +79,3 @@ def test_every_node_family_declares_its_graph_helper() -> None:
     assert not violations, "\n".join(violations)
     stale = set(GRAPH_HELPER_DEPARTURES) - departures_seen
     assert not stale, f"departures no longer needed; remove them: {sorted(stale)}"
-
-
-def test_components_never_import_recipes_or_orchestration() -> None:
-    violations: list[str] = []
-    for package in _packages():
-        for module in package.rglob("*.py"):
-            tree = ast.parse(module.read_text(encoding="utf-8"), filename=str(module))
-            for node in ast.walk(tree):
-                if (
-                    isinstance(node, ast.ImportFrom)
-                    and node.module
-                    and node.module.startswith(("stage_gen.recipes", "stage_gen.orchestration"))
-                ):
-                    violations.append(f"{module.relative_to(COMPONENTS)}: {node.module}")
-    assert not violations, "\n".join(violations)

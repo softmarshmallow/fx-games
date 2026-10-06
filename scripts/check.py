@@ -50,20 +50,57 @@ class Outcome:
         return self.returncode == 0
 
 
-def sanitized_environment(source: dict[str, str] | None = None) -> dict[str, str]:
+def sanitized_environment(
+    source: dict[str, str] | None = None, *, python: str = sys.executable
+) -> dict[str, str]:
+    """The caller's environment without provider credentials, with FX held offline: node bodies
+    run on ``python``, no ``.env`` is read and no provider is reached. ``GRIDA_FX_BIN`` and
+    ``GRIDA_FX_TOOL_*`` pass through."""
     environment = dict(os.environ if source is None else source)
     for variable in CREDENTIAL_VARIABLES:
         environment.pop(variable, None)
-    environment["_STAGE_GEN_DISABLE_DOTENV"] = "1"
+    environment["GRIDA_FX_PYTHON"] = python
+    environment["GRIDA_FX_DISABLE_DOTENV"] = "1"
+    environment["GRIDA_FX_NETWORK"] = "off"
     return environment
 
 
 def commands(
-    python: str = sys.executable, *, scope: str = "product"
+    python: str = sys.executable, *, scope: str = "product", engine_bin: str | None = None
 ) -> tuple[tuple[str, ...], ...]:
     """The repository-rooted command list, kept for callers that read it as data."""
 
-    return tuple(step.command for step in steps(python, scratch=Path("/dev/null"), scope=scope))
+    return tuple(
+        step.command
+        for step in steps(python, scratch=Path("/dev/null"), scope=scope, engine_bin=engine_bin)
+    )
+
+
+WORKFLOWS_ROOT = "src/stage_gen/workflows"
+#: Builds FX's engine from the submodule and puts it where ``python -m grida.fx`` finds it.
+ENGINE_BUILD = "third_party/fx/tools/build_engine.py"
+
+
+def _fx(python: str, *args: str) -> tuple[str, ...]:
+    return (python, "-m", "grida.fx", *args)
+
+
+def _engine_step(python: str, engine_bin: str | None) -> Step:
+    """Every later step that plans or runs needs the engine: an engine named by ``GRIDA_FX_BIN``
+    is only probed, otherwise the submodule's engine is built (cargo rebuilds only what changed)."""
+    if engine_bin:
+        return Step(_fx(python, "--version"))
+    return Step((python, ENGINE_BUILD))
+
+
+def _scratch_project(python: str, project: Path) -> Step:
+    """An FX project in the scratch folder that finds the first-party workflows by id; its runs
+    and its store stay inside it. Written by the one project writer the product uses."""
+    program = (
+        "import pathlib, sys; from stage_gen.workflows._fx import write_project; "
+        "write_project(pathlib.Path(sys.argv[1]))"
+    )
+    return Step((python, "-c", program, str(project)))
 
 
 # Source roots are explicit: checking each game wrapper named prepare.py in one
@@ -78,18 +115,18 @@ GAME_PYTHON_ROOTS = (
     "godot/games/the_grain/pipeline/src",
     "godot/tools/python/src",
 )
-#: Games built with gnode: each one's builder and node modules are typed in their own run,
+#: Games built with FX: each one's builder and node modules are typed in their own run,
 #: because node modules are top-level files whose names would collide across projects.
-GNODE_GAME_PROJECTS = (
+GAME_PROJECTS = (
     "godot/games/iron_petal_unit",
     "godot/games/bellweather",
     "godot/games/the_grain",
     "godot/games/ember_hollow",
 )
-#: The builder a one-builder gnode game plans from its own folder.
+#: The builder a one-builder game plans from its own folder.
 BUILDER = "pipeline/workflow.py:build"
-#: Each gnode game's builders, the packages each one plans offline, and any other arguments.
-GNODE_GAME_PLANS: tuple[tuple[str, tuple[tuple[str, str, tuple[str, ...]], ...]], ...] = (
+#: Each game's builders, the packages each one plans offline, and any other arguments.
+GAME_PLANS: tuple[tuple[str, tuple[tuple[str, str, tuple[str, ...]], ...]], ...] = (
     ("iron_petal_unit", ((BUILDER, "inputs", ()),)),
     ("bellweather", ((BUILDER, "inputs/default", ()), (BUILDER, "inputs/waves", ()))),
     (
@@ -121,10 +158,10 @@ GAME_TYPED_TOOLS = (
 )
 
 
-def _gnode_game_typechecks() -> tuple[Step, ...]:
+def _game_typechecks() -> tuple[Step, ...]:
     return tuple(
         Step(("mypy", "--strict", f"{game}/pipeline/workflow.py", f"{game}/pipeline/nodes"))
-        for game in GNODE_GAME_PROJECTS
+        for game in GAME_PROJECTS
     )
 
 
@@ -134,14 +171,14 @@ def _game_steps(python: str, *, scratch: Path) -> tuple[Step, ...]:
         # The Grain's script proves its case; its rooms and scene are planned below.
         Step((python, "godot/games/the_grain/pipeline/prepare.py")),
     ]
-    # A game built with gnode: its node types are locked and its builders plan each of its
+    # A game built with FX: its node types are locked and its builders plan each of its
     # packages, offline, from the game's folder.
-    for game, plans in GNODE_GAME_PLANS:
+    for game, plans in GAME_PLANS:
         home = REPOSITORY_ROOT / "godot/games" / game
-        result.append(Step(("gnode", "lock", "--check"), cwd=home))
+        result.append(Step(_fx(python, "lock", "--check"), cwd=home))
         result.extend(
             Step(
-                ("gnode", "plan", builder, "--arg", f"package={package}", *extra, "--check"),
+                _fx(python, "plan", builder, "--arg", f"package={package}", *extra, "--check"),
                 cwd=home,
             )
             for builder, package, extra in plans
@@ -169,8 +206,8 @@ CHARACTER_SAMPLE = "src/stage_gen/workflows/character_3d/inputs/sample/inputs.ya
 
 
 def _asset_steps(python: str, *, scratch: Path) -> tuple[Step, ...]:
-    """Run a real local workflow through gnode, check every workflow file's lock, and plan
-    every workflow whose calls are all paid."""
+    """Run a real local workflow through FX (``python -m grida.fx``), check every workflow
+    home's lock, and plan every workflow whose calls are all paid."""
     from stage_gen.workflows._registry import discover
 
     parallax = "src/stage_gen/workflows/looping_parallax/inputs/supplied_layers"
@@ -179,38 +216,38 @@ def _asset_steps(python: str, *, scratch: Path) -> tuple[Step, ...]:
     clip = scratch / "movie-sprite-inputs"
     portrait = "src/stage_gen/workflows/portrait_motion/inputs/make_inputs.py"
     face = scratch / "portrait-inputs"
-    # A scratch folder with no gnode.yaml: the runs and their cache stay inside it.
-    project = scratch / "parallax-project"
+    # A scratch folder with its own fx.yaml: the runs and their store stay inside it.
+    project = scratch / "workflow-project"
     files = [w for w in discover() if w.root.joinpath("workflow.yaml").is_file()]
     return (
-        *(Step(("gnode", "lock", workflow.id, "--check")) for workflow in files),
+        # FX locks a folder: each workflow home's own fx.lock.
+        *(
+            Step(_fx(python, "lock", f"{WORKFLOWS_ROOT}/{workflow.root.name}", "--check"))
+            for workflow in files
+        ),
         Step((python, f"{parallax}/make_inputs.py", str(inputs))),
-        Step((python, "-c", f"import pathlib; pathlib.Path({str(project)!r}).mkdir()")),
+        _scratch_project(python, project),
         Step(
-            ("gnode", "run", "looping-parallax", "--inputs", str(inputs / "inputs.yaml")),
+            _fx(python, "run", "looping-parallax", "--inputs", str(inputs / "inputs.yaml")),
             cwd=project,
         ),
-        Step(("gnode", "inspect", "looping-parallax", "--verify"), cwd=project),
+        Step(_fx(python, "inspect", "looping-parallax", "--verify"), cwd=project),
         # movie-sprite: the paid take is only planned; the supplied clip is finished for free.
         Step((python, f"{movie}/make_inputs.py", str(clip))),
-        Step(("gnode", "plan", "movie-sprite", "--inputs", str(clip / "take.yaml")), cwd=project),
-        Step(("gnode", "run", "movie-sprite", "--inputs", str(clip / "clip.yaml")), cwd=project),
-        Step(("gnode", "inspect", "movie-sprite", "--verify"), cwd=project),
+        Step(_fx(python, "plan", "movie-sprite", "--inputs", str(clip / "take.yaml")), cwd=project),
+        Step(_fx(python, "run", "movie-sprite", "--inputs", str(clip / "clip.yaml")), cwd=project),
+        Step(_fx(python, "inspect", "movie-sprite", "--verify"), cwd=project),
         # portrait-motion: every call is paid, so both paths are planned; pytest runs them on
         # the sample's stand-in answers.
         Step((python, portrait, str(face))),
         *(
-            Step(("gnode", "plan", "portrait-motion", "--inputs", str(face / name)), cwd=project)
+            Step(_fx(python, "plan", "portrait-motion", "--inputs", str(face / name)), cwd=project)
             for name in ("face.yaml", "whole.yaml")
         ),
-        # gnode's published document schemas, and the language-neutral conformance suite that
-        # any gnode implementation must pass, run through the gnode command only.
-        Step((python, "scripts/write_gnode_schemas.py", "--check")),
-        Step((python, "tests/conformance/run.py")),
         # universe: the plan prices the world phase exactly and the gallery at its ceiling.
         Step(
-            (
-                "gnode",
+            _fx(
+                python,
                 "plan",
                 "universe",
                 "--inputs",
@@ -225,8 +262,8 @@ def _asset_steps(python: str, *, scratch: Path) -> tuple[Step, ...]:
         # character-3d: every agent, mesh and rig call is paid, and its run needs Blender; the
         # committed brief is planned, and pytest runs the graph on stand-ins.
         Step(
-            (
-                "gnode",
+            _fx(
+                python,
                 "plan",
                 "character-3d",
                 "--inputs",
@@ -234,8 +271,7 @@ def _asset_steps(python: str, *, scratch: Path) -> tuple[Step, ...]:
             ),
             cwd=project,
         ),
-        Step((python, "scripts/write_model_policy_snapshot.py")),
-        Step(("gnode", "--help")),
+        Step(_fx(python, "--help")),
         Step(
             (
                 python,
@@ -250,9 +286,14 @@ def _asset_steps(python: str, *, scratch: Path) -> tuple[Step, ...]:
 
 
 def steps(
-    python: str = sys.executable, *, scratch: Path, scope: str = "product"
+    python: str = sys.executable,
+    *,
+    scratch: Path,
+    scope: str = "product",
+    engine_bin: str | None = None,
 ) -> tuple[Step, ...]:
-    """Owned gates; the default product gate needs neither Bun nor Godot."""
+    """Owned gates; the default product gate needs neither Bun nor Godot. Every scope starts
+    with FX's engine, because its tests, the site and the catalog all plan."""
     from scripts.test_ownership import paths_for
 
     product_tests = paths_for(REPOSITORY_ROOT, "product")
@@ -270,7 +311,7 @@ def steps(
             ),
             Step(("ruff", "check", "src", "scripts", *product_tests)),
             Step(("mypy", "--strict", "src")),
-            Step(("pytest", "-m", "not live", *product_tests)),
+            Step(("pytest", *product_tests)),
             Step((python, "-m", "build", "--no-isolation")),
             *_asset_steps(python, scratch=scratch),
         ),
@@ -279,21 +320,22 @@ def steps(
             Step(("bun", "test"), WEB_ROOT),
             # The static site, from the catalog and whatever the example store holds.
             Step((python, "scripts/site.py", "build", "--allow-missing-examples")),
-            Step(("pytest", "-m", "not live", *paths_for(REPOSITORY_ROOT, "web"))),
+            Step(("pytest", *paths_for(REPOSITORY_ROOT, "web"))),
         ),
         "godot": (
             Step((python, "godot/tools/check.py")),
-            Step(("pytest", "-m", "not live", *paths_for(REPOSITORY_ROOT, "godot"))),
+            Step(("pytest", *paths_for(REPOSITORY_ROOT, "godot"))),
         ),
         "games": (
-            Step(("pytest", "-m", "not live", *paths_for(REPOSITORY_ROOT, "games"))),
-            *_gnode_game_typechecks(),
+            Step(("pytest", *paths_for(REPOSITORY_ROOT, "games"))),
+            *_game_typechecks(),
             *_game_steps(python, scratch=scratch),
         ),
         "docs": (Step((python, "scripts/check_docs.py")),),
     }
     if scope == "all":
         return (
+            _engine_step(python, engine_bin),
             Step(("ruff", "format", "--check", ".")),
             Step(("ruff", "check", ".")),
             Step(
@@ -308,7 +350,7 @@ def steps(
                     "godot/templates/asset_consumer/prepare.py",
                 )
             ),
-            Step(("pytest", "-m", "not live")),
+            Step(("pytest",)),
             *groups["web"][:3],
             *groups["godot"][:-1],
             *groups["docs"],
@@ -318,7 +360,7 @@ def steps(
         )
     if scope not in groups:
         raise ValueError(f"unknown verification scope: {scope}")
-    return groups[scope]
+    return (_engine_step(python, engine_bin), *groups[scope])
 
 
 def run_step(step: Step, environment: dict[str, str]) -> Outcome:
@@ -358,14 +400,18 @@ def main() -> int:
         default="product",
     )
     args = parser.parse_args()
-    environment = sanitized_environment()
+    environment = sanitized_environment(python=sys.executable)
     environment["PATH"] = (
         str(Path(sys.executable).parent) + os.pathsep + environment.get("PATH", "")
     )
     with tempfile.TemporaryDirectory(prefix="stage-gen-gate-") as scratch:
         outcomes = [
             run_step(step, environment)
-            for step in steps(scratch=Path(scratch).resolve(), scope=args.scope)
+            for step in steps(
+                scratch=Path(scratch).resolve(),
+                scope=args.scope,
+                engine_bin=environment.get("GRIDA_FX_BIN"),
+            )
         ]
     print()
     print(report(outcomes), flush=True)

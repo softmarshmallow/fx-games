@@ -131,8 +131,8 @@ static func of(
 		return KernelRefusal.of(
 			"dialogue/ui",
 			(
-				"this scene publishes no panel or button art; build it again with its gnode "
-				+ "builder (cd godot/games/the_grain && gnode run pipeline/workflow.py:scene)"
+				"this scene publishes no panel or button art; build it again with its builder "
+				+ "(cd godot/games/the_grain && uv run python -m grida.fx run pipeline/workflow.py:scene)"
 			),
 			"scene_data.ui"
 		)

@@ -3,13 +3,13 @@
 ``uv run python make_inputs.py out/portrait-motion-input`` writes there:
 
 - ``sprite.png``, ``spec.json`` and ``face.yaml``: a full sprite on transparency, to plan
-  the face path (``gnode plan portrait-motion --inputs <dir>/face.yaml``);
+  the face path (``uv run python -m grida.fx plan portrait-motion --inputs <dir>/face.yaml``);
 - ``portrait.png``, ``whole-spec.json`` and ``whole.yaml``: an opaque portrait at the
   four-card canvas, animated whole (``face_crop: false``).
 
-``stand_in(store)`` answers every paid call of either path without a provider: the face box,
-the eyes and the mouth are found by the exact colours they are drawn in, the sheet comes
-back as it was sent, and every decision passes. Tests and the identity gate run the whole
+``stand_in(call)`` answers every paid call of either path without a provider: the face box, the
+eyes and the mouth are found by the exact colours they are drawn in, the sheet comes back as
+it was sent, and every decision passes. Tests and the identity gate run the whole
 chain with it; it proves the plumbing, never a picture.
 """
 
@@ -100,13 +100,24 @@ def write_whole(target: Path) -> Path:
 # ------------------------------------------------------------------------- stand-in answers
 
 
-def _bytes(file: Any) -> bytes:
-    return Path(file.location).read_bytes()
-
-
 def _pixels(file: Any) -> np.ndarray:
-    with Image.open(file.location) as opened:
+    with Image.open(file.path) as opened:
         return np.asarray(opened.convert("RGBA"))
+
+
+def _text(value: Any) -> str:
+    """A request's text, sent as it was written or as the file that holds it."""
+
+    return value if isinstance(value, str) else str(value.read_bytes().decode("utf-8"))
+
+
+def _schema(value: Any) -> Mapping[str, Any]:
+    """A request's schema, sent as the object or as the file that holds it."""
+
+    if isinstance(value, Mapping):
+        return value
+    schema: Mapping[str, Any] = json.loads(value.read_bytes())
+    return schema
 
 
 def _matching(pixels: np.ndarray, colour: tuple[int, int, int]) -> np.ndarray:
@@ -215,35 +226,47 @@ def quality(eligible: list[str]) -> dict[str, Any]:
     }
 
 
-def stand_in(store: Any) -> dict[str, Any]:
-    """Every paid call of the workflow, answered from the pictures it is shown."""
+#: The answer each schema asks for, told by a property only that schema has (the location
+#: schema has no title).
+_SCHEMAS = (
+    ("bbox_xyxy", "location"),
+    ("subject_count", "admission"),
+    ("coordinate_space", "geometry"),
+    ("temporal_review", "quality"),
+)
 
-    from gnode import CallRecord
 
-    async def structured(route: Any, request: Mapping[str, Any], take: int) -> Any:
-        del route, take
-        schema = Path(request["schema"].location).stem
+def schema_name(schema: Mapping[str, Any]) -> str:
+    """Which of the workflow's four schemas a structured call answers to."""
+
+    properties = schema.get("properties") or {}
+    for marker, name in _SCHEMAS:
+        if marker in properties:
+            return name
+    raise AssertionError(f"no stand-in answer for a schema with {sorted(properties)}")
+
+
+def stand_in(call: Any) -> Any:
+    """One paid call of the workflow, answered from the pictures it is shown: the stand-in for
+    ``grida.fx.run(..., stand_in=stand_in)``."""
+
+    from grida.fx import DECLINE, Answer
+
+    request = call.request
+    if call.capability == "structured.generate":
+        schema = schema_name(_schema(request["schema"]))
         pictures = [_pixels(file) for file in request.get("context") or []]
         if schema == "location":
-            answer = locate(pictures[0])
-        elif schema == "admission":
-            answer = admission()
-        elif schema == "geometry":
-            answer = geometry(pictures[0])
-        elif schema == "quality":
-            answer = quality([f for f in FEATURES if f in str(request["prompt"])])
-        else:
-            raise AssertionError(f"no stand-in answer for {schema}")
-        return CallRecord({}, {"json": answer}, 0.0)
-
-    async def edit(route: Any, request: Mapping[str, Any], take: int) -> Any:
-        del route, take
-        sheet = _bytes(request["image"])
-        return CallRecord(
-            {"image": store.put_bytes(sheet, kind="image/png", name="image")}, None, 0.0
-        )
-
-    return {"structured.generate": structured, "image.edit": edit}
+            return Answer.json(locate(pictures[0]))
+        if schema == "admission":
+            return Answer.json(admission())
+        if schema == "geometry":
+            return Answer.json(geometry(pictures[0]))
+        prompt = _text(request["prompt"])
+        return Answer.json(quality([f for f in FEATURES if f in prompt]))
+    if call.capability == "image.edit":
+        return Answer(files={"image": request["image"]})
+    return DECLINE
 
 
 def main() -> None:

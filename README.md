@@ -4,7 +4,7 @@ Stage Gen is a general asset generation toolkit. Each workflow turns a small inp
 named deliverable, such as a transparent idle loop, a rigged 3D character or a set of
 repeating parallax layers, and every workflow is a GNode graph you can run and inspect. All
 but 3D character plan offline before any spend, and most reuse a node cache across runs.
-Inspect runs in the viewer, the local read-only client that `gnode view` opens. Your
+Inspect runs in the viewer, the local read-only client that `uv run python scripts/view.py` opens. Your
 application decides how the assets become a game, an animation or a tool.
 
 ![Iron Petal Unit key art: a young mechanic-pilot riding a rescue robot through an orbital greenhouse](godot/games/iron_petal_unit/inputs/references/cover.png)
@@ -45,12 +45,12 @@ engine is Rust: `python3 third_party/fx/tools/build_engine.py` builds it (cargo 
 ```sh
 git submodule update --init
 uv sync --frozen
-uv run gnode schema looping-parallax
+uv run python -m grida.fx schema looping-parallax
 uv run python src/stage_gen/workflows/looping_parallax/inputs/supplied_layers/make_inputs.py out/looping-parallax-input
-uv run gnode plan looping-parallax --inputs out/looping-parallax-input/inputs.yaml
-uv run gnode run looping-parallax --inputs out/looping-parallax-input/inputs.yaml
-uv run gnode inspect looping-parallax --verify
-uv run gnode view
+uv run python -m grida.fx plan looping-parallax --inputs out/looping-parallax-input/inputs.yaml
+uv run python -m grida.fx run looping-parallax --inputs out/looping-parallax-input/inputs.yaml
+uv run python -m grida.fx inspect looping-parallax --verify
+uv run python scripts/view.py
 ```
 
 That run is offline: committed scripts draw the input layers, and no provider is called.
@@ -58,13 +58,13 @@ Every workflow is a gnode workflow file, so `gnode` plans, runs and inspects eac
 `gnode schema <id>` prints the inputs it takes, and its run folders are under `out/runs/`.
 Planning never spends; a provider call needs `--live` and your own keys (see
 [provider setup](docs/models/providers.md)). Your own workflow is a workflow file or a Python
-builder, which `gnode plan` and `gnode run` take the same way; the [gnode guide](docs/guide/README.md)
-shows how to write one.
+builder, which `python -m grida.fx plan` and `run` take the same way; the
+[FX guide](https://github.com/gridaco/fx/tree/main/docs/guide) shows how to write one.
 
 ## Read more
 
-- [Getting started](docs/getting-started.md), the [gnode guide](docs/guide/README.md) and the
-  [glossary](docs/glossary.md).
+- [Getting started](docs/getting-started.md), the
+  [FX guide](https://github.com/gridaco/fx/tree/main/docs/guide) and the [glossary](docs/glossary.md).
 - [Viewer](docs/viewer.md): `gnode view`, the local read-only client over run folders.
 - [Site](docs/site.md): the static landing and documentation site built from the catalog
   and the example store.

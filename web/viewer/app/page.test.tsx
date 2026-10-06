@@ -12,25 +12,25 @@ let env: ViewerEnv;
 
 beforeAll(async () => {
   env = await viewerEnv();
-  const swatchPlan = { gnode: "graph/v2", workflow: { id: "swatch-sheet" } };
+  const swatchPlan = { kind: "fx-graph-v1", workflow: { id: "swatch-sheet" } };
   await env.write("swatch-old", {
     "plan.json": swatchPlan,
     "events.jsonl": "",
-    "execution-view.json": { ...executionViewFixture(), kind: "gnode-run-view-v1" },
+    "execution-view.json": { ...executionViewFixture(), kind: "stage-gen-run-view-v1" },
   });
   await env.write("batch~swatch-live", {
     "plan.json": swatchPlan,
     "events.jsonl": "",
     "execution-view.json": {
       ...unfinishedExecutionViewFixture(new Date().toISOString()),
-      kind: "gnode-run-view-v1",
+      kind: "stage-gen-run-view-v1",
     },
   });
   await env.write("bellweather-m21", {
     "manifest.json": { kind: "sideview-platformer-runtime-v1", schema_version: 1 },
   });
   await env.write("calibration-01", {
-    "plan.json": { gnode: "plan/v1", workflow: { id: "no-such-workflow" } },
+    "plan.json": { kind: "fx-graph-v1", workflow: { id: "no-such-workflow" } },
     "events.jsonl": "",
   });
   await env.write("old-platformer", { "execution-view.json": executionViewFixture() });
@@ -75,8 +75,8 @@ describe("workflow page", () => {
       await WorkflowPage({ params: Promise.resolve({ id: "swatch-sheet" }) }),
     );
     expect(markup).toContain("One brief in. A checked sheet of material swatches out.");
-    expect(markup).toContain("uv run gnode plan swatch-sheet --inputs");
-    expect(markup).toContain("gnode schema swatch-sheet");
+    expect(markup).toContain("uv run python -m grida.fx plan swatch-sheet --inputs");
+    expect(markup).toContain("uv run python -m grida.fx schema swatch-sheet");
     expect(markup).toContain("[ copy ]");
     // The plan is drawn by the run viewer, embedded and with nothing run.
     expect(markup).toContain("planned offline");

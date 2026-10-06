@@ -14,7 +14,7 @@ import json
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import PurePosixPath
-from typing import cast
+from typing import Literal, cast
 
 from demo_game_tools.kits.screen_art.layouts import (
     LOADING_SCREEN,
@@ -30,12 +30,9 @@ from ember_hollow_pipeline.shell.models import (
     ShellClip,
     ShellPlate,
 )
-from gnode import (
-    VideoResolution,
-)
 
-IMAGE_FEATURES = ("transparent_background", "reference_images")
-STRUCTURED_FEATURES = ("structured_output", "image_input")
+#: The resolution tiers of the video route's ladder, as the route names them.
+VideoResolution = Literal["360p", "720p", "1080p", "4k"]
 
 #: The generate node's cache contract: what the model is asked to paint. Bumping it
 #: re-bills every plate, so measured facts only the local gate reads live under the
@@ -55,7 +52,6 @@ SHELL_VERDICT_KIND = "review-verdict-v1"
 #: this node draws nothing — it republishes the package's face into the run, because a
 #: host resolves nothing above the run root and a manifest may only bind what the run
 #: carries. Local, free, and present exactly when the document declares a face.
-VIDEO_FEATURES = ("reference_images",)
 
 #: The two codecs a clip wears: the response arrives as h264 in mp4 and is published as
 #: Theora in Ogg, the only video codec the pinned host plays.

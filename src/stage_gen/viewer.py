@@ -1,19 +1,21 @@
-"""The viewer, the dashboard ``gnode view`` starts: a local read-only client over run folders.
+"""The viewer: a local read-only client over FX run folders.
 
-Stage Gen installs it as a gnode plugin of its own (``viewer`` in ``gnode.plugins``), apart
-from the one that composes its routes and providers, because it reads the workflow catalog.
+``uv run python scripts/view.py [runs ...] [--port N] [--no-open]`` starts it over the given
+folders of runs, by default the ``runs`` folder of the nearest ``fx.yaml``. While it runs, the
+run views and view contexts of every run under them are kept fresh in the user cache
+(:mod:`stage_gen.runview.refresh`); nothing is written into a run.
 
 The viewer is the Next app in ``web/viewer``, so it needs a source checkout and Bun; from an
-installed wheel it refuses. gnode keeps the run views fresh in its cache; this exports the
-catalog the viewer groups runs by into the user cache and starts the viewer's dev server
-with the run roots, the catalog and the view cache in its environment, provider keys left
-out. Nothing it starts can start a run: the viewer only reads. However it ends, by the
-server exiting, Ctrl-C, SIGTERM or a hangup, it first ends the server and every process the
-server started.
+installed wheel it refuses. This exports the catalog the viewer groups runs by into the user
+cache and starts the viewer's dev server with the run roots, the catalog and the view cache in
+its environment, provider keys left out. Nothing it starts can start a run: the viewer only
+reads. However it ends, by the server exiting, Ctrl-C, SIGTERM or a hangup, it first ends the
+server and every process the server started.
 """
 
 from __future__ import annotations
 
+import argparse
 import atexit
 import contextlib
 import functools
@@ -28,30 +30,25 @@ import threading
 import time
 import tomllib
 import webbrowser
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import FrameType
-from typing import Any
+from typing import Any, TextIO
 
-from gnode import Dashboard, Plugin
+from stage_gen.runview import ViewRefresher, cache_home, keep_fresh, project_file, setting
 
 REFUSAL = "the viewer needs a source checkout of Stage Gen and Bun; see docs/viewer.md"
 VIEWER = Path("web/viewer")
 HOST = "127.0.0.1"
+PORT = 3000
+PROG = "view"
 # The signals that end the launcher; each one ends the viewer first.
 STOP_SIGNALS = (signal.SIGTERM, signal.SIGHUP, signal.SIGINT)
 # How long the viewer's process group has to leave after SIGTERM before it gets SIGKILL.
 STOP_GRACE_SECONDS = 10.0
 
 SignalHandler = Callable[[int, FrameType | None], Any] | int | signal.Handlers | None
-
-
-def cache_home(env: Mapping[str, str]) -> Path:
-    """``$XDG_CACHE_HOME/stage-gen`` when that is an absolute path, else ``~/.cache``."""
-    configured = env.get("XDG_CACHE_HOME", "")
-    base = Path(configured) if configured and Path(configured).is_absolute() else None
-    return (base or Path.home() / ".cache") / "stage-gen"
 
 
 def _names_stage_gen(pyproject: Path) -> bool:
@@ -77,6 +74,17 @@ def find_checkout(starts: tuple[Path, ...]) -> Path | None:
 
 
 @dataclass(frozen=True, slots=True)
+class ViewerRequest:
+    """What the viewer is started over: the run roots it shows, the cache the run views are
+    kept in, and where it listens."""
+
+    roots: tuple[Path, ...]
+    view_cache: Path
+    port: int
+    open_browser: bool
+
+
+@dataclass(frozen=True, slots=True)
 class Launch:
     checkout: Path
     roots: tuple[Path, ...]
@@ -91,7 +99,7 @@ class Launch:
         return f"http://{HOST}:{self.port}/"
 
 
-def prepare(request: Dashboard, env: Mapping[str, str]) -> Launch:
+def prepare(request: ViewerRequest, env: Mapping[str, str] = os.environ) -> Launch:
     """Everything the viewer starts with, checked before anything is written or started."""
     import stage_gen
     from stage_gen.provider_env import PROVIDER_ENV_KEYS
@@ -220,15 +228,16 @@ def _restore_signals(replaced: Mapping[int, SignalHandler]) -> None:
         signal.signal(number, handler)
 
 
-def launch(request: Dashboard) -> int:
+def launch(request: ViewerRequest, *, out: TextIO | None = None) -> int:
     """Serve the viewer over ``request.roots`` until it ends; its exit status."""
     launched = prepare(request, os.environ)
+    out = out or sys.stdout
     problems = export_catalog(launched.catalog)
     roots = ", ".join(str(root) for root in launched.roots)
-    sys.stdout.write(f"gnode view: {launched.url} over {roots}\n")
+    out.write(f"view: {launched.url} over {roots}\n")
     if problems:
-        sys.stdout.write(f"gnode view: the catalog has {len(problems)} drift problem(s)\n")
-    sys.stdout.flush()
+        out.write(f"view: the catalog has {len(problems)} drift problem(s)\n")
+    out.flush()
     stop = threading.Event()
     replaced = _trap_stop_signals()
     child: subprocess.Popen[bytes] | None = None
@@ -261,9 +270,81 @@ def launch(request: Dashboard) -> int:
     return status
 
 
-def plugin() -> Plugin:
-    """The ``gnode.plugins`` entry point: the viewer is the dashboard ``gnode view`` starts."""
-    return Plugin(name="viewer", dashboard=launch)
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog=PROG, description="The viewer over FX run folders; it only reads."
+    )
+    parser.add_argument(
+        "roots",
+        nargs="*",
+        type=Path,
+        metavar="runs",
+        help="folders of runs to show (default: the runs folder of the nearest fx.yaml)",
+    )
+    parser.add_argument("--port", type=int, default=PORT, help="local port to listen on")
+    parser.add_argument("--no-open", action="store_true", help="do not open a browser")
+    return parser
 
 
-__all__ = ["REFUSAL", "Launch", "export_catalog", "find_checkout", "launch", "plugin", "prepare"]
+def default_root(cwd: Path) -> Path:
+    """The ``runs`` folder of the nearest ``fx.yaml`` at or above ``cwd``."""
+    project = project_file(cwd)
+    base = project.parent if project is not None else cwd
+    return (base / setting(project, "runs", "runs")).resolve()
+
+
+def main(
+    argv: Sequence[str] | None = None,
+    *,
+    stdout: TextIO | None = None,
+    stderr: TextIO | None = None,
+    cwd: Path | None = None,
+) -> int:
+    """Serve the viewer over the run roots, keeping their views fresh; its exit status, or 2
+    when it is refused before it starts."""
+    errors = stderr or sys.stderr
+    here = (cwd or Path.cwd()).resolve()
+    parser = _parser()
+    try:
+        args = parser.parse_args(list(sys.argv[1:] if argv is None else argv))
+    except SystemExit as stopped:
+        return stopped.code if isinstance(stopped.code, int) else 2
+    if not 0 < args.port < 65536:
+        errors.write(f"{PROG}: --port must be between 1 and 65535, not {args.port}\n")
+        return 2
+    roots = tuple((here / root).resolve() for root in args.roots) or (default_root(here),)
+    missing = [str(root) for root in roots if not root.is_dir()]
+    if missing:
+        errors.write(f"{PROG}: no run folder at {', '.join(missing)}\n")
+        return 2
+    request = ViewerRequest(
+        roots=roots,
+        view_cache=cache_home(os.environ) / "views",
+        port=args.port,
+        open_browser=not args.no_open,
+    )
+    stop = threading.Event()
+    refresher = ViewRefresher(roots, request.view_cache)
+    threading.Thread(target=keep_fresh, args=(refresher, stop, errors), daemon=True).start()
+    try:
+        return launch(request, out=stdout)
+    except ValueError as error:  # the viewer refused before it started
+        errors.write(f"{PROG}: {error}\n")
+        return 2
+    except KeyboardInterrupt:
+        return 130
+    finally:
+        stop.set()
+
+
+__all__ = [
+    "REFUSAL",
+    "Launch",
+    "ViewerRequest",
+    "default_root",
+    "export_catalog",
+    "find_checkout",
+    "launch",
+    "main",
+    "prepare",
+]

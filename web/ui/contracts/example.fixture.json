@@ -20,7 +20,7 @@
     "out/swatch-sheet-slate-01/sheet.png": "6666666666666666666666666666666666666666666666666666666666666666"
   },
   "status": "succeeded",
-  "graph_kind": "gnode-graph-v2",
+  "graph_kind": "fx-graph-v1",
   "graph_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
   "inputs": {
     "brief": {

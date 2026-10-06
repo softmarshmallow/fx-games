@@ -1,5 +1,5 @@
 # Only what the workflow file cannot say. Steps, titles and the sample plan come from
-# workflow.yaml through gnode.
+# workflow.yaml through FX.
 schema_version = 1
 kind = "stage-gen-workflow-v1"
 id = "looping-parallax"
@@ -13,9 +13,9 @@ manifest and a preview frame."""
 [try]
 input = "Two original layers and the inputs.yaml that places them, written by uv run python src/stage_gen/workflows/looping_parallax/inputs/supplied_layers/make_inputs.py out/looping-parallax-input"
 commands = [
-  "gnode plan looping-parallax --inputs out/looping-parallax-input/inputs.yaml",
-  "gnode run looping-parallax --inputs out/looping-parallax-input/inputs.yaml --deliver manifest=out/looping-parallax-try/manifest.json --deliver preview=out/looping-parallax-try/preview.png --deliver layers=out/looping-parallax-try/layers/{key}.png",
-  "gnode inspect looping-parallax --verify",
+  "uv run python -m grida.fx plan looping-parallax --inputs out/looping-parallax-input/inputs.yaml",
+  "uv run python -m grida.fx run looping-parallax --inputs out/looping-parallax-input/inputs.yaml --deliver manifest=out/looping-parallax-try/manifest.json --deliver preview=out/looping-parallax-try/preview.png --deliver layers=out/looping-parallax-try/layers/{key}.png",
+  "uv run python -m grida.fx inspect looping-parallax --verify",
 ]
 
 [[outputs]]

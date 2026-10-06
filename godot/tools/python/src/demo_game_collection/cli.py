@@ -12,9 +12,6 @@ from demo_game_collection.parser import build_parser as build_parser
 from stage_gen.application import (
     UsageError as CliUsageError,
 )
-from stage_gen.config import (
-    ConfigError,
-)
 
 
 def main(
@@ -40,9 +37,6 @@ def main(
         return _dispatch(namespace, stdout=output)
     except CliUsageError as error:
         errors.write(f"demo-games: usage: {error}\n")
-        return 2
-    except ConfigError as error:
-        errors.write(f"demo-games: configuration: {error}\n")
         return 2
     except Exception as error:
         errors.write(f"demo-games: error: {error}\n")
@@ -85,11 +79,8 @@ def _dispatch(args: argparse.Namespace, *, stdout: TextIO) -> int:
 
 
 async def _dispatch_async(args: argparse.Namespace, *, stdout: TextIO) -> int:
-    from stage_gen.config import load_config
-
-    config = load_config()
     if args.command == "dialogue-scene":
         from demo_game_collection.commands.dialogue import _dispatch_dialogue_scene
 
-        return await _dispatch_dialogue_scene(args, config=config, stdout=stdout)
+        return await _dispatch_dialogue_scene(args, stdout=stdout)
     raise CliUsageError(f"unknown command {args.command!r}")

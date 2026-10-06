@@ -96,7 +96,7 @@ timber frame, four times.
 
 ## Identity: what re-bills what
 
-Each step's identity is its node type's locked version ([`gnode.lock`](gnode.lock); the node
+Each step's identity is its node type's locked version ([`fx.lock`](fx.lock); the node
 modules, the universe models and the medium contracts count as their source) and what it reads.
 Each paid call is kept in gnode's call cache by the request it sends, the rendered prompt
 included, so editing one prompt template re-bills only the steps that render it and what reads
@@ -116,7 +116,7 @@ plan entry's concept mode through `tables.size_by_mode`, so changing a size draw
 A take is drawn once; running again restores it from the cache. To draw a rejected image again:
 
 ```bash
-gnode reroll out/runs/universe/<run> "entity['low_marsh'].draw"
+uv run python -m grida.fx reroll out/runs/universe/<run> "entity['low_marsh'].draw"
 ```
 
 draws the next take of that one entity, records the pick in the takes file
@@ -126,8 +126,8 @@ take a later run keeps.
 ## Image route
 
 Concept images are opaque text-to-image at their exact canvas, on the route the workflow's
-[`gnode.yaml`](gnode.yaml) names by default: OpenRouter's Sunburst generation route, verified live
-on 2026-09-09 at 2560 by 1440, 2560 by 1712 and 1712 by 2560. A project's `gnode.yaml` or `--routes`
+[`fx.yaml`](fx.yaml) names by default: OpenRouter's Sunburst generation route, verified live
+on 2026-09-09 at 2560 by 1440, 2560 by 1712 and 1712 by 2560. A project's `fx.yaml` or `--routes`
 may choose the OpenAI or fal Sunburst route instead; an unsupported size is refused before any
 spend, and a run never falls back to another provider.
 
@@ -141,7 +141,7 @@ the configured text model through OpenRouter, priced at USD 0.02–0.60 each.
 Offline, no provider:
 
 ```bash
-uv run gnode plan universe --inputs src/stage_gen/workflows/universe/inputs/lantern_ferry/inputs.yaml
+uv run python -m grida.fx plan universe --inputs src/stage_gen/workflows/universe/inputs/lantern_ferry/inputs.yaml
 uv run python -m pytest -q tests/unit/workflows/universe
 ```
 
@@ -149,8 +149,8 @@ Live, with a ceiling: the world phase costs about USD 0.5, and the gallery is wh
 so the run stops before it unless the ceiling covers it:
 
 ```bash
-uv run gnode run universe --inputs <dir>/inputs.yaml --live --max-usd 1
-uv run gnode run universe --inputs <dir>/inputs.yaml --live --max-usd 15
+uv run python -m grida.fx run universe --inputs <dir>/inputs.yaml --live --max-usd 1
+uv run python -m grida.fx run universe --inputs <dir>/inputs.yaml --live --max-usd 15
 ```
 
 The second command continues from the first's cache: the world is not proposed again. `gnode
@@ -170,7 +170,7 @@ Under the run folder's `outputs/`:
 
 ## Graph
 
-gnode plans the committed `lantern_ferry` world offline; this is the shape of that plan, the
+FX plans the committed `lantern_ferry` world offline; this is the shape of that plan, the
 world phase, since the gallery's size is known only once its list exists.
 `scripts/write_workflow_contracts.py --write` regenerates the block, and the check above fails when
 it drifts:
@@ -178,7 +178,7 @@ it drifts:
 <!-- pipeline-graph-contract:start -->
 ```json
 {
-  "graph_kind": "gnode-graph-v2",
+  "graph_kind": "fx-graph-v1",
   "topology_sha256": "bd449c3afde320a4b9a15d5aecc74a07e20a8c3a9f0ee2b6e4b3da53c16e0943",
   "node_count": 43,
   "operation_counts": {

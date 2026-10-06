@@ -17,8 +17,8 @@
 > graph documents. [Universe](../../../../src/stage_gen/workflows/universe/contract.md) is not a
 > game at all: it builds a storyworld package to read rather than one to play.
 
-The game's folder is a gnode project. `gnode.yaml` names the routes, the node folder and the
-packages whose source counts as the nodes' source; `gnode.lock` pins every node type to that
+The game's folder is an FX project. `fx.yaml` names the routes, the node folder and the
+packages whose source counts as the nodes' source; `fx.lock` pins every node type to that
 source. The builder, [`pipeline/workflow.py`](../pipeline/workflow.py), reads the game's own TOML
 package with the game's reader, unchanged, and writes one group of steps per asset. The node
 types live in [`pipeline/nodes/`](../pipeline/nodes): the game's own (maps, content, ground
@@ -34,14 +34,14 @@ Plan from the game's folder; a plan never spends:
 
 ```bash
 cd godot/games/bellweather
-uv run gnode plan pipeline/workflow.py:build --arg package=inputs/default
+uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs/default
 ```
 
 A live build needs the owner's go and a ceiling. It runs every step, draws again what a judge
 refuses, and delivers the runtime folder the Godot host plays:
 
 ```bash
-uv run gnode run pipeline/workflow.py:build --arg package=inputs/default --live --max-usd 175 --deliver package=../../../out/bellweather/{key}
+uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs/default --live --max-usd 175 --deliver package=../../../out/bellweather/{key}
 godot --path godot/games/bellweather -- --run out/bellweather
 ```
 
@@ -81,7 +81,7 @@ moves it.
 <!-- pipeline-graph-contract:start -->
 ```json
 {
-  "kind": "sideview-platformer-gnode-plan-contract-v1",
+  "kind": "sideview-platformer-fx-plan-contract-v1",
   "fixture_ref": "godot/games/bellweather/inputs/default",
   "builder": "pipeline/workflow.py:build",
   "workflow_id": "bellweather",
@@ -138,9 +138,9 @@ moves it.
     "./pipeline/nodes/rebase.py#rebase_verify_record",
     "./pipeline/nodes/soundtrack.py#admit_track",
     "./pipeline/nodes/soundtrack.py#record_track",
-    "gnode/image.edit@1",
-    "gnode/music.generate@1",
-    "gnode/structured.generate@1"
+    "fx/image.edit@1",
+    "fx/music.generate@1",
+    "fx/structured.generate@1"
   ]
 }
 ```

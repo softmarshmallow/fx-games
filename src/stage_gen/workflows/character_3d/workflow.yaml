@@ -1,4 +1,4 @@
-gnode: workflow/v1
+fx: workflow/v1
 id: character-3d
 title: 3D character
 description: >-
@@ -164,7 +164,7 @@ steps:
           mesh:
             title: Generate the mesh
             if: ${{ inputs.brief }}
-            uses: gnode/mesh.generate@1
+            uses: fx/mesh.generate@1
             with:
               views: ${{ steps.views.outputs.sides }}
               face_limit: ${{ inputs.mesh.face_limit }}
@@ -236,7 +236,7 @@ steps:
           task:
             title: Rig with Tripo
             if: ${{ lookup(tables.lane, inputs.profile) == 'provider' }}
-            uses: gnode/mesh.rig@1
+            uses: fx/mesh.rig@1
             with:
               model: ${{ steps.assembly.assemble.outputs.model }}
               allow_negative_check: true

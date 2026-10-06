@@ -1,0 +1,6 @@
+# fx.lock: the source behind each versioned node type; commit it
+fx: lock/v1
+nodes:
+  tools/voice_nodes.py#admit_line@1: 864a3f4966ceb8c73732a338f9daefeae9bdf05e00e05d7d567367f757cb870f
+  tools/voice_nodes.py#layout@1: 864a3f4966ceb8c73732a338f9daefeae9bdf05e00e05d7d567367f757cb870f
+  tools/voice_nodes.py#voiced_lines@2: 864a3f4966ceb8c73732a338f9daefeae9bdf05e00e05d7d567367f757cb870f

@@ -12,26 +12,15 @@ license = { file = "LICENSE" }
 authors = [{ name = "stage-gen contributors" }]
 dependencies = [
   "jsonschema>=4.26,<5",
-  "httpx>=0.28,<1",
   "pillow>=11,<13",
   "pydantic>=2.11,<3",
   "numpy>=2.2,<3",
   "scipy>=1.15,<2",
   "opencv-python-headless>=4.13,<5",
   "pyyaml>=6.0.2,<7",
-  # Grida FX, gnode's successor, from the submodule at third_party/fx (its overview, decision 11).
+  # Grida FX, the engine stage-gen runs on, from the submodule at third_party/fx.
   "grida",
 ]
-
-[project.scripts]
-gnode = "gnode.workflow.cli:entrypoint"
-
-# What the gnode command line composes: standard node types, file facts, routes and the
-# provider adapters that serve them. The engine never imports a plugin by name.
-[project.entry-points."gnode.plugins"]
-std = "gnode_std:plugin"
-stage_gen = "stage_gen.orchestration.gnode_plugin:plugin"
-viewer = "stage_gen.viewer:plugin"
 
 [dependency-groups]
 dev = [
@@ -72,14 +61,16 @@ exclude = [
 path = "scripts/build_hooks.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/gnode", "src/gnode_std", "src/stage_gen"]
+packages = ["src/stage_gen"]
 # A target's exclude replaces the build-wide list, so the wheel repeats it. Workflow prose
-# (page.mdx, contract.md) is read from the checkout by the site, never by installed code.
+# (page.mdx, contract.md) is read from the checkout by the site, never by installed code, and
+# a takes file holds someone's personal picks.
 exclude = [
   "/src/stage_gen/**/inputs/**/references/**",
   "/src/stage_gen/workflows/universe/inputs/lantern_ferry/**",
   "/src/stage_gen/workflows/**/*.mdx",
   "/src/stage_gen/workflows/**/contract.md",
+  "/src/stage_gen/workflows/**/*.takes.yaml",
 ]
 
 [tool.hatch.build.targets.sdist]
@@ -92,8 +83,6 @@ include = [
   "/docs/**/*.json",
   "/docs/**/*.md",
   "/scripts/**/*.py",
-  "/src/gnode/**",
-  "/src/gnode_std/**",
   "/src/stage_gen/**",
   "/tests/**/*.json",
   "/tests/**/*.py",
@@ -126,9 +115,6 @@ asyncio_default_fixture_loop_scope = "function"
 asyncio_mode = "auto"
 testpaths = ["tests"]
 pythonpath = ["."]
-markers = [
-  "live: opt-in test that calls a hosted provider",
-]
 
 [tool.ruff]
 line-length = 100
@@ -140,21 +126,14 @@ extend-exclude = ["third_party"]
 select = ["E", "F", "I", "UP", "B", "SIM", "ASYNC", "RUF"]
 ignore = ["RUF022"]
 
-[tool.ruff.lint.per-file-ignores]
-# The guide's example projects elide their math ("the seam math is elided"): they are read,
-# planned and priced, never run, so their helpers are named but not written.
-"docs/guide/examples/**/*.py" = ["F821"]
-
 [tool.ruff.lint.isort]
-known-first-party = ["gnode", "gnode_std", "stage_gen", "scenario_authoring", "demo_game_tools", "demo_game_collection", "bellweather_pipeline", "iron_petal_unit_pipeline", "ember_hollow_pipeline", "the_grain_pipeline"]
+known-first-party = ["stage_gen", "scenario_authoring", "demo_game_tools", "demo_game_collection", "bellweather_pipeline", "iron_petal_unit_pipeline", "ember_hollow_pipeline", "the_grain_pipeline"]
 
 [tool.mypy]
 python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
 files = ["src", "tests", "scripts"]
-# A conformance case's project is an input to the gnode command, not part of this code base.
-exclude = ["^tests/conformance/[^/]+/in/"]
 
 [[tool.mypy.overrides]]
 module = ["PIL.*"]

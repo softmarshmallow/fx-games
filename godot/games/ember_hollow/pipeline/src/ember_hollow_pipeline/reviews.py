@@ -10,8 +10,6 @@ from typing import Any, Final
 
 from pydantic import BaseModel, Field
 
-from stage_gen.orchestration.structured_transport import inline_local_schema_refs
-
 #: The families a build reviews, each over its own contact sheet.
 REVIEW_FAMILIES: Final = ("props", "ground", "actors", "fx", "seasons")
 REVIEW_MAX_TOKENS: Final = 12_000
@@ -58,9 +56,9 @@ def evaluate_review(review: FamilyReview) -> list[str]:
 
 
 def family_review_schema() -> dict[str, Any]:
-    """The review's answer shape, with its definitions inlined as the structured route reads."""
+    """The review's answer shape, as written: FX inlines its ``$defs`` when it sends it."""
 
-    return inline_local_schema_refs(FamilyReview.model_json_schema())
+    return FamilyReview.model_json_schema()
 
 
 __all__ = [

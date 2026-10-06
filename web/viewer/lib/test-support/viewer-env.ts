@@ -1,5 +1,5 @@
 // A viewer environment for page tests: one temporary run root, a view cache and the
-// shared catalog fixture, exactly as `gnode view` would set them. Every run a test
+// shared catalog fixture, exactly as `scripts/view.py` would set them. Every run a test
 // writes sits under the temporary root, never under out/.
 
 import { mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";

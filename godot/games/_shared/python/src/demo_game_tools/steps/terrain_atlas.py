@@ -13,13 +13,14 @@ import hashlib
 from collections.abc import Sequence
 from typing import Any
 
+from grida.fx import Ctx, Group, StepRef, node
+
 from demo_game_tools.kits.sideview_terrain import (
     PAINT_CANVAS_SIZE,
     assemble_terrain_atlas,
     require_terrain_atlas_source,
     terrain_atlas_paint_target,
 )
-from gnode import Ctx, Group, StepRef, node
 from stage_gen.resources import terrain_atlas_lookup_path, terrain_atlas_template_path
 
 #: Paintings an atlas sheet gets before the run stops on it.
@@ -125,7 +126,7 @@ def add_atlas_steps(
     painting = group.step(
         "generate",
         title="Paint the 47-mask atlas",
-        uses="gnode/image.edit@1",
+        uses="fx/image.edit@1",
         with_={
             "image": target.outputs.image,
             "references": list(materials),

@@ -1,8 +1,8 @@
 """Iron Petal Unit's asset build: the game's package, read by the game, written as steps.
 
-    gnode plan pipeline/workflow.py:build --arg package=inputs
-    gnode run  pipeline/workflow.py:build --arg package=inputs --live --max-usd 80 \\
-        --deliver package=../../../out/iron-petal/{key}
+    uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs
+    uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs \\
+        --live --max-usd 80 --deliver package=../../../out/iron-petal/{key}
 
 The game's reader resolves its own TOML package, unchanged, and this builder writes one group
 of steps per asset: the ground chunks and their shared seam, the scrolling layers, the avatar
@@ -12,7 +12,7 @@ is judged by the game's own admission and drawn again when it fails. The last st
 published file out at the path the Godot host reads it from and writes ``manifest.json``;
 ``godot --path godot/games/iron_petal_unit -- --run <dir>`` plays the delivered folder.
 
-The package must sit inside this project (the folder holding ``gnode.yaml``): its authored
+The package must sit inside this project (the folder holding ``fx.yaml``): its authored
 references are project files, read by content.
 """
 
@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from grida.fx import Group, StepRef, Workflow
 
 from demo_game_tools.kits.effects_art.directions import (
     cut_in_artifact_refs,
@@ -37,7 +38,6 @@ from demo_game_tools.steps.layers import add_layer_steps
 from demo_game_tools.steps.rebase import add_rebase_steps
 from demo_game_tools.steps.soundtrack import add_track_steps
 from demo_game_tools.steps.terrain_atlas import add_atlas_steps
-from gnode import Group, StepRef, Workflow
 from iron_petal_unit_pipeline.admission import RUNNER_LAYER_GATE
 from iron_petal_unit_pipeline.audio.realizations import (
     GeneratedClipRealization,
@@ -81,6 +81,8 @@ SOUNDTRACK = "./pipeline/nodes/soundtrack.py"
 EFFECTS = "./pipeline/nodes/effects.py"
 
 #: Draws a judged painting or clip gets before the run stops on it.
+#: The workflow's id: FX names its takes file after it, beside this module.
+WORKFLOW_ID = "iron-petal-unit"
 TAKES = 6
 #: The avatar's baseline: every other strip is rebased against its run.
 AVATAR_BASELINE_STATE = "run"
@@ -99,9 +101,9 @@ def _name(value: str) -> str:
 
 def _project_root(package: Path) -> Path:
     for folder in (package, *package.parents):
-        if (folder / "gnode.yaml").is_file():
+        if (folder / "fx.yaml").is_file():
             return folder
-    raise ValueError(f"{package} is not inside a gnode project")
+    raise ValueError(f"{package} is not inside an FX project")
 
 
 def _paint(
@@ -122,9 +124,9 @@ def _paint(
     return group.step(
         "generate",
         title=title,
-        uses="gnode/image.edit@1" if pictures else "gnode/image.generate@1",
+        uses="fx/image.edit@1" if pictures else "fx/image.generate@1",
         with_=with_,
-        requires=["transparent_background"] if background == "transparent" else [],
+        requires=["alpha"] if background == "transparent" else [],
         view=True,
     )
 
@@ -150,12 +152,12 @@ class _Build:
         return "./" + (self.root / source).relative_to(self.project).as_posix()
 
     def route(self, capability: str) -> str:
-        """The project's route for a capability, as ``gnode.yaml`` declares it."""
+        """The project's route for a capability, as ``fx.yaml`` declares it."""
 
-        project = yaml.safe_load((self.project / "gnode.yaml").read_text(encoding="utf-8"))
+        project = yaml.safe_load((self.project / "fx.yaml").read_text(encoding="utf-8"))
         route = (project.get("routes") or {}).get(capability)
         if not isinstance(route, str):
-            raise ValueError(f"gnode.yaml declares no route for {capability}")
+            raise ValueError(f"fx.yaml declares no route for {capability}")
         return route
 
     def publish(self, runtime_path: str, value: Any) -> None:
@@ -508,7 +510,7 @@ class _Build:
                     title="Generate the clip",
                     # The authored text is the entire prompt; playback gain stays out of it, so
                     # a rebalance after listening is never a redraw.
-                    uses="gnode/sound.generate@1",
+                    uses="fx/sound.generate@1",
                     with_={
                         "prompt": clip.prompt,
                         "duration": clip.duration_seconds,
@@ -578,7 +580,7 @@ class _Build:
                     title="Speak the line",
                     # The text is authored, verbatim, annotations included; the read is keyed on
                     # the cast provider voice, so recasting a name redraws it.
-                    uses="gnode/speech.generate@1",
+                    uses="fx/speech.generate@1",
                     with_={
                         "text": line.text,
                         "voice": voice.provider.voice,
@@ -716,7 +718,7 @@ class _Build:
 def _first_take(effect_id: str, take: int) -> None:
     if take != 1:
         raise ValueError(
-            f"{effect_id} asks for take {take}: choose a take in pipeline/workflow.takes.yaml"
+            f"{effect_id} asks for take {take}: choose a take in pipeline/{WORKFLOW_ID}.takes.yaml"
         )
 
 
@@ -729,7 +731,7 @@ def build(package: str) -> Workflow:
     track = resolved.runner.track
     built = _Build(resolved, root, _project_root(root))
     wf = Workflow(
-        "iron-petal-unit",
+        WORKFLOW_ID,
         title=f"{game.display_name}: {track.display_name}",
         description="Every asset Iron Petal Unit's package declares, laid out for the Godot host.",
         budget={"max_usd": BUDGET_USD},

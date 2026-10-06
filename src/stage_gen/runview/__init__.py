@@ -1,0 +1,121 @@
+"""Stage Gen's reading of FX run folders: the run view, the view contexts and the view cache.
+
+FX writes a run folder (``plan.json``, ``events.jsonl``, placed files) and draws no views. This
+package reads one, never writing into it, for the viewer and for the tools that check runs:
+:func:`project_run` projects it to one run view (``stage-gen-run-view-v1``), :func:`view_contexts`
+gives each step's view and the workflow's own view what they show, and :class:`ViewRefresher`
+keeps both, with the templates and files they name, in the user cache. It imports neither the
+engine nor its SDK.
+"""
+
+from stage_gen.runview.contexts import (
+    GENERIC_VIEWS,
+    INLINE_JSON_BYTES,
+    VIEW_CONTEXT_KIND,
+    RunViews,
+    template_for,
+    view_contexts,
+    view_file,
+    workflow_home,
+)
+from stage_gen.runview.facts import FactsReader, file_facts
+from stage_gen.runview.folder import (
+    EVENTS_FILE,
+    FX_GRAPH_KIND,
+    PLAN_FILE,
+    RunFolderError,
+    find_file,
+    is_fx_run,
+    is_stand_in,
+    placed_path,
+    project_file,
+    read_events,
+    read_plan,
+    setting,
+    store_of,
+)
+from stage_gen.runview.model import (
+    RUN_VIEW_KIND,
+    RUN_VIEW_SCHEMA_VERSION,
+    AuthoredInput,
+    CacheDisposition,
+    NodeCard,
+    NodeState,
+    Port,
+    PortRef,
+    Resource,
+    RetryOwner,
+    RunState,
+    RunView,
+    RunViewArtifact,
+    RunViewGap,
+    RunViewNode,
+    ViewArchetype,
+)
+from stage_gen.runview.project import project_run, verify_run
+from stage_gen.runview.refresh import (
+    VIEW_CONTEXTS_FILE,
+    VIEW_CONTEXTS_KIND,
+    VIEW_FILE,
+    ViewRefresher,
+    cache_home,
+    discover,
+    is_run,
+    keep_fresh,
+    view_key,
+    write_view,
+)
+
+__all__ = [
+    "EVENTS_FILE",
+    "FX_GRAPH_KIND",
+    "GENERIC_VIEWS",
+    "INLINE_JSON_BYTES",
+    "PLAN_FILE",
+    "RUN_VIEW_KIND",
+    "RUN_VIEW_SCHEMA_VERSION",
+    "VIEW_CONTEXTS_FILE",
+    "VIEW_CONTEXTS_KIND",
+    "VIEW_CONTEXT_KIND",
+    "VIEW_FILE",
+    "AuthoredInput",
+    "CacheDisposition",
+    "FactsReader",
+    "NodeCard",
+    "NodeState",
+    "Port",
+    "PortRef",
+    "Resource",
+    "RetryOwner",
+    "RunFolderError",
+    "RunState",
+    "RunView",
+    "RunViewArtifact",
+    "RunViewGap",
+    "RunViewNode",
+    "RunViews",
+    "ViewArchetype",
+    "ViewRefresher",
+    "cache_home",
+    "discover",
+    "file_facts",
+    "find_file",
+    "is_fx_run",
+    "is_run",
+    "is_stand_in",
+    "keep_fresh",
+    "placed_path",
+    "project_file",
+    "project_run",
+    "read_events",
+    "read_plan",
+    "setting",
+    "store_of",
+    "template_for",
+    "verify_run",
+    "view_contexts",
+    "view_file",
+    "view_key",
+    "workflow_home",
+    "write_view",
+]

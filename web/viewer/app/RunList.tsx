@@ -76,7 +76,7 @@ function RunRow({ entry, game, now }: { entry: RunIndexEntry; game: boolean; now
       </div>
       <span className="text-xs text-dim max-[700px]:hidden">
         {states(entry)}
-        {entry.view?.source === "cache" ? <span title="kept by gnode view"> ⁺</span> : null}
+        {entry.view?.source === "cache" ? <span title="kept by scripts/view.py"> ⁺</span> : null}
       </span>
       <span
         className="text-xs text-dim max-[700px]:hidden"

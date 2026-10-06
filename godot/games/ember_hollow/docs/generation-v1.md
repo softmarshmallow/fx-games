@@ -309,14 +309,14 @@ path below the delivered folder. The host that plays it is
 From `godot/games/ember_hollow`, offline, no provider, no credentials:
 
 ```bash
-gnode plan pipeline/workflow.py:build --arg package=inputs --arg scope=full
+uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs --arg scope=full
 ```
 
 A build is the same command run, with `--live` as the explicit provider opt-in and a
 spending cap:
 
 ```bash
-gnode run pipeline/workflow.py:build --arg package=inputs --arg scope=full --live \
+uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs --arg scope=full --live \
   --max-usd 40 --deliver package=../../../out/<tag>/{key}
 ```
 
@@ -340,7 +340,7 @@ same change.
 <!-- pipeline-graph-contract:start -->
 ```json
 {
-  "kind": "oblique-survival-gnode-plan-contract-v1",
+  "kind": "oblique-survival-fx-plan-contract-v1",
   "fixture_ref": "godot/games/ember_hollow/inputs",
   "builder": "pipeline/workflow.py:build",
   "arguments": {
@@ -400,10 +400,10 @@ same change.
     "./pipeline/nodes/shell.py#shell_review_schema",
     "./pipeline/nodes/world.py#package_manifest",
     "./pipeline/nodes/world.py#world_layout",
-    "gnode/image.edit@1",
-    "gnode/image.generate@1",
-    "gnode/sound.generate@1",
-    "gnode/structured.generate@1"
+    "fx/image.edit@1",
+    "fx/image.generate@1",
+    "fx/sound.generate@1",
+    "fx/structured.generate@1"
   ]
 }
 ```

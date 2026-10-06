@@ -16,7 +16,10 @@
 # working tree is never read, never stashed, and never touched — which also
 # makes the hook safe to run while somebody else is editing it.
 #
-# Under a minute, most of it the contract suite. Install once with:
+# About a minute warm, most of it the contract suite, plus FX's engine build: cargo
+# reuses the submodule's own build when the pin is checked out clean, and a dirty or
+# off-pin submodule rebuilds the engine's crates, which takes a few minutes. Needs
+# cargo (https://rustup.rs). Install once with:
 #   git config core.hooksPath .githooks
 set -euo pipefail
 
@@ -39,6 +42,28 @@ cleanup() {
 	git worktree prune >/dev/null 2>&1 || true
 }
 
+# FX's engine for the pinned FX commit, placed where the scratch tree's grida finds it.
+# The submodule's own build is reused when it is checked out clean at the pin. Any other
+# state builds the archived copy into its own target folder: cargo judges freshness by
+# mtime, so two source trees sharing one target folder would each look fresh to the other.
+build_engine() {
+	local scratch="$1" fx="$2" here="$repository/third_party/fx" source target
+	command -v cargo >/dev/null 2>&1 || {
+		echo "pre-push: cargo is not on PATH; FX's engine is built from third_party/fx (https://rustup.rs)" >&2
+		return 1
+	}
+	if [ "$(git -C "$here" rev-parse HEAD 2>/dev/null)" = "$fx" ] &&
+		[ -z "$(git -C "$here" status --porcelain --untracked-files=all)" ]; then
+		source="$here" target="$here/target"
+	else
+		source="$scratch/third_party/fx" target="$here/target/pre-push"
+	fi
+	CARGO_INCREMENTAL=0 CARGO_TARGET_DIR="$target" \
+		cargo build --quiet --locked --release -p grida-fx --manifest-path "$source/Cargo.toml" || return 1
+	mkdir -p "$scratch/third_party/fx/python/src/grida/fx/_bin"
+	install -m 0755 "$target/release/grida-fx" "$scratch/third_party/fx/python/src/grida/fx/_bin/grida-fx"
+}
+
 gate() {
 	local sha="$1" ref="$2" scratch status=0
 	scratch="$(mktemp -d "${TMPDIR:-/tmp}/stage-gen-prepush.XXXXXX")"
@@ -54,27 +79,35 @@ gate() {
 	fi
 	# A worktree checks out no submodule, and `uv sync` installs grida from third_party/fx.
 	# Copy the FX commit this commit pins out of the local submodule: no network, no clone.
+	# `-m` stamps the files now: `git archive` stamps them with the commit time, and cargo
+	# judges freshness by mtime.
 	local fx
 	fx="$(git -C "$scratch" rev-parse --verify --quiet "HEAD:third_party/fx" || true)"
 	if [ -n "$fx" ]; then
 		mkdir -p "$scratch/third_party/fx"
-		if ! git -C "$repository/third_party/fx" archive "$fx" | tar -x -C "$scratch/third_party/fx"; then
+		if ! git -C "$repository/third_party/fx" archive "$fx" | tar -x -m -C "$scratch/third_party/fx"; then
 			cleanup "$scratch"
 			trap - EXIT
 			echo "pre-push: third_party/fx pins ${fx:0:12}, which the local submodule lacks (git submodule update --init)" >&2
 			return 1
 		fi
+		if ! build_engine "$scratch" "$fx"; then
+			cleanup "$scratch"
+			trap - EXIT
+			echo "pre-push: could not build FX's engine at ${fx:0:12}" >&2
+			return 1
+		fi
 	fi
 	(
 		cd "$scratch"
+		# FX runs offline here, on this tree's engine and interpreter, and reads no .env.
+		export GRIDA_FX_BIN="$scratch/third_party/fx/python/src/grida/fx/_bin/grida-fx" \
+			GRIDA_FX_PYTHON="$scratch/.venv/bin/python" GRIDA_FX_DISABLE_DOTENV=1 GRIDA_FX_NETWORK=off
 		uv sync --all-groups --frozen --quiet
 		uv run --all-groups ruff format --check .
 		uv run --all-groups ruff check .
 		(cd web && bun install --frozen-lockfile --silent && bun test)
-		uv run --all-groups pytest -m "not live" tests/contract -q
-		# The language-neutral cases any gnode implementation must pass, through the command
-		# only: the readiness gate for a second core.
-		uv run --all-groups python tests/conformance/run.py
+		uv run --all-groups pytest tests/contract -q
 	) || status=$?
 	cleanup "$scratch"
 	trap - EXIT

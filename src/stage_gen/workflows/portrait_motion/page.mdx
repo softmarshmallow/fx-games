@@ -25,15 +25,15 @@ Use Stage Gen's portrait motion workflow (`gnode plan portrait-motion`) to add a
 <Shell>
 
 ```sh
-uv run gnode plan portrait-motion --inputs face.yaml
+uv run python -m grida.fx plan portrait-motion --inputs face.yaml
 ```
 
 ```sh
-uv run gnode run portrait-motion --inputs face.yaml --live --max-usd 5
+uv run python -m grida.fx run portrait-motion --inputs face.yaml --live --max-usd 5
 ```
 
 ```sh
-uv run gnode inspect portrait-motion
+uv run python -m grida.fx inspect portrait-motion
 ```
 
 `face.yaml` names your sprite and the committed face spec; Run it yourself, at the end of this page,
@@ -134,9 +134,9 @@ geometric character both ways, with the two inputs files, to try the plan with.
 ### Plan, run, read
 
 ```sh
-uv run gnode plan portrait-motion --inputs face.yaml
-uv run gnode run portrait-motion --inputs face.yaml --live --max-usd 5
-uv run gnode inspect portrait-motion
+uv run python -m grida.fx plan portrait-motion --inputs face.yaml
+uv run python -m grida.fx run portrait-motion --inputs face.yaml --live --max-usd 5
+uv run python -m grida.fx inspect portrait-motion
 ```
 
 The plan prices the run before anything is paid for. The usual accepted run makes five paid calls:

@@ -1,12 +1,12 @@
 "use client";
 
-// A step's or a workflow's own view: the template its run keeps, in a sandboxed frame of its
+// A step's or a workflow's own view: the template its view cache keeps, in a sandboxed frame of its
 // own origin, handed its context and nothing else. The frame asks for the context when it is
 // ready; files arrive as URLs the asset route serves, and the frame cannot reach the
 // viewer, the run's other files or the network beyond the origins its run declares.
 
 import { useEffect, useRef } from "react";
-import { type ViewContext, withUrls } from "@stage-gen/ui/contracts/view-context";
+import { type ViewContext, VIEW_READY_KIND, withUrls } from "@stage-gen/ui/contracts/view-context";
 import { preparedAssetUrl, type RunRef } from "@/lib/shell/run-ref";
 
 export default function ViewFrame({
@@ -28,7 +28,7 @@ export default function ViewFrame({
     const send = () => target.contentWindow?.postMessage(context, "*");
     function answer(event: MessageEvent) {
       if (event.source !== target?.contentWindow) return;
-      if ((event.data as { kind?: unknown } | null)?.kind === "gnode-view-ready") send();
+      if ((event.data as { kind?: unknown } | null)?.kind === VIEW_READY_KIND) send();
     }
     // A frame that announced itself before this listener existed still gets its context
     // once it has loaded; a view reads the first context it receives.

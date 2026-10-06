@@ -42,10 +42,17 @@ function integer(value: unknown, label: string, min: number, max: number): numbe
   return result;
 }
 
+/**
+ * One segment of a run-local path: FX names (letters and digits of any script, `.`, `_`,
+ * `-`, a take's `#`, a cut name's `~`), never starting with `.`, so neither `.`, `..` nor a
+ * hidden `.part` file is ever named.
+ */
+export const ARTIFACT_SEGMENT_PATTERN = /^(?!\.)(?!\.\.?$)[\p{L}\p{N}._#~-]{1,255}$/u;
+
 /** Same portable, already-decoded path vocabulary as the confined asset API. */
 export function artifactReference(value: unknown, label: string): string {
   const ref = text(value, label);
-  if (!ref.split("/").every((segment) => /^[A-Za-z0-9][A-Za-z0-9._-]{0,254}$/.test(segment)))
+  if (!ref.split("/").every((segment) => ARTIFACT_SEGMENT_PATTERN.test(segment)))
     throw new Error(`${label} must be a portable run-local artifact path`);
   return ref;
 }

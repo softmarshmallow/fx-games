@@ -7,7 +7,7 @@
 
 `stage` writes everything `next build` reads, all into gitignored folders:
 - the catalog export (as `scripts/catalog.py` writes it) into web/site/.catalog/:
-  catalog.json, and cli.json, the `gnode` command tree the CLI reference page is written from;
+  catalog.json;
 - the prose from the checkout into web/site/.catalog/pages/: each workflow's page.mdx,
   contract.md and examples/*.mdx, each game example's page.mdx from the store, and the
   SITE_DOCS markdown with docs/index.json, their slugs, titles and checkout paths in order;
@@ -46,17 +46,6 @@ DEFAULT_EXAMPLES = REPOSITORY_ROOT / "out" / "examples"
 # order the docs index lists them. The site resolves a doc's relative links by its path.
 SITE_DOCS: Mapping[str, tuple[str, str]] = {
     "getting-started": ("docs/getting-started.md", "Getting started"),
-    "guide": ("docs/guide/README.md", "The gnode guide"),
-    "guide-getting-started": ("docs/guide/01-getting-started.md", "gnode: getting started"),
-    "guide-workflow-file": ("docs/guide/02-workflow-file.md", "gnode: the workflow file"),
-    "guide-nodes": ("docs/guide/03-nodes.md", "gnode: nodes"),
-    "guide-cost-and-cache": ("docs/guide/04-cost-and-cache.md", "gnode: cost, cache and takes"),
-    "guide-views": ("docs/guide/05-views.md", "gnode: views"),
-    "guide-running": ("docs/guide/06-running.md", "gnode: running"),
-    "guide-annotations": (
-        "docs/guide/07-annotations-and-judges.md",
-        "gnode: annotations and judges",
-    ),
     "glossary": ("docs/glossary.md", "Glossary"),
     "viewer": ("docs/viewer.md", "Viewer"),
     "site": ("docs/site.md", "Site"),
@@ -100,8 +89,6 @@ def export_catalog(examples: Path, *, allow_missing_examples: bool) -> dict[str,
     loaded: object = json.loads((CATALOG_ROOT / "catalog.json").read_text(encoding="utf-8"))
     if not isinstance(loaded, dict):
         raise SiteError("catalog.json is not an object")
-    if not (CATALOG_ROOT / "cli.json").is_file():
-        raise SiteError("the catalog export wrote no cli.json; the CLI reference needs it")
     return loaded
 
 

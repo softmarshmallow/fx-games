@@ -11,7 +11,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from gnode import Ctx, node
+from grida.fx import Ctx, node
+
 from stage_gen.components.image_repeat import (
     ImageRepeatDeterministicReport,
     ImageRepeatStitch,

@@ -24,19 +24,15 @@ Each layer imports only the layers above it in this list, with two named excepti
 character-3d run reader in `workflow.py` imports `stage_gen.runs` for the run-view file, and `_checks.py` imports the CLI parser lazily to parse `[try]` commands. The
 import rules below are what the tests enforce; this ordering is not tested.
 
-1. **GNode** (`src/gnode/`) keeps its three rings. Ring 0 owns the workflow file with its
-   expander, planner, node host, call cache, runner and spending ceiling, the run record and
-   the run view projected from it, the `gnode` command, and the media-free records, model
-   binding, reliability and provenance they share.
-   Ring 1 owns modality specifications and retry-owning services. Ring 2 owns first-party
-   provider adapters. Imports point inward. GNode imports no Stage Gen package, workflow,
-   game or brand. Consumers use declared public surfaces. The standard node types live in
-   `src/gnode_std/` (ring 3), a plugin that imports only the `gnode` surface. See
-   [ring rules](docs/spec/gnode-rings.md).
-2. **Plugins** (`src/stage_gen/orchestration/gnode_plugin.py`, `src/stage_gen/viewer.py`):
-   Stage Gen composes its provider routes and capability handlers, its workflows and its
-   viewer into gnode as plugins. It adds no graph engine of its own: every workflow, game
-   build and user project is a gnode workflow file or Python builder.
+1. **Grida FX** (`third_party/fx`, imported as `grida.fx`) is the engine, a separate product
+   pinned as a submodule. It owns the workflow file with its expander, planner, node host,
+   call cache, runner and spending ceiling, the run record, the `python -m grida.fx` command,
+   its built-in node types (`fx/…`), and the provider adapters with their retries. FX imports
+   no Stage Gen package, workflow, game or brand, and Stage Gen imports only its public names.
+2. **Glue** (`src/stage_gen/workflows/_fx.py`, `src/stage_gen/runview/`, `src/stage_gen/viewer.py`):
+   Stage Gen reads FX plans for its catalog and checks, projects FX run folders to run views,
+   and starts the viewer. It adds no graph engine of its own: every workflow, game build and
+   user project is an FX workflow file or Python builder.
 3. **Components** (`src/stage_gen/components/`): bounded building blocks with their node types,
    graph fragments, contracts and services. A component never runs alone and never imports
    a workflow. Shared workflow-neutral media inspection and transforms belong in
@@ -69,22 +65,20 @@ import rules below are what the tests enforce; this ordering is not tested.
    the viewer and the site share only `web/ui` and the versioned data contracts.
 8. **Consumers.** The Godot example project.
 
-Provider configuration, credentials and concrete service construction belong to the
-composition root, `src/stage_gen/orchestration/`: the provider services, image routing, and
-Stage Gen's gnode plugin: the image, video, structured, agent, mesh and rig routes and the
-adapters that serve them. No workflow acquires those responsibilities.
+Provider configuration, credentials and concrete services belong to Grida FX: each project's
+`fx.yaml` names the routes its calls take, and FX reads the keys and owns the adapters that
+serve them. No workflow acquires those responsibilities.
 
 ## Import rules
 
 `tests/contract/test_import_boundaries.py` enforces these, and every scan asserts that it
 matched at least one file:
 
-- GNode imports nothing above it, and consumers import only its declared surfaces.
+- FX is imported only as `from grida.fx import X`, with `X` one of its public names.
 - Workflows never import each other. A workflow may import its own package, its own frozen
   implementation root and `stage_gen.workflows._registry`.
-- Generic orchestration, the SDK and components import no workflow; the registry, catalog,
-  checks and `stage_gen.examples` import no workflow either.
-- Concrete providers are imported only in `orchestration` and `providers`.
+- Components import no workflow; the registry, catalog, checks and `stage_gen.examples`
+  import no workflow either.
 - The product imports no game, and no optional consumer.
 
 ## Identity is frozen where it is persisted

@@ -18,7 +18,6 @@ from demo_game_tools.kits.sideview_map_design import (
     vocabulary,
 )
 from demo_game_tools.kits.sideview_map_design import grammar as grammar_module
-from gnode import StructuredOutputSchema
 
 from ._profiles import CHAINED_SHAFT_PROFILE, CLIMBLESS_PROFILE, GROUND_FOOTED_PROFILE
 
@@ -35,8 +34,8 @@ def _nodes(value: object) -> Iterator[Mapping[str, object]]:
             yield from _nodes(item)
 
 
-def _branches(schema: StructuredOutputSchema) -> dict[str, Mapping[str, object]]:
-    properties = schema.json_schema["properties"]
+def _branches(schema: Mapping[str, object]) -> dict[str, Mapping[str, object]]:
+    properties = schema["properties"]
     assert isinstance(properties, Mapping)
     chunks = properties["chunks"]
     assert isinstance(chunks, Mapping)
@@ -134,7 +133,7 @@ def test_the_chunk_schema_never_emits_const_and_discriminates_with_a_typed_enum(
 
     for profile in (GROUND_FOOTED_PROFILE, CHAINED_SHAFT_PROFILE):
         schema = build_chunk_schema(profile)
-        for node in _nodes(schema.json_schema):
+        for node in _nodes(schema):
             assert "const" not in node
         for kind, branch in _branches(schema).items():
             properties = branch["properties"]
@@ -142,14 +141,15 @@ def test_the_chunk_schema_never_emits_const_and_discriminates_with_a_typed_enum(
             assert properties["kind"] == {"type": "string", "enum": [kind]}
 
 
-def test_the_chunk_schema_survives_strict_output_canonicalization() -> None:
-    """Bounds are advisory: the transport strips them, and ``check`` remains authoritative."""
+def test_the_chunk_schema_states_shape_only() -> None:
+    """FX checks an answer against the schema as written, so it carries no bound: ``check``
+    owns every bound and refuses with feedback, where a schema bound would fail the call."""
 
     schema = build_chunk_schema(GROUND_FOOTED_PROFILE)
 
-    assert isinstance(schema, StructuredOutputSchema)
-    assert schema.strict is True
-    for node in _nodes(schema.json_schema):
+    assert isinstance(schema, dict)
+    assert schema["title"] == "composed_map"
+    for node in _nodes(schema):
         assert not {"minimum", "maximum", "minItems", "maxItems", "default"} & set(node)
         properties = node.get("properties")
         if isinstance(properties, Mapping):

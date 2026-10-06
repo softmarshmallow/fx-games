@@ -13,8 +13,6 @@ from pathlib import Path, PurePosixPath
 
 import yaml
 
-MODEL_POLICY_SNAPSHOT_RESOURCE = "stage_gen/model_policy_snapshot.json"
-MODEL_POLICY_SNAPSHOT_UNPACKED_LIMIT = 64_000
 PORTRAIT_FACE_MODULES = {
     "stage_gen/components/portrait_motion/face_crop.py",
     "stage_gen/components/portrait_motion/face_location.py",
@@ -24,8 +22,8 @@ PORTRAIT_FACE_MODULES = {
         f"stage_gen/workflows/portrait_motion/{name}"
         for name in (
             "workflow.yaml",
-            "gnode.yaml",
-            "gnode.lock",
+            "fx.yaml",
+            "fx.lock",
             "states.py",
             "nodes/face.py",
             "nodes/motion.py",
@@ -48,8 +46,8 @@ MOVIE_SPRITE_MODULES = {
         f"stage_gen/workflows/movie_sprite/{name}"
         for name in (
             "workflow.yaml",
-            "gnode.yaml",
-            "gnode.lock",
+            "fx.yaml",
+            "fx.lock",
             "nodes/take.py",
             "nodes/finish.py",
             "prompts/idle.md",
@@ -57,14 +55,14 @@ MOVIE_SPRITE_MODULES = {
             "inputs/supplied_clip/make_inputs.py",
         )
     ),
-    "gnode_std/views/video.html",
+    *(f"stage_gen/runview/views/{name}.html" for name in ("image", "json", "video")),
 }
 UNIVERSE_WORKFLOW = {
     f"stage_gen/workflows/universe/{name}"
     for name in (
         "workflow.yaml",
-        "gnode.yaml",
-        "gnode.lock",
+        "fx.yaml",
+        "fx.lock",
         "nodes/world.py",
         "nodes/judges.py",
         "nodes/entities.py",
@@ -94,8 +92,8 @@ PARALLAX_WORKFLOW = {
     f"stage_gen/workflows/looping_parallax/{name}"
     for name in (
         "workflow.yaml",
-        "gnode.yaml",
-        "gnode.lock",
+        "fx.yaml",
+        "fx.lock",
         "nodes/seams.py",
         "nodes/compose.py",
         "prompts/seam.md",
@@ -105,7 +103,6 @@ PARALLAX_WORKFLOW = {
 }
 
 WHEEL_RESOURCES = {
-    MODEL_POLICY_SNAPSHOT_RESOURCE,
     "stage_gen/resources/model_names.toml",
     "stage_gen/resources/fixtures/image_gen_templates/inventory_template.png",
     "stage_gen/resources/fixtures/image_gen_templates/terrain_atlas_12x4_template.png",
@@ -256,9 +253,6 @@ def test_built_distributions_are_small_clean_and_resource_complete(tmp_path: Pat
             entry.filename: entry.file_size for entry in wheel.infolist() if not entry.is_dir()
         }
         _assert_archive_hygiene(wheel_entries, resource_prefix="stage_gen/resources/")
-        # Budgets exclude the independently bounded route snapshot.
-        model_policy_snapshot_size = wheel_entries[MODEL_POLICY_SNAPSHOT_RESOURCE]
-        assert model_policy_snapshot_size < MODEL_POLICY_SNAPSHOT_UNPACKED_LIMIT
         # Character candidate final-m1-28 (2026-09-13): non-snapshot wheel slice
         # measured 3,727,974 B, of which the character capability is 967,681 B
         # across 85 Python/data files. No new media; the executable model snapshot
@@ -269,7 +263,9 @@ def test_built_distributions_are_small_clean_and_resource_complete(tmp_path: Pat
         # drift checks, the example contract, importers, six workflow.toml and
         # model_names.toml) measured 3,990,782 B; the cap is that plus 10%. Workflow
         # prose (page.mdx, contract.md) is excluded from the wheel. No new media.
-        assert sum(wheel_entries.values()) - model_policy_snapshot_size < 4_390_000
+        # Milestone 2 moved the engine out to Grida FX: the wheel ships no engine, no
+        # route snapshot and no command line, and the cap stays where it was.
+        assert sum(wheel_entries.values()) < 4_390_000
         assert wheel_entries.keys() >= WHEEL_RESOURCES
         assert wheel_entries.keys() >= PORTRAIT_FACE_MODULES
         assert wheel_entries.keys() >= MOVIE_SPRITE_MODULES
@@ -282,14 +278,16 @@ def test_built_distributions_are_small_clean_and_resource_complete(tmp_path: Pat
         )
         assert all(wheel_entries[name] > 0 for name in WHEEL_RESOURCES)
         assert {
-            "gnode/__init__.py",
-            "gnode/py.typed",
             "stage_gen/__init__.py",
             "stage_gen/py.typed",
             "stage_gen/resources/__init__.py",
         } <= wheel_entries.keys()
         assert any(name.endswith(".dist-info/METADATA") for name in wheel_entries)
-        assert any(name.endswith(".dist-info/entry_points.txt") for name in wheel_entries)
+        assert not any(name.endswith(".dist-info/entry_points.txt") for name in wheel_entries)
+        # Stage Gen alone: the engine is Grida FX's own distribution.
+        assert {name.split("/")[0] for name in wheel_entries if ".dist-info/" not in name} == {
+            "stage_gen"
+        }
         assert not any(
             name.startswith(
                 (
@@ -354,9 +352,10 @@ def test_built_distributions_are_small_clean_and_resource_complete(tmp_path: Pat
         )
         assert ignored.returncode in {0, 1}, ignored.stderr
         assert ignored.stdout.strip() == "", ignored.stdout
-        sdist_snapshot_size = sdist_entries[f"src/{MODEL_POLICY_SNAPSHOT_RESOURCE}"]
-        assert sdist_snapshot_size < MODEL_POLICY_SNAPSHOT_UNPACKED_LIMIT
-        assert sum(sdist_entries.values()) - sdist_snapshot_size < 11_070_000
+        assert sum(sdist_entries.values()) < 11_070_000
+        assert {
+            PurePosixPath(name).parts[1] for name in sdist_entries if name.startswith("src/")
+        } == {"stage_gen"}
         assert not any(name.startswith("godot/") for name in sdist_entries)
         assert sdist_entries.keys() >= SDIST_RESOURCES | EXPECTED_SDIST_FILES
         assert sdist_entries.keys() >= {f"src/{name}" for name in PORTRAIT_FACE_MODULES}
@@ -396,7 +395,7 @@ def test_built_distributions_are_small_clean_and_resource_complete(tmp_path: Pat
             "-m",
             "pytest",
             "-q",
-            "tests/unit/test_config.py",
+            "tests/unit/test_image_style.py",
         ],
         cwd=extracted_sdist,
         env=sdist_test_environment,
@@ -406,10 +405,9 @@ def test_built_distributions_are_small_clean_and_resource_complete(tmp_path: Pat
     )
 
     probe = """
-import asyncio
 import importlib
 import importlib.abc
-import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -429,7 +427,7 @@ class NoConsumerImports(importlib.abc.MetaPathFinder):
 
 sys.meta_path.insert(0, NoConsumerImports())
 import runpy
-import gnode
+from grida import fx
 from stage_gen.resources import (
     image_style_resource_digests,
     image_style_skill_path,
@@ -441,7 +439,20 @@ from stage_gen.resources import (
     terrain_atlas_topology_reference_path,
 )
 from stage_gen.image_prompting import load_image_style_resources
-from stage_gen.model_policy_maintenance import load_active_model_policy_snapshot
+from stage_gen.runview import project_run, verify_run
+from stage_gen.workflows._fx import WORKFLOWS_ROOT, write_project
+
+installed = Path("installed").resolve()
+assert WORKFLOWS_ROOT.is_relative_to(installed)
+
+def verified(run_dir):
+    inspected = subprocess.run(
+        [sys.executable, "-m", "grida.fx", "inspect", str(run_dir), "--verify"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return inspected.returncode == 0 and verify_run(run_dir) == []
 
 paths = required_resource_paths()
 assert len(paths) == 8
@@ -459,9 +470,6 @@ assert image_style_resource_digests() == {
     "skill_sha256": style_resources.skill.sha256,
     "vocabulary_sha256": style_resources.vocabulary_sha256,
 }
-snapshot = load_active_model_policy_snapshot()
-assert snapshot.kind == "stage-gen-model-policy-snapshot-v2"
-assert snapshot.routes and snapshot.policies
 face_surfaces = {
     "stage_gen.components.portrait_motion.face_crop": ("create_working_crop", "restore_feature"),
     "stage_gen.components.portrait_motion.face_location": (
@@ -477,61 +485,61 @@ face_surfaces = {
 }
 for name, names in face_surfaces.items():
     module = importlib.import_module(name)
-    assert Path(module.__file__).resolve().is_relative_to(Path("installed").resolve())
+    assert Path(module.__file__).resolve().is_relative_to(installed)
     assert all(callable(getattr(module, name)) for name in names)
 
 parallax = Path(importlib.import_module("stage_gen.workflows.looping_parallax").__file__).parent
-assert parallax.resolve().is_relative_to(Path("installed").resolve())
+assert parallax.resolve().is_relative_to(installed)
 make_layers = runpy.run_path(str(parallax / "inputs/supplied_layers/make_inputs.py"))
 layers = make_layers["write_inputs"](Path("parallax-inputs"))
-Path("parallax-project").mkdir()
-parallax_run = gnode.run(
-    "looping-parallax", input_files=[layers.resolve()], cwd=Path("parallax-project")
-)
-assert parallax_run.ok, parallax_run.outcome.failed
-assert gnode.verify_run(parallax_run.run_dir) == []
+parallax_project = write_project(Path("parallax-project"))
+parallax_run = fx.run("looping-parallax", input_files=[layers.resolve()], cwd=parallax_project)
+assert parallax_run.ok, parallax_run.failures
+assert verified(parallax_run.run_dir)
 assert set(parallax_run.outputs) == {"manifest", "preview", "layers"}
 
 from stage_gen.workflows.movie_sprite.inputs.supplied_clip import make_inputs as clip
 
-assert Path(clip.__file__).resolve().is_relative_to(Path("installed").resolve())
+assert Path(clip.__file__).resolve().is_relative_to(installed)
 clip.make_inputs(Path("movie-sprite-inputs"))
-Path("movie-sprite-project").mkdir()
-take_plan = gnode.plan(
+movie_project = write_project(Path("movie-sprite-project"))
+take_plan = fx.plan(
     "movie-sprite",
     input_files=[Path("movie-sprite-inputs/take.yaml").resolve()],
-    cwd=Path("movie-sprite-project"),
+    cwd=movie_project,
 )
 assert take_plan.ok and take_plan.estimate()[1] > 0
 movie_runs = [
-    gnode.run(
+    fx.run(
         "movie-sprite",
         input_files=[Path("movie-sprite-inputs/clip.yaml").resolve()],
-        cwd=Path("movie-sprite-project"),
+        cwd=movie_project,
     )
     for _ in range(2)
 ]
-assert all(movie.ok for movie in movie_runs), movie_runs[0].outcome.failed
+assert all(movie.ok for movie in movie_runs), movie_runs[0].failures
 outputs = movie_runs[0].outputs
-assert {"loop", "canonical", "frames"} <= set(outputs)
+assert {"loop", "canonical", "manifest"} <= set(outputs)
 from PIL import Image
 with Image.open(outputs["canonical"].path) as canonical:
     assert canonical.convert("RGBA").tobytes() == clip.make_frame(0).tobytes()
-assert gnode.verify_run(movie_runs[1].run_dir) == []
-assert [node.cache for node in gnode.project_run(movie_runs[1].run_dir).nodes] == ["hit"]
+assert verified(movie_runs[1].run_dir)
+again = [node.cache for node in project_run(movie_runs[1].run_dir).nodes]
+assert again and set(again) == {"hit"}, again
 
 portrait = Path(importlib.import_module("stage_gen.workflows.portrait_motion").__file__).parent
-assert portrait.resolve().is_relative_to(Path("installed").resolve())
+assert portrait.resolve().is_relative_to(installed)
 face = runpy.run_path(str(portrait / "inputs/make_inputs.py"))["write_inputs"](
     Path("portrait-inputs")
 )
-Path("portrait-project").mkdir()
-face_plan = gnode.plan(
-    "portrait-motion", input_files=[face.resolve()], cwd=Path("portrait-project")
-)
+portrait_project = write_project(Path("portrait-project"))
+face_plan = fx.plan("portrait-motion", input_files=[face.resolve()], cwd=portrait_project)
 assert face_plan.ok and face_plan.estimate()[1] > 0
 """
-    probe_environment = environment | {"PYTHONPATH": str(installed)}
+    probe_environment = environment | {
+        "PYTHONPATH": str(installed),
+        "GRIDA_FX_PYTHON": sys.executable,
+    }
     subprocess.run(
         [sys.executable, "-c", probe],
         cwd=tmp_path,

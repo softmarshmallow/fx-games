@@ -29,7 +29,7 @@ With a `character`, the plan has four steps: `plate`, `brief`, `take` and `finis
 
 - **plate** crops the character's visible silhouette, scales it uniformly into a 720×1280 (or 1280×720) frame with a margin, and composites it onto flat green, never repainting the art. The plate is both ends of the take, so its pixels are part of the paid request.
 - **brief** writes the take's prompt: the standing-idle template, [`prompts/idle.md`](prompts/idle.md), then the author's direction, requested motion and constraints, each as its own section. With none at all, a quiet listening idle is asked for.
-- **take** is one `video.generate` call on the route the workflow's [`gnode.yaml`](gnode.yaml) names by default: fal's Gemini Omni Flash image-to-video route, with the plate as the first and the last frame. The route needs `first_last_frame`, which the plan checks before any spend; the plan prices it per second at the take's resolution. A run makes it only with `--live` (`live=True` in Python) and a fal key.
+- **take** is one `video.generate` call on the route the workflow's [`fx.yaml`](fx.yaml) names by default: fal's Gemini Omni Flash image-to-video route, with the plate as the first and the last frame. The route needs `first_last_frame`, which the plan checks before any spend; the plan prices it per second at the take's resolution. A run makes it only with `--live` (`live=True` in Python) and a fal key.
 - **finish** is the component's finishing: green chroma extraction with despill, optional held regions and local repairs, an optical-flow loop closure, and playback retiming. It is local and free, and verifies every decoded output frame.
 
 ```python
@@ -43,7 +43,7 @@ The take is a long provider job. gnode records the job before it is submitted an
 
 ## Cache and identity
 
-Each step's identity is its node type's locked version ([`gnode.lock`](gnode.lock); the node modules' sources and Stage Gen's movie sprite component count as their source) and what it reads. The take's call is kept in gnode's call cache by its capability, route, request (the prompt, the plate's digest, length, resolution and aspect ratio) and take number, so changing only the finishing settings reruns `finish` alone and bills nothing, and a reroll is a new take. Changing the template, the plate's fit or the brief's wording changes the request, and with it the bill.
+Each step's identity is its node type's locked version ([`fx.lock`](fx.lock); the node modules' sources and Stage Gen's movie sprite component count as their source) and what it reads. The take's call is kept in gnode's call cache by its capability, route, request (the prompt, the plate's digest, length, resolution and aspect ratio) and take number, so changing only the finishing settings reruns `finish` alone and bills nothing, and a reroll is a new take. Changing the template, the plate's fit or the brief's wording changes the request, and with it the bill.
 
 A take answered by a provider earlier, under the same request, is reused from the cache whatever run made it.
 
@@ -63,12 +63,12 @@ The finish step's view plays the preview and shows the contact sheet with the re
 
 ## Graph
 
-gnode plans the committed sample's take path offline; this is the shape of that plan. `scripts/write_workflow_contracts.py --write` regenerates the block, and the check above fails when it drifts:
+FX plans the committed sample's take path offline; this is the shape of that plan. `scripts/write_workflow_contracts.py --write` regenerates the block, and the check above fails when it drifts:
 
 <!-- pipeline-graph-contract:start -->
 ```json
 {
-  "graph_kind": "gnode-graph-v2",
+  "graph_kind": "fx-graph-v1",
   "topology_sha256": "8fe00c409807766aa7300acb2df7d49bcc77dbdd697eb58fa0ebb569405c5ef9",
   "node_count": 4,
   "operation_counts": {
@@ -100,9 +100,9 @@ gnode plans the committed sample's take path offline; this is the shape of that 
 
 ```sh
 uv run python src/stage_gen/workflows/movie_sprite/inputs/supplied_clip/make_inputs.py /tmp/movie-inputs
-uv run gnode plan movie-sprite --inputs /tmp/movie-inputs/take.yaml
-uv run gnode run movie-sprite --inputs /tmp/movie-inputs/clip.yaml
-uv run gnode inspect movie-sprite --verify
+uv run python -m grida.fx plan movie-sprite --inputs /tmp/movie-inputs/take.yaml
+uv run python -m grida.fx run movie-sprite --inputs /tmp/movie-inputs/clip.yaml
+uv run python -m grida.fx inspect movie-sprite --verify
 ```
 
 Tests run the take path offline with a stand-in for the video call, the footage path for real, and the importer that makes an example from a run. The installed-wheel probe runs outside the checkout. Live provider canaries and human motion review remain separate evidence.

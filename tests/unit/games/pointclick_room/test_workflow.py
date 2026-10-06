@@ -1,6 +1,6 @@
-"""The Grain's room builder through gnode, offline: the plan, a whole run, the judges, reuse.
+"""The Grain's room builder through FX, offline: the plan, a whole run, the judges, reuse.
 
-Each run builds a copy of the shipped window room inside a scratch copy of the game's gnode
+Each run builds a copy of the shipped window room inside a scratch copy of the game's FX
 project. Paid calls are answered by the stand-ins in ``tests.unit.games._grain``.
 The build is documented in ``godot/games/the_grain/docs/pointclick-room.md``.
 """
@@ -13,19 +13,10 @@ import shutil
 from pathlib import Path
 
 import pytest
+from grida.fx import FxError
 
-from gnode import PlanError
-from tests.unit.games._grain import (
-    GAME,
-    ROOM,
-    calls_of,
-    deliver,
-    failures,
-    grain_project,
-    plan,
-    run,
-    stand_ins_for,
-)
+from tests.unit._fx import calls_of, ceiling, deliver, failures, first_takes
+from tests.unit.games._grain import GAME, ROOM, StandIns, grain_project, plan, run
 from the_grain_pipeline.pointclick_room.room_prompts import narration_ids
 from the_grain_pipeline.pointclick_room.room_request import (
     read_room_document,
@@ -68,9 +59,9 @@ def test_each_shipped_room_plans_inside_the_game_project(room: str) -> None:
     planned = plan(GAME, ROOM, f"inputs/rooms/{room}")
 
     assert planned.ok, planned.problems
-    assert planned.planner.workflow.id == "the-grain-room"
-    budget = planned.planner.workflow.budget
-    assert budget is not None and planned.estimate()[1] <= budget.max_usd
+    assert planned.document["workflow"]["id"] == "the-grain-room"
+    budget = ceiling(planned)
+    assert budget is not None and planned.estimate()[1] <= budget
 
 
 def test_the_plan_draws_each_room_asset_once() -> None:
@@ -82,7 +73,11 @@ def test_the_plan_draws_each_room_asset_once() -> None:
     calls = calls_of(planned)
 
     # The backdrop, one cut-out per sprite hotspot, one icon per item, one sheet per role.
-    roles = {i.step.split(".")[1] for i in planned.instances if i.step.startswith("interface.")}
+    roles = {
+        row["step"].split(".")[1]
+        for row in first_takes(planned)
+        if row["step"].startswith("interface.")
+    }
     assert calls["image.edit"] == 1 + sprites + len(room.items) + len(roles)
     assert calls["structured.generate"] >= 1 + bool(narration_ids(room))
     assert "music.generate" not in calls
@@ -95,7 +90,7 @@ def test_a_room_the_proof_refuses_is_refused_while_planning(tmp_path: Path) -> N
         project, '[win]\nrequires = ["left_the_room"]', '[win]\nrequires = ["never_set_anywhere"]'
     )
 
-    with pytest.raises(PlanError, match="never_set_anywhere"):
+    with pytest.raises(FxError, match="never_set_anywhere"):
         plan(project, ROOM, PACKAGE)
 
 
@@ -105,12 +100,13 @@ def test_a_room_the_proof_refuses_is_refused_while_planning(tmp_path: Path) -> N
 def test_a_whole_room_runs_offline_and_lays_out_what_the_host_plays(tmp_path: Path) -> None:
     project = room_project(tmp_path)
     _leave_the_win_line_open(project)
-    stand_ins = stand_ins_for(project, ROOM, PACKAGE)
+    stand_ins = StandIns()
 
     outcome = run(project, ROOM, PACKAGE, stand_ins)
 
     assert outcome.ok, failures(outcome)
-    played = deliver(stand_ins.store, outcome, tmp_path / "room")
+    played = tmp_path / "room"
+    deliver(outcome, played)
     manifest = json.loads((played / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["kind"] == MANIFEST_KIND
     bound = {entry["path"]: entry["sha256"] for entry in manifest["closure"]["artifacts"]}
@@ -129,7 +125,7 @@ def test_a_whole_room_runs_offline_and_lays_out_what_the_host_plays(tmp_path: Pa
 
 def test_every_painting_is_drawn_against_the_authored_cover(tmp_path: Path) -> None:
     project = room_project(tmp_path)
-    stand_ins = stand_ins_for(project, ROOM, PACKAGE)
+    stand_ins = StandIns()
 
     outcome = run(project, ROOM, PACKAGE, stand_ins)
 
@@ -144,12 +140,12 @@ def test_a_refused_painting_and_a_short_narration_are_asked_again(tmp_path: Path
     project = room_project(tmp_path)
     _leave_the_win_line_open(project)
     planned = calls_of(plan(project, ROOM, PACKAGE))
-    stand_ins = stand_ins_for(project, ROOM, PACKAGE, refuse={"backdrop": 1, "narration": 1})
+    stand_ins = StandIns(refuse={"cutout": 1, "narration": 1})
 
     outcome = run(project, ROOM, PACKAGE, stand_ins)
 
     assert outcome.ok, failures(outcome)
-    assert stand_ins.calls["backdrop"] == 2
+    assert stand_ins.calls["backdrop"] == 1
     assert stand_ins.calls["narration"] == 2
     images = sum(stand_ins.calls[kind] for kind in ("backdrop", "cutout", "ui"))
     assert images == planned["image.edit"] + 1
@@ -160,7 +156,7 @@ def test_a_refused_painting_and_a_short_narration_are_asked_again(tmp_path: Path
 
 def test_correcting_a_hit_area_reuses_every_paid_answer(tmp_path: Path) -> None:
     project = room_project(tmp_path)
-    first = stand_ins_for(project, ROOM, PACKAGE)
+    first = StandIns()
     assert run(project, ROOM, PACKAGE, first, "first").ok
     assert sum(first.calls.values()) > 0
 
@@ -171,12 +167,13 @@ def test_correcting_a_hit_area_reuses_every_paid_answer(tmp_path: Path) -> None:
         "\nregion = { x = 0.4688, y = 0.4097, w = 0.0781, h = 0.3681 }",
         "\nregion = { x = 0.05, y = 0.55, w = 0.33, h = 0.30 }",
     )
-    second = stand_ins_for(project, ROOM, PACKAGE)
+    second = StandIns()
     outcome = run(project, ROOM, PACKAGE, second, "second")
 
     assert outcome.ok, failures(outcome)
     assert sum(second.calls.values()) == 0
-    played = deliver(second.store, outcome, tmp_path / "room")
+    played = tmp_path / "room"
+    deliver(outcome, played)
     manifest = json.loads((played / "manifest.json").read_text(encoding="utf-8"))
     six_figures = next(entry for entry in manifest["hotspots"] if entry["id"] == "six_figures")
     assert six_figures["region"] == {"x": 0.05, "y": 0.55, "w": 0.33, "h": 0.30}
@@ -185,7 +182,7 @@ def test_correcting_a_hit_area_reuses_every_paid_answer(tmp_path: Path) -> None:
 
 def test_rewording_one_brief_redraws_that_object_and_nothing_else(tmp_path: Path) -> None:
     project = room_project(tmp_path)
-    assert run(project, ROOM, PACKAGE, stand_ins_for(project, ROOM, PACKAGE), "first").ok
+    assert run(project, ROOM, PACKAGE, StandIns(), "first").ok
 
     _edit(
         project,
@@ -193,7 +190,7 @@ def test_rewording_one_brief_redraws_that_object_and_nothing_else(tmp_path: Path
         "one edge visible beneath curled fingers",
         "a torn pale-blue sheet with a folded corner and a narrow strip of typed marks",
     )
-    second = stand_ins_for(project, ROOM, PACKAGE)
+    second = StandIns()
     outcome = run(project, ROOM, PACKAGE, second, "second")
 
     assert outcome.ok, failures(outcome)

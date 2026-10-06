@@ -11,7 +11,8 @@ import json
 import re
 from typing import Any
 
-from gnode import Ctx, node
+from grida.fx import Ctx, node
+
 from stage_gen.workflows.universe import models
 from stage_gen.workflows.universe.medium import medium_contract
 

@@ -1,8 +1,8 @@
 // Server-side helpers for finding and addressing runs under the configured run roots.
 //
 // The shell is a consumer: it locates and validates paths, and never generates.
-// `gnode view` passes the roots in STAGE_GEN_RUN_ROOTS; without it the viewer reads
-// out/ of its checkout. Runs are found the way `stage_gen.runs.discover` finds them, by
+// `scripts/view.py` passes the roots in STAGE_GEN_RUN_ROOTS; without it the viewer reads
+// out/ of its checkout. Runs are found the way `stage_gen.runview.discover` finds them, by
 // the documents they publish. Every tag is checked segment by segment against the
 // producer's one-safe-segment contract, and every artifact path is confined to its own
 // run directory before a byte is read.
@@ -10,6 +10,7 @@
 import { createHash } from "node:crypto";
 import { promises as fs, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
+import { ARTIFACT_SEGMENT_PATTERN } from "@stage-gen/ui/contracts/artifact-preview";
 import { type RunRef, TAG_SEPARATOR, tagFor } from "./run-ref";
 
 const PROJECT_NAME = "stage-gen";
@@ -61,7 +62,7 @@ export function findRepoRoot(
 
 // ------------------------------------------------------------------ roots
 
-/** One folder of runs, as `gnode view DIR` named it. */
+/** One folder of runs, as `scripts/view.py DIR` named it. */
 export interface RunRoot {
   /** The URL key: the folder name and the first six hex digits of its real path's digest. */
   readonly key: string;
@@ -94,7 +95,7 @@ const rootsCache = new Map<string, readonly RunRoot[]>();
 
 /**
  * The run roots, in the order they were given: STAGE_GEN_RUN_ROOTS (a path list in the
- * platform's delimiter, as `gnode view` sets it), or out/ of the checkout.
+ * platform's delimiter, as `scripts/view.py` sets it), or out/ of the checkout.
  */
 export function runRoots(): readonly RunRoot[] {
   const configured = process.env.STAGE_GEN_RUN_ROOTS?.trim() ?? "";
@@ -118,13 +119,13 @@ export function rootFor(key: string): RunRoot | null {
   return runRoots().find((root) => root.key === key) ?? null;
 }
 
-/** Where `gnode view` keeps the views it derives, or null when it is not running. */
+/** Where `scripts/view.py` keeps the views it derives, or null when it is not running. */
 export function viewCacheDir(): string | null {
   const configured = process.env.STAGE_GEN_VIEW_CACHE?.trim();
   return configured ? path.resolve(configured) : null;
 }
 
-/** The catalog `gnode view` exported, or null when it is not running. */
+/** The catalog `scripts/view.py` exported, or null when it is not running. */
 export function catalogPath(): string | null {
   const configured = process.env.STAGE_GEN_CATALOG?.trim();
   return configured ? path.resolve(configured) : null;
@@ -138,9 +139,8 @@ const SEGMENT_MAXIMUM_LENGTH = 128;
 const SEGMENT_PATTERN = new RegExp(
   `^[A-Za-z0-9][A-Za-z0-9._-]{0,${SEGMENT_MAXIMUM_LENGTH - 1}}$`,
 );
-/** How many folders below its root a run may sit, as stage_gen.runs.SEARCH_DEPTH. */
+/** How many folders below its root a run may sit, as stage_gen.runview.SEARCH_DEPTH. */
 export const SEARCH_DEPTH = 4;
-const ARTIFACT_SEGMENT_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,254}$/;
 
 function isAlreadyDecoded(value: string): boolean {
   try {
@@ -178,7 +178,7 @@ export function runDirFor(run: RunRef): string {
   return runDir;
 }
 
-export function artifactPathFor(run: RunRef, asset: string): string {
+function artifactSegments(asset: string): string[] {
   const segments = asset.split("/");
   if (
     !isAlreadyDecoded(asset) ||
@@ -192,10 +192,37 @@ export function artifactPathFor(run: RunRef, asset: string): string {
   ) {
     throw new Error("invalid artifact path");
   }
+  return segments;
+}
+
+export function artifactPathFor(run: RunRef, asset: string): string {
+  const segments = artifactSegments(asset);
   const runDir = runDirFor(run);
   const target = path.resolve(runDir, ...segments);
   if (!target.startsWith(`${runDir}${path.sep}`)) {
     throw new Error("artifact path escapes run directory");
+  }
+  return target;
+}
+
+/** The run's folder in the view cache, or null when the viewer was started without one. */
+export function viewCacheFolderFor(run: RunRef): string | null {
+  const cache = viewCacheDir();
+  return cache === null ? null : path.join(cache, viewKey(runDirFor(run)));
+}
+
+/**
+ * Where the view cache keeps a file of a run's views (`views/<sha>.html`,
+ * `views/files/<digest><suffix>`): `<view cache>/<view key>/<relative>`. Null when the
+ * viewer was started without a view cache.
+ */
+export function viewCachePathFor(run: RunRef, relative: string): string | null {
+  const segments = artifactSegments(relative);
+  const folder = viewCacheFolderFor(run);
+  if (folder === null) return null;
+  const target = path.resolve(folder, ...segments);
+  if (!target.startsWith(`${folder}${path.sep}`)) {
+    throw new Error("view path escapes the run's view cache");
   }
   return target;
 }
@@ -227,7 +254,7 @@ export async function isRealRunDirectory(run: RunRef): Promise<boolean> {
   return assertRealDirectory(runDirFor(run), "run directory");
 }
 
-/** The cache folder name of a run, as gnode's view_key: its real path, hashed. */
+/** The cache folder name of a run, as stage_gen.runview.view_key: its real path, hashed. */
 export function viewKey(runDir: string): string {
   return createHash("sha256").update(realOrResolved(runDir)).digest("hex").slice(0, 16);
 }
@@ -242,10 +269,10 @@ export const RUN_DOCUMENTS = [
   "case.json",
 ] as const;
 
-/** A folder holding the first of a pair and one of its partners is a run too. */
-export const RUN_DOCUMENT_PAIRS: readonly (readonly [string, readonly string[]])[] = [
-  ["plan.json", ["events.jsonl"]],
-];
+/** An FX run keeps its plan beside its record from the moment it starts. */
+export const FX_RUN_DOCUMENTS = ["plan.json", "events.jsonl"] as const;
+/** The plan kind of an FX run; a plan and record of another kind are a foreign run's. */
+export const FX_GRAPH_KIND = "fx-graph-v1";
 
 /** The example store sits at the top of a root and holds exports, not runs. */
 const EXAMPLE_STORE = "examples";
@@ -258,18 +285,26 @@ export interface FoundRun {
   readonly dir: string;
 }
 
-function isRunListing(names: ReadonlySet<string>): boolean {
-  return (
-    RUN_DOCUMENTS.some((name) => names.has(name)) ||
-    RUN_DOCUMENT_PAIRS.some(
-      ([first, partners]) => names.has(first) && partners.some((name) => names.has(name)),
-    )
-  );
+async function planKind(dir: string): Promise<unknown> {
+  try {
+    const plan = JSON.parse(await fs.readFile(path.join(dir, "plan.json"), "utf8")) as unknown;
+    return plan !== null && typeof plan === "object" ? (plan as { kind?: unknown }).kind : null;
+  } catch {
+    return null;
+  }
+}
+
+/** "run" for a run, "foreign" for a plan and record of another kind, null for neither. */
+async function runListing(dir: string, names: ReadonlySet<string>): Promise<"run" | "foreign" | null> {
+  if (FX_RUN_DOCUMENTS.every((name) => names.has(name)))
+    return (await planKind(dir)) === FX_GRAPH_KIND ? "run" : "foreign";
+  return RUN_DOCUMENTS.some((name) => names.has(name)) ? "run" : null;
 }
 
 /**
  * Every run under each root, at most SEARCH_DEPTH folders down, in root then path order.
- * A run's own folders are not searched again, so a sub-run is part of its run. Hidden
+ * A run's own folders are not searched again, so a sub-run is part of its run. A plan and
+ * record of another kind than FX's are a foreign run: neither listed nor searched. Hidden
  * folders, node_modules, the example store at the top of a root, symlinked folders and
  * folders whose names cannot be a tag segment are skipped.
  */
@@ -285,11 +320,12 @@ export async function discoverRuns(roots: readonly RunRoot[] = runRoots()): Prom
         return;
       }
       const files = new Set(entries.filter((entry) => !entry.isDirectory()).map((entry) => entry.name));
-      if (segments.length > 0 && isRunListing(files)) {
+      const listing = segments.length > 0 ? await runListing(dir, files) : null;
+      if (listing === "run") {
         const relative = segments.join("/");
         runs.push({ run: { root: root.key, tag: tagFor(relative) }, root, relative, dir });
-        return;
       }
+      if (listing !== null) return;
       if (segments.length === SEARCH_DEPTH) return;
       await Promise.all(
         entries

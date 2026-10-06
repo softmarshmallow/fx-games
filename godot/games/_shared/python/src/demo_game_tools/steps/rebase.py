@@ -12,6 +12,8 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
+from grida.fx import Ctx, Group, StepRef, node
+
 from demo_game_tools.kits.sideview_actor.motion_rebase import (
     MotionRebaseError,
     admit_first_pass_record,
@@ -24,7 +26,6 @@ from demo_game_tools.kits.sideview_actor.motion_rebase import (
     motion_rebase_verification_prompt,
     parse_motion_rebase,
 )
-from gnode import Ctx, Group, StepRef, node
 from stage_gen.media.sprite_sheets import split_atlas_columns
 
 #: Readings a pass gets before the run stops on it.
@@ -218,7 +219,7 @@ def add_rebase_steps(
     judge = group.step(
         "judge",
         title="Read each state's scale",
-        uses="gnode/structured.generate@1",
+        uses="fx/structured.generate@1",
         with_={
             "prompt": motion_rebase_prompt(display_name, list(states)),
             "system": JUDGE_SYSTEM_PROMPT,
@@ -249,7 +250,7 @@ def add_rebase_steps(
     verify = group.step(
         "verify",
         title="Read the residual",
-        uses="gnode/structured.generate@1",
+        uses="fx/structured.generate@1",
         with_={
             "prompt": motion_rebase_verification_prompt(display_name, list(states)),
             "system": JUDGE_SYSTEM_PROMPT,

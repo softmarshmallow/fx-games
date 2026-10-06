@@ -10,8 +10,8 @@ from pathlib import Path
 from typing import Any
 
 import jsonschema
+from grida.fx import Tool, ToolInvocationError, ToolResult
 
-from gnode import Tool, ToolInvocationError, ToolResult
 from stage_gen.components.character_3d.io import confined, digest, write_json
 from stage_gen.components.character_3d.tool_views import render_view
 from stage_gen.components.character_3d.worker_client import WorkerClient

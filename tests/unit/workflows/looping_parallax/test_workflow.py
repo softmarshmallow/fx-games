@@ -1,4 +1,4 @@
-"""Looping parallax through gnode, offline: placement reruns only the compose step."""
+"""Looping parallax through FX, offline: placement reruns only the compose step."""
 
 from __future__ import annotations
 
@@ -6,17 +6,12 @@ import json
 from pathlib import Path
 from typing import Any
 
-import pytest
 import yaml
+from grida.fx import RunResult, run_async
 from PIL import Image
 
-from gnode import RunResult, project_run, run_async, verify_run
 from stage_gen.media.codec import encode_png
-
-
-@pytest.fixture(autouse=True)
-def _no_dotenv(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("_STAGE_GEN_DISABLE_DOTENV", "1")
+from tests.unit._fx import caches, scratch_project, verify
 
 
 def _source() -> bytes:
@@ -38,20 +33,20 @@ def _inputs(tmp_path: Path, name: str, **layer: Any) -> Path:
     return path
 
 
-async def _run(tmp_path: Path, inputs: Path) -> RunResult:
-    return await run_async("looping-parallax", input_files=[inputs], cwd=tmp_path)
+async def _run(project: Path, inputs: Path) -> RunResult:
+    return await run_async("looping-parallax", input_files=[inputs], cwd=project)
 
 
 async def test_moving_a_layer_reuses_its_repeat_and_recomposes(tmp_path: Path) -> None:
-    (tmp_path / "gnode.yaml").write_text("gnode: project/v1\n")
-    first = await _run(tmp_path, _inputs(tmp_path, "first.yaml"))
-    moved = await _run(tmp_path, _inputs(tmp_path, "moved.yaml", offset_x=3.0))
+    project = scratch_project(tmp_path)
+    first = await _run(project, _inputs(tmp_path, "first.yaml"))
+    moved = await _run(project, _inputs(tmp_path, "moved.yaml", offset_x=3.0))
 
     assert first.ok and moved.ok
-    caches = {node.node_id: node.cache for node in project_run(moved.run_dir).nodes}
-    assert caches["layer['clouds'].mirror#1"] == "hit"
-    assert caches["compose#1"] == "miss"
-    manifest = json.loads(moved.outputs["manifest"].path.read_bytes())
+    cached = caches(moved)
+    assert cached["layer['clouds'].mirror#1"] == "hit"
+    assert cached["compose#1"] == "miss"
+    manifest = json.loads(moved.outputs["manifest"].read_bytes())
     (layer,) = manifest["layers"]
     assert (layer["asset_ref"], layer["offset_x"], layer["construction"]) == (
         "parallax/layers/clouds.png",
@@ -59,4 +54,4 @@ async def test_moving_a_layer_reuses_its_repeat_and_recomposes(tmp_path: Path) -
         "mirror_repeat",
     )
     assert (layer["width"], layer["height"]) == (16, 8)
-    assert verify_run(moved.run_dir) == []
+    assert verify(moved.run_dir) == []

@@ -2,10 +2,10 @@
 
 A support record is a reviewed deployment decision kept outside any run folder; no model
 writes it. It says one configuration was qualified. That configuration is a closure, not
-a hash of every installed file: the node types as ``gnode.lock`` pins their source, the
-workflow file, the core contract versions, each route with its contract and price, the
-Blender build, and the settings the cohort ran with. The brief, the reference picture and
-the supplied parts may vary.
+a hash of every installed file: the node types as ``fx.lock`` pins their source, the
+workflow file, the core contract versions, each route with its contract, each paid step's
+price, the Blender build, and the settings the cohort ran with. The brief, the reference
+picture and the supplied parts may vary.
 
 A run is supported only when its plan has exactly the recorded closure. Anything else runs
 in development and claims nothing. ``run_supported`` admits a plan and then runs that same
@@ -19,29 +19,28 @@ plan, so nothing can change between the check and the run.
 from __future__ import annotations
 
 import argparse
+import functools
 import hashlib
 import json
+import os
 import re
+import shutil
+import subprocess
 import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
 import yaml
+from grida.fx import Plan, RunResult, run
+from grida.fx import plan as make_plan
 
-from gnode import (
-    RUN_EVENTS_SCHEMA_VERSION,
-    RUN_VIEW_SCHEMA_VERSION,
-    Plan,
-    RunResult,
-    resolve_tool,
-    run,
-)
-from gnode import plan as make_plan
+from stage_gen.runview import RUN_VIEW_KIND
 
 type JsonObject = dict[str, Any]
 
 WORKFLOW_ID = "character-3d"
+HOME = Path(__file__).resolve().parent
 #: The inputs that are the character, not the configuration: they may differ from the cohort.
 CHARACTER_INPUTS = frozenset({"brief", "parts", "reference"})
 _EVIDENCE = frozenset(
@@ -71,61 +70,123 @@ def _is_sha(value: object) -> bool:
     return isinstance(value, str) and re.fullmatch(r"[a-f0-9]{64}", value) is not None
 
 
+def _blender() -> Path | None:
+    """The Blender FX binds: ``GRIDA_FX_TOOL_BLENDER`` when set, else ``blender`` on PATH."""
+
+    configured = os.environ.get("GRIDA_FX_TOOL_BLENDER")
+    if configured:
+        return Path(configured) if Path(configured).is_file() else None
+    found = shutil.which("blender")
+    return Path(found) if found is not None else None
+
+
 def blender_build(executable: str | Path | None = None) -> JsonObject:
     """The Blender build a run would use: its executable's bytes."""
 
-    found = executable or resolve_tool("blender")
-    if found is None or not Path(found).is_file():
-        raise SupportRefused("no Blender to bind: install it or set GNODE_TOOL_BLENDER")
-    return {"sha256": _sha256_file(Path(found))}
+    found = Path(executable) if executable else _blender()
+    if found is None or not found.is_file():
+        raise SupportRefused("no Blender to bind: install it or set GRIDA_FX_TOOL_BLENDER")
+    return {"sha256": _sha256_file(found)}
 
 
 def closure(plan: Plan, *, blender: JsonObject) -> JsonObject:
     """What a qualification of this plan binds, apart from its settings."""
 
     if not plan.ok:
-        problems = "; ".join(str(problem) for problem in plan.problems)
+        problems = "; ".join(problem["message"] for problem in plan.problems)
         raise SupportRefused(f"the plan is refused, so it has no closure: {problems}")
-    planner = plan.planner
-    if planner.workflow.id != WORKFLOW_ID:
-        raise SupportRefused(f"support binds {WORKFLOW_ID}, not {planner.workflow.id}")
-    types = {i.uses: i.type_identity for i in plan.instances if i.type_identity is not None}
+    document = plan.document
+    workflow = document["workflow"]
+    if workflow["id"] != WORKFLOW_ID:
+        raise SupportRefused(f"support binds {WORKFLOW_ID}, not {workflow['id']}")
     routes: dict[str, JsonObject] = {}
-    for instance in plan.instances:
-        for capability, route in instance.routes.items():
-            routes[capability] = {
-                "route": route.route_id,
-                "fingerprint": route.fingerprint,
-                "price": [route.price.low_usd, route.price.high_usd, route.price.unit],
-            }
+    prices: dict[str, list[float]] = {}
+    for instance in document["instances"]:
+        for capability, route in instance["routes"].items():
+            routes[capability] = {"route": route["route"], "fingerprint": route["fingerprint"]}
+        if instance["routes"]:
+            # Route prices are not part of a fingerprint; a paid step's price shows a repricing.
+            prices[instance["step"]] = [
+                instance["price"]["low_usd"],
+                instance["price"]["high_usd"],
+            ]
     return {
-        "workflow_sha256": _sha256_file(planner.workflow_path),
-        "lock": dict(sorted(planner.registry.locks.items())),
-        "types": dict(sorted(types.items())),
+        "workflow_sha256": _sha256_file(HOME / workflow["file"]),
+        # Each type's identity and the digests of its source: what fx.lock pins.
+        "types": dict(sorted(document["types"].items())),
         "contracts": {
-            "workflow_document": planner.workflow.gnode,
-            "run_events": RUN_EVENTS_SCHEMA_VERSION,
-            "run_view": RUN_VIEW_SCHEMA_VERSION,
+            "workflow_document": "fx: workflow/v1",
+            "graph": document["kind"],
+            "run_events": "fx-run-events-v1",
+            "run_view": RUN_VIEW_KIND,
         },
         "routes": dict(sorted(routes.items())),
+        "prices": dict(sorted(prices.items())),
         "blender": dict(blender),
     }
 
 
-def settings(plan: Plan) -> JsonObject:
+@functools.cache
+def _input_schema() -> JsonObject:
+    """The JSON Schema the workflow's inputs compile to, as FX prints it."""
+
+    done = subprocess.run(
+        [sys.executable, "-m", "grida.fx", "schema", str(HOME / "workflow.yaml")],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if done.returncode != 0:
+        raise SupportRefused(f"the workflow's inputs have no schema: {done.stderr.strip()}")
+    schema: JsonObject = json.loads(done.stdout)
+    return schema
+
+
+def _with_defaults(schema: Mapping[str, Any], value: Any) -> Any:
+    """``value`` with every default the schema states filled in, as FX fills them: a group of
+    settings left out takes each of its fields' defaults."""
+
+    if not isinstance(value, Mapping):
+        return value
+    filled = dict(value)
+    for name, field in schema.get("properties", {}).items():
+        if name in filled:
+            filled[name] = _with_defaults(field, filled[name])
+        elif "default" in field:
+            filled[name] = field["default"]
+        elif "properties" in field:
+            filled[name] = _with_defaults(field, {})
+    return filled
+
+
+def planned_inputs(input_files: Sequence[Path]) -> JsonObject:
+    """The inputs a plan of these files runs with: the files merged by name in order, the
+    later winning, as FX merges them, and every default filled in."""
+
+    given: JsonObject = {}
+    for path in input_files:
+        document = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
+        if not isinstance(document, dict):
+            raise SupportRefused(f"{Path(path).name}: an inputs file maps input names to values")
+        given.update(document)
+    filled: JsonObject = _with_defaults(_input_schema(), given)
+    return filled
+
+
+def settings(inputs: Mapping[str, Any]) -> JsonObject:
     """The settings a cohort ran with: every input except the character itself."""
 
-    inputs = plan.planner.inputs
     chosen = {k: v for k, v in inputs.items() if k not in CHARACTER_INPUTS}
     chosen["entry"] = "brief" if inputs.get("brief") is not None else "parts"
     plain: JsonObject = json.loads(json.dumps(chosen, sort_keys=True, default=str))
     return plain
 
 
-def support_target(plan: Plan, *, blender: JsonObject) -> JsonObject:
-    """The exact target a support record must name for this plan to be supported."""
+def support_target(plan: Plan, *, inputs: Mapping[str, Any], blender: JsonObject) -> JsonObject:
+    """The exact target a support record must name for this plan, made from ``inputs``
+    (:func:`planned_inputs`), to be supported."""
 
-    return {"closure": closure(plan, blender=blender), "settings": settings(plan)}
+    return {"closure": closure(plan, blender=blender), "settings": settings(inputs)}
 
 
 def admit(record: Mapping[str, Any] | None, target: Mapping[str, Any]) -> JsonObject:
@@ -177,25 +238,32 @@ def run_supported(
     plan: Plan,
     record: Mapping[str, Any],
     *,
+    inputs: Mapping[str, Any],
     blender: JsonObject,
     run_dir: Path | None = None,
-    **options: Any,
+    live: bool = False,
 ) -> tuple[JsonObject, RunResult]:
-    """Admit ``plan`` against ``record``, then run that same plan; refuses before any spend."""
+    """Admit ``plan`` against ``record``, then run that same plan; refuses before any spend.
+    The plan carries its own ceiling: a plan runs with the options it was planned with."""
 
-    admission = admit(record, support_target(plan, blender=blender))
-    result = run(plan, run_dir=run_dir, **options)
-    (result.outcome.run_dir / "support.json").write_text(json.dumps(admission, indent=2) + "\n")
+    admission = admit(record, support_target(plan, inputs=inputs, blender=blender))
+    result = run(plan, run_dir=run_dir, live=live)
+    (result.run_dir / "support.json").write_text(json.dumps(admission, indent=2) + "\n")
     return admission, result
 
 
 # ------------------------------------------------------------------------------ command
 
 
+def _input_files(arguments: argparse.Namespace) -> list[Path]:
+    # FX reads them from the project folder, so they are named from here, absolutely.
+    return [Path(path).resolve() for path in arguments.inputs]
+
+
 def _plan(arguments: argparse.Namespace) -> Plan:
     return make_plan(
         WORKFLOW_ID,
-        input_files=arguments.inputs,
+        input_files=_input_files(arguments),
         max_usd=arguments.max_usd,
         cwd=Path(arguments.project) if arguments.project else None,
     )
@@ -218,8 +286,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     arguments = parser.parse_args(argv)
     try:
         planned = _plan(arguments)
+        inputs = planned_inputs(_input_files(arguments))
         blender = blender_build(arguments.blender)
-        target = support_target(planned, blender=blender)
+        target = support_target(planned, inputs=inputs, blender=blender)
         if arguments.command == "target":
             print(json.dumps(target, indent=2, sort_keys=True))
             return 0
@@ -227,14 +296,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         if arguments.command == "check":
             print(json.dumps(admit(record, target), indent=2, sort_keys=True))
             return 0
-        run_dir = Path(arguments.run_dir) if arguments.run_dir else None
+        run_dir = Path(arguments.run_dir).resolve() if arguments.run_dir else None
         admission, _ = run_supported(
             planned,
             record,
+            inputs=inputs,
             blender=blender,
             run_dir=run_dir,
             live=arguments.live,
-            max_usd=arguments.max_usd,
         )
         print(json.dumps(admission, indent=2, sort_keys=True))
         return 0

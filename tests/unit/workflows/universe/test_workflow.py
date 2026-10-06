@@ -1,4 +1,4 @@
-"""Universe through gnode, offline: every paid call answered by a stand-in, the world admitted,
+"""Universe through FX, offline: every paid call answered by a stand-in, the world admitted,
 one reviewed image per entity, and the gallery packaged and viewed."""
 
 from __future__ import annotations
@@ -6,27 +6,15 @@ from __future__ import annotations
 import io
 import json
 import re
-from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-import pytest
+from grida.fx import Answer, RunResult, StandInCall, run_async
 from PIL import Image
 
-from gnode import (
-    CallRecord,
-    FileValue,
-    HostServices,
-    Plan,
-    Route,
-    RunOutcome,
-    WorkflowRun,
-    plan_async,
-    project_run,
-    verify_run,
-    view_contexts,
-)
+from stage_gen.runview import view_contexts
 from stage_gen.workflows.universe import models
+from tests.unit._fx import caches, schema_of, scratch_project, verify
 from tests.unit.workflows.universe._universe_fixture import entity_direction
 
 REPOSITORY = Path(__file__).resolve().parents[4]
@@ -36,11 +24,6 @@ ADMITTED = json.loads(
         REPOSITORY / "tests/contract/fixtures/universe/lantern_ferry.admitted-universe.json"
     ).read_text(encoding="utf-8")
 )
-
-
-@pytest.fixture(autouse=True)
-def _no_dotenv(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("_STAGE_GEN_DISABLE_DOTENV", "1")
 
 
 def _grammar() -> dict[str, Any]:
@@ -94,11 +77,6 @@ SEMANTIC_REVIEW = models.SemanticReview(
 ).model_dump(mode="json")
 
 
-def _schema_title(schema: FileValue) -> str:
-    assert schema.location is not None
-    return str(json.loads(Path(schema.location).read_text(encoding="utf-8"))["title"])
-
-
 class Stand_in:
     """Answers each structured call by the schema it names, and draws flat pictures."""
 
@@ -106,59 +84,53 @@ class Stand_in:
         self.rejected = rejected
         self.calls: list[tuple[str, str]] = []
 
-    def services(self, plan: Plan) -> HostServices:
-        store = plan.planner.store
-
-        async def structured(route: Route, request: Mapping[str, Any], take: int) -> CallRecord:
-            schema = request["schema"]
-            assert isinstance(schema, FileValue)
-            title = _schema_title(schema)
-            prompt = str(request["prompt"])
-            self.calls.append(("structured.generate", title))
-            bound = re.search(r"(?:Bound|Required) entity_id: (\w+)", prompt)
-            answer = {
-                "UniverseProposal": ADMITTED["proposal"],
-                "GalleryPlan": ADMITTED["plan"],
-                "SemanticReview": SEMANTIC_REVIEW,
-                "GlobalDirection": _grammar(),
-            }.get(title)
-            if title == "EntityDirection":
-                assert bound is not None
-                answer = entity_direction(bound[1], "a clear dry day on the landing").model_dump(
-                    mode="json"
-                )
-            if title == "ImageReview":
-                assert bound is not None
-                answer = _review(bound[1], "reject" if bound[1] in self.rejected else "admit")
-            assert answer is not None, title
-            return CallRecord({}, {"json": answer}, 0.01)
-
-        async def image(route: Route, request: Mapping[str, Any], take: int) -> CallRecord:
-            self.calls.append(("image.generate", str(request["size"])))
-            width, height = (int(n) // 16 for n in str(request["size"]).split("x"))
-            buffer = io.BytesIO()
-            Image.new("RGB", (width, height), (90, 110, 140 + take)).save(buffer, "PNG")
-            return CallRecord(
-                {"image": store.put_bytes(buffer.getvalue(), kind="image/png", name="image")},
-                None,
-                0.2,
+    def __call__(self, call: StandInCall) -> Answer:
+        if call.capability == "image.generate":
+            return self.image(call)
+        assert call.capability == "structured.generate", call.capability
+        title = str(schema_of(call)["title"])
+        prompt = call.request["prompt"]
+        if not isinstance(prompt, str):
+            prompt = prompt.read_bytes().decode("utf-8")
+        self.calls.append(("structured.generate", title))
+        bound = re.search(r"(?:Bound|Required) entity_id: (\w+)", prompt)
+        answer = {
+            "UniverseProposal": ADMITTED["proposal"],
+            "GalleryPlan": ADMITTED["plan"],
+            "SemanticReview": SEMANTIC_REVIEW,
+            "GlobalDirection": _grammar(),
+        }.get(title)
+        if title == "EntityDirection":
+            assert bound is not None
+            answer = entity_direction(bound[1], "a clear dry day on the landing").model_dump(
+                mode="json"
             )
+        if title == "ImageReview":
+            assert bound is not None
+            answer = _review(bound[1], "reject" if bound[1] in self.rejected else "admit")
+        assert answer is not None, title
+        return Answer.json(answer)
 
-        return HostServices(
-            store=store,
-            capabilities={"structured.generate": structured, "image.generate": image},
-            live=True,
-        )
+    def image(self, call: StandInCall) -> Answer:
+        """A flat picture at exactly the size asked for, a shade apart for each take."""
+
+        size = str(call.request["size"])
+        self.calls.append(("image.generate", size))
+        width, height = (int(n) for n in size.split("x"))
+        buffer = io.BytesIO()
+        Image.new("RGB", (width, height), (90, 110, 140 + call.take)).save(buffer, "PNG")
+        return Answer(files={"image": buffer.getvalue()})
 
 
-async def _run(tmp_path: Path, stand_in: Stand_in) -> tuple[Plan, RunOutcome]:
-    project = tmp_path / "project"
-    project.mkdir(exist_ok=True)
-    (project / "gnode.yaml").write_text("gnode: project/v1\n", encoding="utf-8")
-    plan = await plan_async("universe", input_files=[LANTERN], cwd=project)
-    assert plan.ok, plan.problems
-    run = WorkflowRun(plan, run_dir=project / "runs/one", services=stand_in.services(plan))
-    return plan, await run.run()
+async def _run(tmp_path: Path, stand_in: Stand_in, run: str = "one") -> RunResult:
+    project = scratch_project(tmp_path / "project")
+    return await run_async(
+        "universe",
+        input_files=[LANTERN],
+        cwd=project,
+        run_dir=project / "runs" / run,
+        stand_in=stand_in,
+    )
 
 
 async def test_the_world_is_admitted_and_each_entity_gets_one_reviewed_image(
@@ -166,9 +138,9 @@ async def test_the_world_is_admitted_and_each_entity_gets_one_reviewed_image(
 ) -> None:
     rejected = frozenset({ADMITTED["plan"]["plans"][0]["entity_id"]})
     stand_in = Stand_in(rejected=rejected)
-    _plan, outcome = await _run(tmp_path, stand_in)
+    outcome = await _run(tmp_path, stand_in)
 
-    assert outcome.ok, outcome.failed
+    assert outcome.ok, outcome.failures
     entities = [entry["entity_id"] for entry in ADMITTED["plan"]["plans"]]
     images = [size for capability, size in stand_in.calls if capability == "image.generate"]
     assert len(images) == len(entities)
@@ -180,29 +152,20 @@ async def test_the_world_is_admitted_and_each_entity_gets_one_reviewed_image(
     for entity_id in entities:
         assert (gallery / f"entities/{entity_id}.png").is_file()
         assert (gallery / f"entities/{entity_id}.md").read_text().startswith("# ")
-    assert verify_run(outcome.run_dir) == []
+    assert verify(outcome.run_dir) == []
 
-    (whole,) = [c for c in view_contexts(outcome.run_dir) if c["scope"] == "workflow"]
+    (whole,) = [c for c in view_contexts(outcome.run_dir).contexts if c["scope"] == "workflow"]
     keys = [instance["key"] for instance in whole["steps"]["entity"]["instances"]]
-    assert keys == entities
+    assert sorted(keys) == sorted(entities)
     assert whole["outputs"]["universe"]["value"]["universe_id"] == "lantern_ferry"
 
 
 async def test_a_second_run_is_answered_from_the_cache(tmp_path: Path) -> None:
-    first = Stand_in()
-    await _run(tmp_path, first)
+    await _run(tmp_path, Stand_in())
     again = Stand_in()
-    project = tmp_path / "project"
-    plan = await plan_async("universe", input_files=[LANTERN], cwd=project)
-    outcome = await WorkflowRun(
-        plan, run_dir=project / "runs/two", services=again.services(plan)
-    ).run()
+    outcome = await _run(tmp_path, again, "two")
 
     assert outcome.ok and again.calls == []
     # ``source`` runs while planning (``at: plan``), so the run itself never starts it.
-    ran = [
-        node
-        for node in project_run(outcome.run_dir).nodes
-        if node.state == "succeeded" and node.node_id != "world.source#1"
-    ]
-    assert {node.cache for node in ran} == {"hit"}
+    ran = {id_: cache for id_, cache in caches(outcome).items() if id_ != "world.source#1"}
+    assert set(ran.values()) == {"hit"}

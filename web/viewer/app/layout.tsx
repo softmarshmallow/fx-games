@@ -2,7 +2,7 @@ import "./globals.css";
 
 export const metadata = {
   title: "stage-gen",
-  description: "The local, read-only viewer for gnode runs and Stage Gen workflows",
+  description: "The local, read-only viewer for Stage Gen runs",
 };
 
 export const viewport = {

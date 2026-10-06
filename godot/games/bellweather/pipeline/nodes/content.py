@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from grida.fx import Ctx, node
+
 from bellweather_pipeline.assets import (
     contact_sheet as board,
 )
@@ -25,7 +27,6 @@ from demo_game_tools.kits.sideview_actor.motion_geometry import (
     dialogue_atlas_grid,
     runtime_mirrors_source,
 )
-from gnode import Ctx, node
 
 _CANVAS = {"width": int, "height": int}
 _GRID: dict[str, Any] = {"columns": int, "rows": int, "required_cells": int, **_CANVAS}

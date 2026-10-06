@@ -89,7 +89,7 @@ def test_a_block_carries_no_path_or_machine_fact() -> None:
 def test_build_refuses_a_plan_that_differs_between_scratch_folders() -> None:
     import dataclasses
 
-    from stage_gen.workflows._gnode import SamplePlan
+    from stage_gen.workflows._fx import SamplePlan
 
     plans: list[SamplePlan] = []
     original = next(block for block in BLOCKS if block.workflow_id == "universe")

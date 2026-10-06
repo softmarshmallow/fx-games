@@ -1,20 +1,20 @@
-"""Make a movie-sprite example from the gnode run that drew or adopted a clip and finished it."""
+"""Make a movie-sprite example from the FX run that drew or adopted a clip and finished it."""
 
 from __future__ import annotations
 
 from stage_gen.examples import (
     Delivered,
-    GnodeRun,
+    FxRun,
     ImportRequest,
     WorkflowExample,
-    import_gnode_run,
+    import_fx_run,
     sha256,
     video_frames,
 )
-from stage_gen.workflows._gnode import GnodeWorkflow
+from stage_gen.workflows._fx import FxWorkflow
 
 
-def deliver(run: GnodeRun) -> Delivered:
+def deliver(run: FxRun) -> Delivered:
     """The character picture a take was drawn from, if any, and the finished loop.
 
     A run that finished supplied footage has no character picture among its inputs.
@@ -62,7 +62,7 @@ def deliver(run: GnodeRun) -> Delivered:
 
 
 def import_example(request: ImportRequest) -> WorkflowExample:
-    workflow = GnodeWorkflow.read(__package__ or "stage_gen.workflows.movie_sprite")
-    return import_gnode_run(
+    workflow = FxWorkflow.read(__package__ or "stage_gen.workflows.movie_sprite")
+    return import_fx_run(
         request, type_of=lambda step: workflow.types[step].type_id, deliver=deliver
     )

@@ -48,7 +48,7 @@ RUNTIME_TILE_PX = 64
 CLIMBABLE_WIDTH_TILES = Fraction(1)
 CLIMBABLE_OVERSHOOT_TILES = Fraction(1, 2)
 
-# src/gnode/providers/openai/image.py::_validate_openai_image_size
+# third_party/fx/spec/providers.md §9.1 (OpenAI size envelope)
 EDGE_MULTIPLE = 16
 EDGE_MAX = 3840
 ASPECT_MAX = Fraction(3)

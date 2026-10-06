@@ -160,27 +160,22 @@ def test_survival_scope_table_agrees_with_the_plans_the_builder_makes() -> None:
     reader budgets a narrow build from, and nothing else recomputes it.
     """
 
-    import asyncio
     from collections import Counter
 
-    from gnode import plan_async
+    from grida.fx import plan
+
+    from stage_gen.workflows._fx import first_takes
 
     rows = _survival_scope_table_rows()
     assert [name for name, _ in rows] == ["minimal", "props", "actors", "full"]
     for name, counts in rows:
-        planned = asyncio.run(
-            plan_async(
-                "pipeline/workflow.py:build",
-                cwd=REPOSITORY_ROOT / "godot/games/ember_hollow",
-                arguments={"package": "inputs", "scope": name},
-            )
+        planned = plan(
+            "pipeline/workflow.py:build",
+            cwd=REPOSITORY_ROOT / "godot/games/ember_hollow",
+            arguments={"package": "inputs", "scope": name},
         )
-        calls = Counter(
-            route
-            for instance in planned.instances
-            if instance.state != "absent" and set(instance.takes) <= {1}
-            for route in instance.routes
-        )
+        assert planned.ok, planned.problems
+        calls = Counter(route for instance in first_takes(planned) for route in instance.routes)
         assert counts == [
             calls["image.edit"] + calls["image.generate"],
             calls["structured.generate"],

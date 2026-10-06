@@ -11,8 +11,9 @@ from __future__ import annotations
 import hashlib
 from typing import Any
 
+from grida.fx import Ctx, node
+
 from ember_hollow_pipeline import build
-from gnode import Ctx, node
 
 _GATE = {"gate": ("music", "sound"), "args": dict}
 
@@ -33,7 +34,7 @@ def admit_audio(ctx: Ctx) -> dict[str, Any]:
             ctx.params["gate"],
             ctx.read.bytes("audio"),
             ctx.params["args"],
-            ffmpeg=ctx.tool("ffmpeg").executable,
+            ffmpeg=str(ctx.tool("ffmpeg").executable),
         )
     except ValueError as error:
         ctx.fact("errors", [str(error)])
@@ -61,7 +62,7 @@ def publish_audio(ctx: Ctx) -> dict[str, Any]:
         data,
         ctx.params["args"],
         head=ctx.params["head"],
-        ffmpeg=ctx.tool("ffmpeg").executable,
+        ffmpeg=str(ctx.tool("ffmpeg").executable),
     )
     return {"audio": ctx.out.bytes(data, "audio/mpeg"), "validation": ctx.out.json(record)}
 
@@ -92,7 +93,7 @@ def adopt_audio(ctx: Ctx) -> dict[str, Any]:
         )
     try:
         facts = build.gate_audio(
-            ctx.params["gate"], data, ctx.params["args"], ffmpeg=ctx.tool("ffmpeg").executable
+            ctx.params["gate"], data, ctx.params["args"], ffmpeg=str(ctx.tool("ffmpeg").executable)
         )
     except ValueError as error:
         raise ctx.fail(f"the take {path} does not pass its gate: {error}") from None

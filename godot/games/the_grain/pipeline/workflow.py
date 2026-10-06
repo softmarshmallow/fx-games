@@ -1,9 +1,9 @@
 """The Grain's asset builds: a point-and-click room and a dialogue scene, read by the game.
 
-    gnode plan pipeline/workflow.py:room --arg package=inputs/rooms/window
-    gnode plan pipeline/workflow.py:scene --arg package=inputs
-    gnode run  pipeline/workflow.py:room --arg package=inputs/rooms/window --live \\
-        --max-usd 20 --deliver package=../../../out/the-grain-window/{key}
+    uv run python -m grida.fx plan pipeline/workflow.py:room --arg package=inputs/rooms/window
+    uv run python -m grida.fx plan pipeline/workflow.py:scene --arg package=inputs
+    uv run python -m grida.fx run pipeline/workflow.py:room --arg package=inputs/rooms/window \\
+        --live --max-usd 20 --deliver package=../../../out/the-grain-window/{key}
 
 Each game reader resolves its own package, unchanged, and proves it first (a room must be
 finishable, a scene's scenarios admitted) so nothing is paid for against a broken puzzle.
@@ -13,7 +13,7 @@ authored style plate. Every painting is judged by the game's own gate and drawn 
 it fails. The last step lays the published files out at the paths the Godot host reads
 and writes the room's ``manifest.json`` or the scene's ``bundle.json``.
 
-A package must sit inside this project (the folder holding ``gnode.yaml``): its authored
+A package must sit inside this project (the folder holding ``fx.yaml``): its authored
 references are project files, read by content.
 """
 
@@ -23,10 +23,11 @@ import re
 from pathlib import Path
 from typing import Any
 
+from grida.fx import Group, StepRef, Workflow
+
 from demo_game_tools.kits.ui_art.nodes import document_roles
 from demo_game_tools.media.ui import GameUi
 from demo_game_tools.steps.ui_atlas import add_ui_sheet_steps
-from gnode import Group, StepRef, Workflow
 from stage_gen.image_style import ImageAssetKind
 from the_grain_pipeline.dialogue_scene.build import (
     PLAN_SYSTEM,
@@ -98,9 +99,9 @@ def _name(value: str) -> str:
 
 def _project_root(package: Path) -> Path:
     for folder in (package, *package.parents):
-        if (folder / "gnode.yaml").is_file():
+        if (folder / "fx.yaml").is_file():
             return folder
-    raise ValueError(f"{package} is not inside a gnode project")
+    raise ValueError(f"{package} is not inside an FX project")
 
 
 class _Package:
@@ -131,7 +132,7 @@ def _style(wf: Workflow, *, brief: str, asset_kinds: tuple[ImageAssetKind, ...])
     selection = group.step(
         "select",
         title="Pick one approved style",
-        uses="gnode/structured.generate@1",
+        uses="fx/structured.generate@1",
         with_={"prompt": prompt, "system": system, "schema": schema.outputs.schema},
     )
     kinds = {"asset_kinds": list(asset_kinds)}
@@ -174,7 +175,7 @@ def _paint(
     painting = group.step(
         "generate",
         title=title,
-        uses="gnode/image.edit@1",
+        uses="fx/image.edit@1",
         with_={
             "image": pictures[0],
             "references": pictures[1:],
@@ -182,7 +183,7 @@ def _paint(
             "size": size,
             "background": "transparent" if transparent else "opaque",
         },
-        requires=["transparent_background"] if transparent else [],
+        requires=["alpha"] if transparent else [],
         view=True,
     )
     group.step(
@@ -303,7 +304,7 @@ def room(package: str) -> Workflow:
         answer = group.step(
             "write",
             title="Write the lines the author left open",
-            uses="gnode/structured.generate@1",
+            uses="fx/structured.generate@1",
             with_={
                 "prompt": narration_prompt(authored),
                 "system": NARRATION_SYSTEM,
@@ -432,7 +433,7 @@ def scene(package: str) -> Workflow:
         draft = planning.step(
             "draft",
             title="Lock pose, light and style",
-            uses="gnode/structured.generate@1",
+            uses="fx/structured.generate@1",
             with_={
                 "prompt": plan_prompt(request, resolved.art_request_sha256, actor.profile.profile),
                 "system": PLAN_SYSTEM,
@@ -508,7 +509,7 @@ def scene(package: str) -> Workflow:
         draw = group.step(
             "generate",
             title="Compose the track",
-            uses="gnode/music.generate@1",
+            uses="fx/music.generate@1",
             with_={"prompt": track_prompt(request.game_id, track)},
             view=True,
         )

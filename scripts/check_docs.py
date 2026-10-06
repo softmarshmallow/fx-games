@@ -101,7 +101,7 @@ PROMPT_FIXTURES = (
 # blocks, in a link target, or in the glossary sections that list the retired and frozen words.
 RETIRED_TERMS = re.compile(
     r"\b(?:recipes?|harness|showcase|(?:web|run) viewer)\b"
-    # The gnode epic (decision 0072) retired the stage-gen command line and the old engine.
+    # Decision 0072 retired the stage-gen command line and the old engine.
     r"|\bstage-gen (?:list|show|plan|run|inspect|view|example|catalog|capability|models|env)\b"
     r"|\bstage_gen\.pipeline\b|\bGraphExecutor\b|\bGraphBuilder\b|\brekey_v1_runs\b",
     re.IGNORECASE,
@@ -117,16 +117,7 @@ RETIRED_TERM_DOCUMENTS = (
     "docs/glossary.md",
     "docs/viewer.md",
     "docs/site.md",
-    "docs/spec/gnode-rings.md",
     ".agents/skills/asset-pipeline/SKILL.md",
-    "docs/guide/README.md",
-    "docs/guide/01-getting-started.md",
-    "docs/guide/02-workflow-file.md",
-    "docs/guide/03-nodes.md",
-    "docs/guide/04-cost-and-cache.md",
-    "docs/guide/05-views.md",
-    "docs/guide/06-running.md",
-    "docs/guide/07-annotations-and-judges.md",
 )
 GLOSSARY_EXEMPT_SECTIONS = ("## Retired terms", "## Frozen persisted strings")
 # The site's own sources, whose strings and JSX text readers see (page titles, headings,
@@ -303,7 +294,7 @@ _USER_SKILL_REPOSITORY_PATH = re.compile(
     r"|\.claude)/[^`]*)`"
 )
 _USER_SKILL_REPOSITORY_NAME = re.compile(
-    r"stage[-_ ]gen|\bgnode\b|(?<![\w-])concept[-_]studio(?![\w-])", re.IGNORECASE
+    r"stage[-_ ]gen|(?<![\w-])concept[-_]studio(?![\w-])", re.IGNORECASE
 )
 
 
@@ -385,10 +376,6 @@ def run_docs_check(repo: Path = REPOSITORY_ROOT) -> DocsCheckResult:
     env_example = (repo / ".env.example").read_text(encoding="utf-8")
     env_assignments = dict(re.findall(r"^([A-Z][A-Z0-9_]*)=(.*)$", env_example, re.MULTILINE))
     consumed_env_names: set[str] = set()
-    for source_path in (repo / "src/stage_gen/config.py",):
-        consumed_env_names.update(
-            re.findall(r"""["']([A-Z][A-Z0-9_]*)["']""", source_path.read_text(encoding="utf-8"))
-        )
     # The viewer's shell is where it reads its environment; a scan that matched no file
     # would prove nothing, so an empty one fails below with the no-spawn rule.
     for web_env_source in sorted((repo / "web/viewer/lib/shell").glob("*.ts")):
@@ -399,14 +386,13 @@ def run_docs_check(repo: Path = REPOSITORY_ROOT) -> DocsCheckResult:
         )
     for name in sorted(consumed_env_names):
         if name not in env_assignments:
-            failures.append(f".env.example: missing Python/web config name {name}")
-    if env_assignments.get("TRANSPARENCY_MODE") != "native":
-        failures.append(".env.example: TRANSPARENCY_MODE must document the native default")
+            failures.append(f".env.example: missing viewer config name {name}")
     for secret_name in (
         "OPENAI_API_KEY",
         "OPENROUTER_API_KEY",
         "FAL_KEY",
         "ELEVENLABS_API_KEY",
+        "TRIPO_API_KEY",
     ):
         if env_assignments.get(secret_name, "") != "":
             failures.append(f".env.example: {secret_name} must remain blank")
@@ -615,18 +601,18 @@ def run_docs_check(repo: Path = REPOSITORY_ROOT) -> DocsCheckResult:
             )
 
     readme = (repo / "README.md").read_text(encoding="utf-8")
-    # The viewer is gnode's dashboard: the sentence that names it names its command.
+    # The viewer is a local command: the sentence that names it names that command.
     viewer_sentences = [
         sentence
         for sentence in re.split(r"(?<=[.!?])\s+", " ".join(readme.split()))
         if re.search(r"\bviewer\b", sentence, re.IGNORECASE)
     ]
     if re.search(r"\bgeneral\b", readme, re.IGNORECASE) is None or not any(
-        "gnode view" in sentence for sentence in viewer_sentences
+        "scripts/view.py" in sentence for sentence in viewer_sentences
     ):
         failures.append(
             "README.md: missing general-core / viewer framing (a sentence naming the "
-            "viewer and `gnode view`)"
+            "viewer and `scripts/view.py`)"
         )
     failures.extend(check_retired_terms(repo))
     failures.extend(check_user_skills(repo))

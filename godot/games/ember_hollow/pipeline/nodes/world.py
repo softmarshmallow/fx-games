@@ -11,11 +11,12 @@ from __future__ import annotations
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from grida.fx import Ctx, node
+
 from ember_hollow_pipeline import layout as layout_module
 from ember_hollow_pipeline import manifest as manifest_module
 from ember_hollow_pipeline.models import Package
 from ember_hollow_pipeline.survival_request import load_package
-from gnode import Ctx, node
 
 #: What the host reads: everything the manifest names lives under these.
 DELIVERED_ROOTS = ("package/", "ui/", "shell/", "production/review/")

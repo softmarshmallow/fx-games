@@ -1,7 +1,8 @@
 """Write original geometric example layers and their inputs; no provider or artwork download.
 
 ``uv run python make_inputs.py out/looping-parallax-input`` draws two layers there and an
-``inputs.yaml`` that places them, for ``gnode run looping-parallax --inputs <dir>/inputs.yaml``.
+``inputs.yaml`` that places them, for ``uv run python -m grida.fx run looping-parallax --inputs
+<dir>/inputs.yaml``.
 """
 
 import argparse

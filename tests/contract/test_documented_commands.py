@@ -1,36 +1,33 @@
-"""Every documented ``gnode`` command parses with the real CLI.
+"""Every documented FX command parses against the real command line.
 
 A command shown to a reader is a promise: a renamed verb, a dropped flag or a misspelt
 workflow id must fail here, not on the reader's machine. Commands are read from fenced
 ``sh``/``bash`` blocks in README.md, the live docs (``docs/`` without its history roots),
 each workflow's ``page.mdx``, ``contract.md`` and example pages, the Godot docs, and each
-``workflow.toml`` ``[try]`` table. A ``gnode`` command is parsed by gnode's own parser, with
-only its workflow's own input flags beside it; the retired ``stage-gen`` command line fails
-wherever it is still shown. None is executed.
+``workflow.toml`` ``[try]`` table. A ``python -m grida.fx`` command is checked against what
+``python -m grida.fx <verb> --help`` states, with only its workflow's own input flags beside
+it; a ``python scripts/view.py`` command against the viewer's help. A retired command line,
+or a bare ``grida-fx``, fails wherever it is still shown. None is executed.
 """
 
 from __future__ import annotations
 
-import contextlib
-import io
-import json
 import re
 import shlex
+import subprocess
+import sys
 import tomllib
 from collections.abc import Iterator
 from dataclasses import dataclass
+from functools import cache
 from pathlib import Path
 
 import pytest
-import yaml
 
-from gnode import cli
-from stage_gen.workflows._checks import gnode_command_problems
+from stage_gen.workflows._checks import FX_PROGRAM, fx_command_problems
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 WORKFLOWS = REPOSITORY_ROOT / "src/stage_gen/workflows"
-#: The guide's example projects: a command in one of their READMEs runs in that folder.
-GUIDE_EXAMPLES = REPOSITORY_ROOT / "docs/guide/examples"
 #: History describes what was true when it was written, so its commands are not held to today.
 HISTORY_ROOTS = ("docs/decisions/", "docs/plans/", "docs/research/", "docs/media/")
 FENCE = re.compile(
@@ -38,17 +35,21 @@ FENCE = re.compile(
 )
 SHELL_FENCES = {"sh", "bash", "shell", "console"}
 ENVIRONMENT = re.compile(r"^[A-Z_][A-Z0-9_]*=")
-#: The ``uv run`` options a documented command may carry before ``gnode``.
+#: The ``uv run`` options a documented command may carry before its program.
 UV_RUN_FLAGS_WITH_VALUE = {"--group", "--extra", "--with", "--python", "--directory"}
 COMMAND_SEPARATORS = {"&&", "||", ";", "|"}
-PROGRAMS = ("stage-gen", "gnode")
+FX = " ".join(FX_PROGRAM)
+VIEWER = "python scripts/view.py"
+#: Command lines a reader may no longer be shown.
+RETIRED_PROGRAMS = ("stage-gen", "gnode", "grida-fx")
+_VIEWER_OPTION = re.compile(r"^\s+(?:-\w, )?(?P<long>--[\w-]+)(?P<value> [A-Z_]+)?(?:\s|$)")
 
 
 @dataclass(frozen=True, slots=True)
 class Documented:
     source: str
     arguments: tuple[str, ...]
-    program: str = "gnode"
+    program: str = FX
 
     def __str__(self) -> str:
         return f"{self.source}: {self.program} {shlex.join(self.arguments)}"
@@ -86,9 +87,28 @@ def _logical_lines(body: str) -> Iterator[str]:
         yield pending
 
 
+def _program(words: list[str]) -> tuple[str, tuple[str, ...]] | None:
+    """The program a command runs, after env assignments and ``uv run``, and its arguments;
+    None for a command this test does not hold to anything."""
+    while words and ENVIRONMENT.match(words[0]):
+        words = words[1:]
+    if words[:2] == ["uv", "run"]:
+        words = words[2:]
+        while words and words[0].startswith("--"):
+            flag = words.pop(0)
+            if flag in UV_RUN_FLAGS_WITH_VALUE and "=" not in flag:
+                words = words[1:]
+    if tuple(words[: len(FX_PROGRAM)]) == FX_PROGRAM:
+        return FX, tuple(words[len(FX_PROGRAM) :])
+    if words[:2] == ["python", "scripts/view.py"]:
+        return VIEWER, tuple(words[2:])
+    if words and words[0] in RETIRED_PROGRAMS:
+        return words[0], tuple(words[1:])
+    return None
+
+
 def _commands(line: str) -> Iterator[tuple[str, tuple[str, ...]]]:
-    """The ``gnode`` (and retired ``stage-gen``) invocations in one shell line, after env
-    assignments and ``uv run``."""
+    """The FX, viewer and retired invocations in one shell line."""
     try:
         tokens = shlex.split(line, comments=True)
     except ValueError:
@@ -98,18 +118,10 @@ def _commands(line: str) -> Iterator[tuple[str, tuple[str, ...]]]:
         if token not in COMMAND_SEPARATORS:
             command.append(token)
             continue
-        words = command
+        found = _program(command)
         command = []
-        while words and ENVIRONMENT.match(words[0]):
-            words = words[1:]
-        if words[:2] == ["uv", "run"]:
-            words = words[2:]
-            while words and words[0].startswith("--"):
-                flag = words.pop(0)
-                if flag in UV_RUN_FLAGS_WITH_VALUE and "=" not in flag:
-                    words = words[1:]
-        if words and words[0] in PROGRAMS:
-            yield words[0], tuple(words[1:])
+        if found is not None:
+            yield found
 
 
 def documented_commands() -> list[Documented]:
@@ -127,11 +139,9 @@ def documented_commands() -> list[Documented]:
         relative = manifest.relative_to(REPOSITORY_ROOT).as_posix()
         table = tomllib.loads(manifest.read_text(encoding="utf-8")).get("try", {})
         for command in table.get("commands", []):
-            words = shlex.split(command)
-            while words and ENVIRONMENT.match(words[0]):
-                words = words[1:]
-            assert words[0] in PROGRAMS, f"{relative}: [try] command must start with {PROGRAMS}"
-            found.append(Documented(f"{relative} [try]", tuple(words[1:]), words[0]))
+            program = _program(shlex.split(command))
+            assert program is not None, f"{relative}: [try] command must run {FX}"
+            found.append(Documented(f"{relative} [try]", program[1], program[0]))
     return found
 
 
@@ -150,72 +160,67 @@ def test_the_scan_reads_every_kind_of_source() -> None:
     )
 
 
-def _example_project(source: str) -> Path | None:
-    """The example project a README belongs to, or None."""
-    path = REPOSITORY_ROOT / source
-    if not path.is_relative_to(GUIDE_EXAMPLES) or path.parent == GUIDE_EXAMPLES:
-        return None
-    return path.parent
+@cache
+def _viewer_options() -> dict[str, bool]:
+    """Each option of ``scripts/view.py`` to whether it takes a value, from its help."""
+    done = subprocess.run(
+        [sys.executable, "scripts/view.py", "--help"],
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=REPOSITORY_ROOT,
+    )
+    options = {"-h": False}
+    for line in done.stdout.splitlines():
+        if (match := _VIEWER_OPTION.match(line)) is not None:
+            options[match["long"]] = match["value"] is not None
+    return options
 
 
-def _block_inputs(source: str, target: str) -> list[str] | None:
-    """The inputs of a workflow the guide shows as a code block headed with its file name."""
-    text = (REPOSITORY_ROOT / source).read_text(encoding="utf-8")
-    for fence in FENCE.finditer(text):
-        body = fence.group("body")
-        if fence.group("info").strip().startswith("yaml") and body.startswith(f"# {target}\n"):
-            document = yaml.safe_load(body)
-            if isinstance(document, dict) and document.get("gnode") == "workflow/v1":
-                return list(document.get("inputs") or {})
-    return None
-
-
-def _local_inputs(command: Documented) -> list[str] | None:
-    """The input names of a command's target when the target is the document's own: an
-    example project's workflow, or a workflow file a guide chapter shows. None otherwise."""
-    if command.arguments[:1] not in (("plan",), ("run",)) or len(command.arguments) < 2:
-        return None
-    target = command.arguments[1]
-    project = _example_project(command.source)
-    if project is not None:
-        out, err = io.StringIO(), io.StringIO()
-        if cli.main(["schema", target], stdout=out, stderr=err, cwd=project) != 0:
-            return None
-        return list(json.loads(out.getvalue()).get("properties", {}))
-    if command.source.startswith("docs/guide/") and target.endswith((".yaml", ".yml")):
-        return _block_inputs(command.source, target)
-    return None
+def viewer_command_problems(arguments: tuple[str, ...]) -> list[str]:
+    """What is wrong with one viewer command line: every option is one its help states, and
+    the rest are run folders."""
+    options = _viewer_options()
+    problems: list[str] = []
+    words = list(arguments)
+    while words:
+        word = words.pop(0)
+        if not word.startswith("-"):
+            continue
+        option, equals, _ = word.partition("=")
+        if option not in options:
+            problems.append(f"{option} is not a viewer option")
+        elif options[option] and not equals and not words:
+            problems.append(f"{option} needs a value")
+        elif options[option] and not equals:
+            words.pop(0)
+    return problems
 
 
 @pytest.mark.parametrize("command", DOCUMENTED, ids=str)
 def test_documented_command_parses_with_the_real_cli(command: Documented) -> None:
-    assert command.program == "gnode", f"{command}: stage-gen is retired; show the gnode command"
-    for flag in ("--help", "-h"):
-        if flag in command.arguments:
-            # A help request parses only as far as the command it asks about; that much must
-            # exist.
-            asked = command.arguments[: command.arguments.index(flag)]
-            with contextlib.redirect_stdout(io.StringIO()), pytest.raises(SystemExit) as exit_:
-                cli.build_parser().parse_args([*asked, "--help"])
-            assert exit_.value.code == 0, f"{command} asks for help on a command that is not there"
-            return
-    local = _local_inputs(command)
-    if local is not None:
-        args, rest = cli.build_parser().parse_known_args(list(command.arguments))
-        flags = {f"--{name.replace('_', '-')}" for name in local}
-        unknown = [
-            word for word in rest if word.startswith("--") and word.split("=")[0] not in flags
-        ]
-        assert not unknown, f"{command}: {unknown} are not inputs of {args.target}"
-        return
-    problems = gnode_command_problems(command.arguments)
+    assert command.program not in RETIRED_PROGRAMS, (
+        f"{command}: {command.program} is retired; show uv run {FX} (or {VIEWER} for the viewer)"
+    )
+    if command.program == VIEWER:
+        problems = viewer_command_problems(command.arguments)
+    else:
+        problems = fx_command_problems(command.arguments)
     assert not problems, f"{command.source}: {problems}"
 
 
 def test_a_retired_command_fails_the_parse() -> None:
     for retired in (
         ("show", "universe"),
+        ("view",),
         ("catalog", "export", "--out", "site"),
-        ("plan", "file", "pipeline.py:pipeline"),
+        ("plan",),
+        ("plan", "universe", "--no-such-input", "x"),
+        ("inspect", "universe", "--write-view"),
     ):
-        assert gnode_command_problems(retired), retired
+        assert fx_command_problems(retired), retired
+
+
+def test_a_retired_program_is_found_and_refused() -> None:
+    for program in RETIRED_PROGRAMS:
+        assert [found for found, _ in _commands(f"uv run {program} plan universe")] == [program]

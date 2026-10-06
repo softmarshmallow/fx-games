@@ -29,8 +29,9 @@ static func parse(document: Variant, scenario_id: String = "") -> Variant:
 		return KernelRefusal.of(
 			"dialogue/bundle-kind",
 			(
-				"unsupported dialogue scene; build this scene again with its gnode builder "
-				+ "(cd godot/games/the_grain && gnode run pipeline/workflow.py:scene --arg package=inputs)"
+				"unsupported dialogue scene; build this scene again with its builder "
+				+ "(cd godot/games/the_grain && uv run python -m grida.fx run "
+				+ "pipeline/workflow.py:scene --arg package=inputs)"
 			),
 			"kind"
 		)
@@ -38,8 +39,9 @@ static func parse(document: Variant, scenario_id: String = "") -> Variant:
 		return KernelRefusal.of(
 			"dialogue/bundle-kind",
 			(
-				"unsupported dialogue scene; build this scene again with its gnode builder "
-				+ "(cd godot/games/the_grain && gnode run pipeline/workflow.py:scene --arg package=inputs)"
+				"unsupported dialogue scene; build this scene again with its builder "
+				+ "(cd godot/games/the_grain && uv run python -m grida.fx run "
+				+ "pipeline/workflow.py:scene --arg package=inputs)"
 			),
 			"schema_version"
 		)

@@ -141,7 +141,7 @@ export default async function RunArtifactsPage({
         <h1 className={h1}>{name}</h1>
         <p className={metaLine}>
           This run carries no execution view, so there is nothing to list. Let{" "}
-          <code>gnode view</code> keep one for a workflow run; a run whose execution plan
+          <code>scripts/view.py</code> keep one for a workflow run; a run whose execution plan
           predates this build cannot be re-derived and keeps only its published
           document.
         </p>

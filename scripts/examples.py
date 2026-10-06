@@ -103,6 +103,7 @@ def verify(args: argparse.Namespace, output: TextIO) -> int:
 def promote(args: argparse.Namespace, output: TextIO) -> int:
     """Export runs as a draft example in the store and pin it in the workflow's manifest."""
     from stage_gen.examples import ImportRequest, MadeBy, store_directory, write_example
+    from stage_gen.runview import is_fx_run, is_stand_in
     from stage_gen.workflows._catalog import default_examples_dir
     from stage_gen.workflows._registry import (
         MANIFEST_FILE,
@@ -116,6 +117,13 @@ def promote(args: argparse.Namespace, output: TextIO) -> int:
     code = load_code(found.id)
     if code.import_example is None:
         raise ValueError(f"{found.id} cannot promote examples: {code.no_importer}")
+    runs = tuple(run.resolve() for run in args.runs)
+    for run in runs:
+        if is_fx_run(run) and is_stand_in(run):
+            raise ValueError(
+                f"{run.name} is a stand-in run; an example is made from a run whose calls a "
+                "provider answered"
+            )
     if any(entry.id == args.example_id for entry in found.manifest.examples):
         raise ValueError(f"{found.id} already pins an example {args.example_id}")
     base = repository_root()
@@ -137,7 +145,7 @@ def promote(args: argparse.Namespace, output: TextIO) -> int:
         example_id=args.example_id,
         made_by=MadeBy(kind="workflow", id=found.id),
         base=base,
-        runs=tuple(run.resolve() for run in args.runs),
+        runs=runs,
         out=directory,
         options=options,
     )

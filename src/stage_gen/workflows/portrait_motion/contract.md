@@ -46,7 +46,7 @@ infer phonemes, align audio or supply a viseme set (see the
   outline and review prompts, registration, masks, composition, playback, and the face crop
   and its way back. It calls no provider and owns no run.
 - The workflow owns how they compose: the steps, the judges, what a refusal ends, and which
-  routes answer by default ([`gnode.yaml`](gnode.yaml)).
+  routes answer by default ([`fx.yaml`](fx.yaml)).
 
 ## Authored specification
 
@@ -156,7 +156,7 @@ component's `apply_offset_patch` places a patch exactly. A whole-portrait run de
 
 ## Identity: what re-bills what
 
-Each step's identity is its node type's locked version ([`gnode.lock`](gnode.lock); the node
+Each step's identity is its node type's locked version ([`fx.lock`](fx.lock); the node
 modules and the component count as their source) and what it reads; each paid call is kept in
 gnode's call cache by the request it sends. So:
 
@@ -174,14 +174,14 @@ delivers byte-identical states, patches and animation.
 
 ## Graph
 
-gnode plans the face path of the drawn sample offline; this is the shape of that plan.
+FX plans the face path of the drawn sample offline; this is the shape of that plan.
 `scripts/write_workflow_contracts.py --write` regenerates the block, and the check above fails
 when it drifts:
 
 <!-- pipeline-graph-contract:start -->
 ```json
 {
-  "graph_kind": "gnode-graph-v2",
+  "graph_kind": "fx-graph-v1",
   "topology_sha256": "f3acd298cf6d9b842aff9724ec1c4153e567b9b1839a633bcf597c78544ca0b6",
   "node_count": 57,
   "operation_counts": {

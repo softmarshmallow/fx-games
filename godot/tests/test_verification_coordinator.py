@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -244,7 +245,10 @@ def test_provider_credentials_are_removed(monkeypatch: pytest.MonkeyPatch) -> No
         monkeypatch.setenv(name, "fixture-secret")
     environment = check.environment()
     assert not any(name in environment for name in check.CREDENTIALS)
-    assert environment["_STAGE_GEN_DISABLE_DOTENV"] == "1"
+    assert "_STAGE_GEN_DISABLE_DOTENV" not in environment
+    assert environment["GRIDA_FX_PYTHON"] == sys.executable
+    assert environment["GRIDA_FX_DISABLE_DOTENV"] == "1"
+    assert environment["GRIDA_FX_NETWORK"] == "off"
 
 
 def test_timeout_preserves_script_diagnostics(monkeypatch: pytest.MonkeyPatch) -> None:

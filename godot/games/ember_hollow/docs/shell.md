@@ -185,8 +185,8 @@ cache, and only the shot is drawn.
 
 ```bash
 cd godot/games/ember_hollow
-uv run gnode run pipeline/workflow.py:build --arg package=inputs --live --max-usd 40
-uv run gnode view
+uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs --live --max-usd 40
+(cd ../../.. && uv run python scripts/view.py out/runs)
 ```
 
 Each take meets the admission gate a kept take meets, is published in the codec the host

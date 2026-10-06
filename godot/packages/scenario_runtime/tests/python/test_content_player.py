@@ -76,7 +76,7 @@ def test_two_content_packages_and_failed_replacement(tmp_path: Path) -> None:
             "TRIPO_API_KEY",
         }
     }
-    environment["_STAGE_GEN_DISABLE_DOTENV"] = "1"
+    environment["GRIDA_FX_DISABLE_DOTENV"] = "1"
     godot = (
         os.environ.get("GODOT")
         or shutil.which("godot")

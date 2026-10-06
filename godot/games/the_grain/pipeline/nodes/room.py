@@ -13,7 +13,8 @@ import json
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from gnode import Ctx, node
+from grida.fx import Ctx, node
+
 from the_grain_pipeline.pointclick_room.room_prompts import narration_ids, narration_json_schema
 from the_grain_pipeline.pointclick_room.room_request import (
     ResolvedPointClickRoom,

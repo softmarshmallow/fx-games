@@ -24,11 +24,7 @@ PACKAGE_RESOLUTION_MODULES = (
         if (root / module / "validation.py").is_file()
     ),
 )
-PROVIDER_FREE_FORBIDDEN = (
-    "gnode.providers",
-    "stage_gen.providers",
-    "stage_gen.orchestration",
-)
+PROVIDER_FREE_FORBIDDEN = ("grida",)
 
 
 def test_prepared_package_resolution_is_provider_free() -> None:

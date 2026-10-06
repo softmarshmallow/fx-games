@@ -11,8 +11,9 @@ from __future__ import annotations
 
 from typing import Any
 
+from grida.fx import Ctx, node
+
 from demo_game_tools.steps.terrain_atlas import admit_atlas, assemble_atlas, atlas_paint_target
-from gnode import Ctx, node
 from iron_petal_unit_pipeline.track import (
     build_structural_ground_guide,
     canonicalize_structural_ground,

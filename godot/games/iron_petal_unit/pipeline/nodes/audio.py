@@ -12,7 +12,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from gnode import Ctx, node
+from grida.fx import Ctx, node
+
 from iron_petal_unit_pipeline.admission import listening_verdict
 from stage_gen.components.sound_effect import DURATION_TOLERANCE_SECONDS, admission_facts
 from stage_gen.components.speech import speech_admission_facts
@@ -24,14 +25,14 @@ _LINE_CEILING: dict[str, Any] = {"type": ["number", "null"], "default": None}
 
 async def _clip_facts(ctx: Ctx, data: bytes) -> dict[str, object]:
     peak = await measure_peak_dbfs(
-        data, ffmpeg=ctx.tool("ffmpeg").executable, timeout_seconds=_TIMEOUT_SECONDS
+        data, ffmpeg=str(ctx.tool("ffmpeg").executable), timeout_seconds=_TIMEOUT_SECONDS
     )
     return admission_facts(data, peak)
 
 
 async def _line_facts(ctx: Ctx, data: bytes, max_seconds: float | None) -> dict[str, object]:
     measured = await measure_level_and_duration(
-        data, ffmpeg=ctx.tool("ffmpeg").executable, timeout_seconds=_TIMEOUT_SECONDS
+        data, ffmpeg=str(ctx.tool("ffmpeg").executable), timeout_seconds=_TIMEOUT_SECONDS
     )
     return speech_admission_facts(data, measured, max_seconds=max_seconds)
 
@@ -88,7 +89,7 @@ async def record_clip(ctx: Ctx) -> dict[str, Any]:
     authored = ctx.params["duration_seconds"]
     probe = await probe_audio(
         ctx.inputs["audio"].path,
-        ffprobe=ctx.tool("ffprobe").executable,
+        ffprobe=str(ctx.tool("ffprobe").executable),
         timeout_seconds=_TIMEOUT_SECONDS,
     )
     delta = probe.duration_seconds - authored
@@ -131,7 +132,7 @@ async def record_line(ctx: Ctx) -> dict[str, Any]:
     max_seconds = ctx.params["max_seconds"]
     probe = await probe_audio(
         ctx.inputs["audio"].path,
-        ffprobe=ctx.tool("ffprobe").executable,
+        ffprobe=str(ctx.tool("ffprobe").executable),
         timeout_seconds=_TIMEOUT_SECONDS,
     )
     facts = await _line_facts(ctx, ctx.read.bytes("audio"), max_seconds)

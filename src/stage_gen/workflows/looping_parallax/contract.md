@@ -18,7 +18,7 @@ manifest = result.outputs["manifest"].path
 result.deliver({"layers": "out/layers/{key}.png", "preview": "out/preview.png"})
 ```
 
-A seam layer's repaint is one `image.edit` call on the `image.edit` route the workflow's [`gnode.yaml`](gnode.yaml) names by default; your project's `gnode.yaml` or `--routes` may choose another route that supports masks and transparency. The plan prices it at its worst case, two takes per layer that does not already loop, and a run makes it only with `--live` (`live=True` in Python) and your provider keys. A layer that already loops, or a mirrored one, costs nothing.
+A seam layer's repaint is one `image.edit` call on the `image.edit` route the workflow's [`fx.yaml`](fx.yaml) names by default; your project's `fx.yaml` or `--routes` may choose another route that supports masks and transparency. The plan prices it at its worst case, two takes per layer that does not already loop, and a run makes it only with `--live` (`live=True` in Python) and your provider keys. A layer that already loops, or a mirrored one, costs nothing.
 
 `inputs/supplied_layers/make_inputs.py <directory>` draws two original geometric PNGs and writes the `inputs.yaml` that places them, without a provider; `gnode run looping-parallax --inputs <directory>/inputs.yaml` runs them. No game definition or Godot project is needed.
 
@@ -32,13 +32,13 @@ A seam layer's step folders also keep the provider's return (`edit`) and the loo
 
 ## Graph
 
-gnode plans the committed supplied-layers sample offline; this is the shape of that plan. `scripts/write_workflow_contracts.py --write` regenerates the block, and the check above
+FX plans the committed supplied-layers sample offline; this is the shape of that plan. `scripts/write_workflow_contracts.py --write` regenerates the block, and the check above
 fails when it drifts:
 
 <!-- pipeline-graph-contract:start -->
 ```json
 {
-  "graph_kind": "gnode-graph-v2",
+  "graph_kind": "fx-graph-v1",
   "topology_sha256": "ed1fd34140f786953a7894ab7fc62ce0bebf9c00f8a22c292a8a76c7b6eb8649",
   "node_count": 5,
   "operation_counts": {

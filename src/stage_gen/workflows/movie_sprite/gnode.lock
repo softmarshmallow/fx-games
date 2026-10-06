@@ -1,5 +1,0 @@
-# gnode.lock: the source behind each versioned node type; commit it
-nodes:
-  nodes/finish.py#finish@1: 32f28069abdb615c6e41a98ead2f1ba1a52e00e397ce7cb0596f9661d0f5061f
-  nodes/take.py#green_plate@1: f253928ce42ab2c9569b3bdc107a60e5ec6b405ebeb9f6ec78cc96d0512586e8
-  nodes/take.py#idle_brief@1: 536374b21a335619b2e42d834a3745f6ed8a6fd2d0b2bd616b3afaba5768d6f4

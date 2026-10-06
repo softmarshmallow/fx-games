@@ -1,8 +1,8 @@
 // Server-side reader for a run's execution view: the one the run persists, or the one
-// `gnode view` derived for it into the user cache.
+// `scripts/view.py` derived for it into the user cache.
 //
 // The run folder's own view is read when it is at least as new as the cached one;
-// otherwise the cache's, which `gnode view` keeps fresh while the run's trace grows.
+// otherwise the cache's, which `scripts/view.py` keeps fresh while the run's trace grows.
 // A run is never written to: a view the viewer needs and the run lacks lives only in the
 // cache. Absent is null; present-but-refused throws — the page turns that into the
 // re-derive message rather than a crash, per the view's hard-drop versioning.
@@ -16,10 +16,10 @@ import type { RunRef } from "./run-ref";
 import { isRealRunDirectory, runDirFor, viewCacheDir, viewKey } from "./runs";
 
 export const EXECUTION_VIEW_FILENAME = "execution-view.json";
-/** Beside a gnode run's view: the context each of its step views is shown with. */
+/** Beside a run's view in the cache: the context each of its views is shown with. */
 export const VIEW_CONTEXTS_FILENAME = "view-contexts.json";
 
-/** Where a view came from: the run folder, or the cache `gnode view` keeps. */
+/** Where a view came from: the run folder, or the cache `scripts/view.py` keeps. */
 export type ViewSource = "run" | "cache";
 
 export interface ReadView {

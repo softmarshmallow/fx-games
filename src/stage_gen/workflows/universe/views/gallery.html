@@ -35,7 +35,7 @@
 <script type="module">
   // The universe workflow's own view (scope: workflow): the world first, then one card per
   // entity with its concept image; a rejected image keeps its place, with a red dot.
-  import { context as read } from "/_gnode/view.js";
+  import { context as read } from "/_views/view.js";
   const context = await read();
   const world = context.outputs.universe?.value ?? {};
   const proposal = world.proposal ?? {};

@@ -37,12 +37,11 @@ def test_standard_keywords_remain_exact_and_application_properties_are_snake_cas
     assert seen_keywords <= JSON_SCHEMA_STANDARD_KEYS
     assert {"$defs", "$ref", "additionalProperties"} <= seen_keywords
     assert _values_for_key(normalized, "additionalProperties")
+    # The schema is sent as written: FX's adapter makes the strict form when it sends, and
+    # checks the answer against these bounds.
     for keyword in ("maxLength", "minLength"):
         assert _values_for_key(raw, keyword)
-        assert not _values_for_key(normalized, keyword)
-    assert not _values_for_key(normalized, "pattern")
-    assert not _values_for_key(normalized, "default")
-    _assert_all_properties_required(normalized)
+        assert _values_for_key(normalized, keyword) == _values_for_key(raw, keyword)
 
 
 def _assert_schema_keys(value: object, seen_keywords: set[str]) -> None:
@@ -75,15 +74,3 @@ def _values_for_key(value: object, target: str) -> list[object]:
         for item in value:
             result.extend(_values_for_key(item, target))
     return result
-
-
-def _assert_all_properties_required(value: object) -> None:
-    if isinstance(value, Mapping):
-        properties = value.get("properties")
-        if isinstance(properties, Mapping):
-            assert value.get("required") == list(properties)
-        for item in value.values():
-            _assert_all_properties_required(item)
-    elif isinstance(value, list):
-        for item in value:
-            _assert_all_properties_required(item)

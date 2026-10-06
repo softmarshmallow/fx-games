@@ -61,9 +61,7 @@ def test_capability_modules_are_ordinary_package_imports(module: str) -> None:
 def test_component_imports_respect_provider_and_composition_boundaries() -> None:
     forbidden = (
         "stage_gen.recipes",
-        "stage_gen.orchestration",
         "stage_gen.viewer",
-        "gnode.providers",
         "repainting",
         "native_preview",
         "four_panel",
@@ -85,9 +83,9 @@ def test_component_imports_respect_provider_and_composition_boundaries() -> None
             for name in names:
                 if name.startswith(forbidden):
                     violations.append(f"{path.name}:{getattr(node, 'lineno', 0)}:{name}")
-                if name.startswith("gnode."):
+                if name.startswith("grida.fx._"):
                     violations.append(
-                        f"{path.name}:{getattr(node, 'lineno', 0)}:private gnode surface {name}"
+                        f"{path.name}:{getattr(node, 'lineno', 0)}:private FX surface {name}"
                     )
     assert not violations, violations
 

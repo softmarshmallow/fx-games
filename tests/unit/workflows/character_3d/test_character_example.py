@@ -18,6 +18,7 @@ from stage_gen.examples import (
 )
 from stage_gen.workflows._registry import load_code
 from stage_gen.workflows.character_3d.example import read_library
+from tests.unit._fx import failures
 from tests.unit.workflows.character_3d.test_workflow import StandIn, _run
 
 REPOSITORY = Path(__file__).resolve().parents[4]
@@ -27,7 +28,7 @@ async def test_an_accepted_character_run_imports_as_an_example(
     tmp_path: Path, blender: Path
 ) -> None:
     outcome = await _run(tmp_path, StandIn(), "example")
-    assert outcome.ok, outcome.failed
+    assert outcome.ok, failures(outcome)
 
     code = load_code("character-3d")
     assert code.import_example is not None and code.owns_run(outcome.run_dir)
@@ -40,14 +41,14 @@ async def test_an_accepted_character_run_imports_as_an_example(
     )
     example = code.import_example(request)
 
-    assert example.importer == "gnode_run"
+    assert example.importer == "fx_run" and example.graph_kind == "fx-graph-v1"
     assert str(example.inputs["brief"]["text"]).startswith("# Pell")
     export = example.outputs["export"]
     assert export["kind"] == "model" and export["src"] == "media/export.glb"
     assert {"cheer", "rest"} <= set(cast(list[str], export["clips"]))
     assert example.metrics["numeric_findings"] == 0 and example.metrics["missing_weights"] == 0
     assert example.metrics["provider_operations"] == 15
-    assert currency(example, code.type_ids(), code.graph_kinds()) == "current"
+    assert currency(example, code.type_ids()) == "current"
     # The poster turns through the pose rows only, in pose order: the face strip and the
     # torso close-ups that follow them in the atlas are the reviewer's, not the page's.
     poster = request.figures(example).latest()["media/export-poses.webp"]

@@ -1,0 +1,9 @@
+# The portrait-motion workflow's home. Its node modules import Stage Gen's portrait-motion
+# component, so that counts as its source: fx.lock notices when it changes.
+fx: project/v1
+runs: ../../../../out/runs
+cache: ../../../../out/fx-cache
+sources: [stage_gen]
+routes:
+  structured.generate: openai/gpt-6-astra@openrouter
+  image.edit: gpt-image-2.5-sunburst@openai

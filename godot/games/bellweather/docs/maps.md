@@ -123,7 +123,7 @@ The canonical Bellweather package is the repository example:
 
 ```sh
 uv run --group games demo-games package validate --input godot/games/bellweather/inputs/default
-(cd godot/games/bellweather && uv run gnode plan pipeline/workflow.py:build --arg package=inputs/default)
+(cd godot/games/bellweather && uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs/default)
 ```
 
 See also:

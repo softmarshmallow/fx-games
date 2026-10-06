@@ -11,6 +11,7 @@ import dataclasses
 import importlib.util
 import io
 import json
+import re
 import sys
 from collections.abc import Iterator
 from pathlib import Path
@@ -181,17 +182,20 @@ def test_a_try_command_must_parse_with_the_real_parser(loaded: dict[str, LoadedW
     good = TryIt(
         input="inputs",
         commands=[
-            "gnode inspect universe --verify",
-            "GNODE_LIVE=1 gnode plan universe --inputs inputs.yaml",
+            "uv run python -m grida.fx inspect universe --verify",
+            "GRIDA_FX_NETWORK=off uv run python -m grida.fx plan universe --inputs inputs.yaml",
+            "python -m grida.fx plan universe --inputs inputs.yaml --title Ferry",
         ],
     )
-    bad = TryIt(input="inputs", commands=["gnode inspect --no-such-flag"])
+    bad = TryIt(input="inputs", commands=["uv run python -m grida.fx inspect --no-such-flag"])
     assert checks.try_commands(_with_manifest(loaded["universe"], try_=good)) == []
-    [problem] = checks.try_commands(_with_manifest(loaded["universe"], try_=bad))
-    assert "does not parse" in problem
-    retired = TryIt(input="inputs", commands=["stage-gen show universe"])
-    [problem] = checks.try_commands(_with_manifest(loaded["universe"], try_=retired))
-    assert "does not start with gnode" in problem
+    problems = checks.try_commands(_with_manifest(loaded["universe"], try_=bad))
+    assert any("--no-such-flag" in problem for problem in problems), problems
+    for retired in ("stage-gen show universe", "grida-fx plan universe"):
+        [problem] = checks.try_commands(
+            _with_manifest(loaded["universe"], try_=TryIt(input="inputs", commands=[retired]))
+        )
+        assert "does not start with python -m grida.fx" in problem
 
 
 def test_every_workflow_says_how_to_try_it_with_its_own_verbs() -> None:
@@ -202,7 +206,7 @@ def test_every_workflow_says_how_to_try_it_with_its_own_verbs() -> None:
         assert workflow.manifest.try_.input.strip()
         commands = workflow.manifest.try_.commands
         assert 1 <= len(commands) <= 3, workflow.id
-        verbs = ("gnode plan", "gnode run")
+        verbs = ("uv run python -m grida.fx plan", "uv run python -m grida.fx run")
         assert any(
             command.startswith(tuple(f"{verb} {workflow.id} " for verb in verbs))
             for command in commands
@@ -363,6 +367,52 @@ def test_identity_must_agree_with_the_identity_golden(loaded: dict[str, LoadedWo
     ]
 
 
+def test_a_built_in_is_pinned_by_the_identity_fx_resolves(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A built-in's contract version carries its minor version, as FX's own plan resolves it,
+    so a submodule bump that moves one (and re-bills every step that uses it) moves the
+    identity golden. character-3d's paid Tripo steps are pinned by no sampled run."""
+
+    from grida.fx import plan
+
+    from stage_gen.workflows._fx import FxWorkflow, write_project
+
+    built_ins = [
+        node_type.contract_version
+        for found in discover()
+        if found.root.joinpath("workflow.yaml").is_file()
+        for node_type in FxWorkflow.read(found.package).types.values()
+        if node_type.contract_version.startswith("fx/")
+    ]
+    assert built_ins
+    assert all(re.fullmatch(r"fx/[a-z_.]+@\d+\.\d+", identity) for identity in built_ins)
+    pinned = {str(entry[2]) for entry in GOLDEN["identities"]["node_types"]}
+
+    character = FxWorkflow.read("stage_gen.workflows.character_3d")
+    sample = character.root / "inputs/sample/inputs.yaml"
+    monkeypatch.setenv("GRIDA_FX_DISABLE_DOTENV", "1")
+    monkeypatch.setenv("GRIDA_FX_NETWORK", "off")
+    planned = plan(
+        "character-3d",
+        input_files=[sample],
+        cwd=write_project(tmp_path / "project", runs="runs", cache="cache"),
+    )
+    resolved = {
+        uses: str(entry["identity"])
+        for uses, entry in planned.document["types"].items()
+        if uses.startswith("fx/")
+    }
+    described = {
+        step.uses: step.type_identity
+        for step in character.description.steps
+        if step.uses.startswith("fx/")
+    }
+    assert {"fx/mesh.generate@1", "fx/mesh.rig@1"} <= set(resolved) <= set(described)
+    assert {uses: described[uses] for uses in resolved} == resolved
+    assert set(resolved.values()) <= pinned
+
+
 def test_landing_order_and_covers_are_one_each(loaded: dict[str, LoadedWorkflow]) -> None:
     portrait = loaded["portrait-motion"]
     entry = portrait.discovered.manifest.examples[0]
@@ -420,7 +470,6 @@ def test_the_script_exports_and_checks_the_catalog(tmp_path: Path) -> None:
     assert json.loads(output.getvalue()) == {
         "workflows": 5,
         "catalog": None,
-        "cli": None,
         "problems": [],
     }
     assert not (tmp_path / "site").exists()
@@ -428,9 +477,7 @@ def test_the_script_exports_and_checks_the_catalog(tmp_path: Path) -> None:
     assert main(argv, stdout=output) == 0
     written = json.loads((tmp_path / "site/catalog.json").read_text(encoding="utf-8"))
     assert written["kind"] == "stage-gen-catalog-v1" and len(written["workflows"]) == 5
-    reference = json.loads((tmp_path / "site/cli.json").read_text(encoding="utf-8"))
-    assert reference["kind"] == "gnode-cli-v1" and reference["prog"] == "gnode"
-    assert json.loads(output.getvalue())["cli"] == str(tmp_path / "site/cli.json")
+    assert sorted(path.name for path in (tmp_path / "site").iterdir()) == ["catalog.json"]
     strict = ["--out", str(tmp_path / "strict")]
     strict += ["--examples", str(tmp_path / "absent")]
     output = io.StringIO()

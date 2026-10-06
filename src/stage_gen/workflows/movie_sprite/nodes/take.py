@@ -13,9 +13,8 @@ import io
 from typing import Any
 
 import numpy as np
+from grida.fx import Ctx, node
 from PIL import Image
-
-from gnode import Ctx, node
 
 #: The frame each aspect ratio is drawn at, before the route scales it.
 PLATE_SIZE = {"9:16": (720, 1280), "16:9": (1280, 720)}

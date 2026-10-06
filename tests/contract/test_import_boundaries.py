@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import importlib
 import re
 from importlib.util import resolve_name
 from pathlib import Path
@@ -25,7 +26,6 @@ GAME_MODULES = (
 )
 COMPONENT_ROOT = SOURCE_ROOT / "stage_gen" / "components"
 FORBIDDEN_COMPONENT_DEPENDENCIES = (
-    "stage_gen.orchestration",
     "stage_gen.workflows",
     "stage_gen.viewer",
 )
@@ -75,24 +75,18 @@ def test_components_do_not_import_application_or_provider_layers() -> None:
 WORKFLOW_ROOT = SOURCE_ROOT / "stage_gen" / "workflows"
 
 _ACTIVE_IMAGE_MODEL_ID = re.compile(r"^(?:(?:openai|fal-ai)/)?gpt-image-[0-9][A-Za-z0-9._/-]*$")
-_CONCRETE_PROVIDER_IMPORT_PREFIXES = ("gnode.providers",)
 
 
 def test_active_image_routes_have_one_application_authority() -> None:
-    """Deployment identities belong to the application's route catalog.
+    """Image routes live in fx.yaml; no Python names an image model.
 
-    The product module is the sole production home for provider model spellings,
-    so a same-spec promotion cannot require a source sweep. Workflows and
-    components may describe semantic image intent but cannot construct provider
-    adapters. Historical prose and fixture data live outside these production
-    Python roots.
+    A route is bound by a project file's ``routes:``, so a same-spec promotion is one line
+    there and never a source sweep. Historical prose and fixture data live outside these
+    production Python roots.
     """
 
     violations: list[str] = []
-    image_product_source = SOURCE_ROOT / "stage_gen" / "image_product.py"
     for path in _python_sources(SOURCE_ROOT / "stage_gen"):
-        if path == image_product_source:
-            continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         relative = path.relative_to(SOURCE_ROOT.parent)
         for node in ast.walk(tree):
@@ -104,24 +98,7 @@ def test_active_image_routes_have_one_application_authority() -> None:
                 violations.append(
                     f"{relative}:{node.lineno} owns active image model {node.value!r}"
                 )
-
-    for root in (WORKFLOW_ROOT, COMPONENT_ROOT):
-        for path in _python_sources(root):
-            package = _package_for(path)
-            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-            relative = path.relative_to(SOURCE_ROOT.parent)
-            for node in ast.walk(tree):
-                if not isinstance(node, (ast.Import, ast.ImportFrom)):
-                    continue
-                for imported in _imported_modules(node, package):
-                    if any(
-                        imported == prefix or imported.startswith(f"{prefix}.")
-                        for prefix in _CONCRETE_PROVIDER_IMPORT_PREFIXES
-                    ):
-                        violations.append(
-                            f"{relative}:{node.lineno} imports concrete provider {imported}"
-                        )
-    assert not violations, "active image routes escaped the catalog:\n" + "\n".join(violations)
+    assert not violations, "a Python source names an image model:\n" + "\n".join(violations)
 
 
 def _module_of(root: Path) -> str:
@@ -142,10 +119,10 @@ def _workflow_roots() -> dict[str, tuple[Path, ...]]:
 #: itself with. It is not a workflow, and it imports none.
 WORKFLOW_DECLARATIONS = "stage_gen.workflows._registry"
 #: How a workflow written as a workflow file declares itself to the registry.
-WORKFLOW_FILE_DECLARATIONS = "stage_gen.workflows._gnode"
+WORKFLOW_FILE_DECLARATIONS = "stage_gen.workflows._fx"
 #: Modules at the workflows root that read every workflow; they load one only on demand,
 #: through ``load_code``, and import none statically.
-WORKFLOW_REGISTRY_MODULES = ("_registry.py", "_catalog.py", "_checks.py", "_gnode.py")
+WORKFLOW_REGISTRY_MODULES = ("_registry.py", "_catalog.py", "_checks.py", "_fx.py")
 
 
 def test_workflows_do_not_import_each_other() -> None:
@@ -192,9 +169,6 @@ def test_registry_and_example_contract_import_no_workflow() -> None:
     assert not violations, "a registry module imports a workflow:\n" + "\n".join(violations)
 
 
-ORCHESTRATION_ROOT = SOURCE_ROOT / "stage_gen" / "orchestration"
-
-
 def _import_violation_pairs(path: Path, forbidden: tuple[str, ...]) -> list[tuple[str, str]]:
     package = _package_for(path)
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -217,26 +191,6 @@ def _import_violations(path: Path, forbidden: tuple[str, ...]) -> list[str]:
     return [violation for violation, _ in _import_violation_pairs(path, forbidden)]
 
 
-GENERIC_ORCHESTRATION_MODULES = (
-    "runtime.py",
-    "image_routing.py",
-)
-
-
-def test_generic_orchestration_imports_no_workflow() -> None:
-    """The composition root imports no workflow."""
-
-    sources = _python_sources(ORCHESTRATION_ROOT)
-    names = {path.relative_to(ORCHESTRATION_ROOT).as_posix() for path in sources}
-    missing = sorted(set(GENERIC_ORCHESTRATION_MODULES) - names)
-    assert not missing, f"generic orchestration modules moved; update this rule: {missing}"
-    violations: list[str] = []
-    for path in sources:
-        violations.extend(_import_violations(path, ("stage_gen.workflows",)))
-    assert not violations, "orchestration imports a workflow:\n" + "\n".join(violations)
-
-
-ENGINE_ROOT = SOURCE_ROOT / "gnode"
 CONSUMER_ROOTS = (
     SOURCE_ROOT / "stage_gen",
     SOURCE_ROOT.parent / "tests",
@@ -253,198 +207,78 @@ def _python_sources(root: Path) -> list[Path]:
     return sources
 
 
-def test_engine_does_not_import_the_application() -> None:
-    """gnode is the engine: it must stay usable with no application present."""
-
-    violations: list[str] = []
-    for path in _python_sources(ENGINE_ROOT):
-        package = _package_for(path)
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if not isinstance(node, (ast.Import, ast.ImportFrom)):
-                continue
-            for imported in _imported_modules(node, package):
-                if imported.split(".")[0] in {"stage_gen", "concept_studio", *GAME_MODULES}:
-                    relative = path.relative_to(SOURCE_ROOT.parent)
-                    violations.append(f"{relative}:{node.lineno} imports {imported}")
-    assert not violations, "engine import boundary violations:\n" + "\n".join(violations)
-
-
 APPLICATION_UTILITY_MODULES = ("contracts", "fs", "provenance", "canonical", "media")
 
 
 def test_application_utilities_import_no_engine() -> None:
-    """Stage Gen's own utilities outlive gnode, so none of them may import it."""
+    """Stage Gen's own utilities are engine-free, so none of them may import FX."""
 
     root = SOURCE_ROOT / "stage_gen"
     violations: list[str] = []
     for name in APPLICATION_UTILITY_MODULES:
         module = root / f"{name}.py"
         for path in [module] if module.is_file() else _python_sources(root / name):
-            violations.extend(_import_violations(path, ("gnode",)))
-    assert not violations, "an application utility imports gnode:\n" + "\n".join(violations)
-
-
-ENGINE_RINGS = {
-    "binding": 0,
-    "contracts": 0,
-    "ledger": 0,
-    "node_types": 0,
-    "records": 0,
-    "reliability": 0,
-    "route_constraints": 0,
-    "routes": 0,
-    "trace": 0,
-    "view": 0,
-    "workflow": 0,
-    "modalities": 1,
-    "providers": 2,
-}
-_RING_ONE_SHARED = ("gnode.modalities", "gnode.modalities._types", "gnode.modalities.signatures")
-
-
-def _engine_ring_of(module: str) -> int | None:
-    parts = module.split(".")
-    if parts[0] != "gnode" or len(parts) == 1:
-        return None
-    return ENGINE_RINGS.get(parts[1])
+            violations.extend(_import_violations(path, ("grida",)))
+    assert not violations, "an application utility imports FX:\n" + "\n".join(violations)
 
 
 def _matches(imported: str, allowed: str) -> bool:
     return imported == allowed or imported.startswith(f"{allowed}.")
 
 
-def test_engine_rings_import_only_inward() -> None:
-    """A ring imports only rings below it; siblings only inside declared shared modules."""
-
-    violations: list[str] = []
-    for path in _python_sources(ENGINE_ROOT):
-        package = _package_for(path)
-        parts = path.relative_to(ENGINE_ROOT).with_suffix("").parts
-        if parts == ("__init__",):
-            own_ring: int | None = None  # the flat surface: rings 0-1, never providers
-        else:
-            own_ring = ENGINE_RINGS.get(parts[0])
-            assert own_ring is not None, f"{parts[0]} is not in ENGINE_RINGS; assign its ring"
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if not isinstance(node, (ast.Import, ast.ImportFrom)):
-                continue
-            for imported in _imported_modules(node, package):
-                if not (imported == "gnode" or imported.startswith("gnode.")):
-                    continue
-                target_ring = _engine_ring_of(imported)
-                relative = path.relative_to(SOURCE_ROOT.parent)
-                where = f"{relative}:{node.lineno} imports {imported}"
-                if own_ring is None:
-                    if target_ring == 2:
-                        violations.append(f"{where} (the flat surface never imports a provider)")
-                    continue
-                if imported == "gnode":
-                    violations.append(
-                        f"{where} (engine modules import concrete modules, not the surface)"
-                    )
-                    continue
-                if target_ring is None or target_ring < own_ring:
-                    continue
-                if target_ring > own_ring:
-                    violations.append(
-                        f"{where} (ring {own_ring} must not import ring {target_ring})"
-                    )
-                    continue
-                if own_ring == 0:
-                    continue  # the core's internal layout is its own business
-                own_leaf = "gnode." + ".".join(parts[:2]) if len(parts) >= 2 else package
-                if own_ring == 1:
-                    allowed: tuple[str, ...] = (*_RING_ONE_SHARED, own_leaf)
-                    reason = "ring-1 siblings share only _types and signatures"
-                else:
-                    allowed = ("gnode.providers._http", own_leaf)
-                    reason = "a provider imports only _http and its own package"
-                if not any(_matches(imported, entry) for entry in allowed):
-                    violations.append(f"{where} ({reason})")
-    assert not violations, "engine ring violations:\n" + "\n".join(violations)
-
-
-def test_ring_zero_stays_media_free() -> None:
-    """The core knows nothing about media or transport: no PIL, no httpx, no ring above."""
-
-    violations: list[str] = []
-    for path in _python_sources(ENGINE_ROOT):
-        parts = path.relative_to(ENGINE_ROOT).with_suffix("").parts
-        if parts == ("__init__",) or ENGINE_RINGS.get(parts[0]) != 0:
-            continue
-        package = _package_for(path)
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if not isinstance(node, (ast.Import, ast.ImportFrom)):
-                continue
-            for imported in _imported_modules(node, package):
-                if any(
-                    _matches(imported, banned)
-                    for banned in ("PIL", "httpx", "gnode.modalities", "gnode.providers")
-                ):
-                    relative = path.relative_to(SOURCE_ROOT.parent)
-                    violations.append(f"{relative}:{node.lineno} imports {imported}")
-    assert not violations, "ring 0 must stay media-free:\n" + "\n".join(violations)
-
-
-def test_ring_one_stays_provider_free() -> None:
-    """Modality specs never know a transport or a vendor."""
-
-    violations: list[str] = []
-    for path in _python_sources(ENGINE_ROOT / "modalities"):
-        package = _package_for(path)
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if not isinstance(node, (ast.Import, ast.ImportFrom)):
-                continue
-            for imported in _imported_modules(node, package):
-                if any(_matches(imported, banned) for banned in ("httpx", "gnode.providers")):
-                    relative = path.relative_to(SOURCE_ROOT.parent)
-                    violations.append(f"{relative}:{node.lineno} imports {imported}")
-    assert not violations, "ring 1 must stay provider-free:\n" + "\n".join(violations)
-
-
-DECLARED_ENGINE_SURFACES = (
-    "gnode",
-    "gnode.providers.elevenlabs",
-    "gnode.providers.fal",
-    "gnode.providers.openai",
-    "gnode.providers.openrouter",
-    "gnode.providers.tripo",
+#: Where FX is driven from outside the product's own sources: the games' pipelines, their
+#: Python tools and tests, and the Godot tools.
+FX_CONSUMER_SOURCES = (
+    *(
+        path
+        for pattern in ("*/pipeline/nodes", "*/pipeline/workflow.py", "*/tools", "*/tests")
+        for path in sorted((SOURCE_ROOT.parent / "godot/games").glob(pattern))
+        if path.is_file() or any(path.rglob("*.py"))
+    ),
+    SOURCE_ROOT.parent / "godot/tools",
 )
+#: What `grida.fx` exports, read without importing it statically (this file is scanned too).
+FX_SURFACE = frozenset(importlib.import_module("grida.fx").__all__)
 
 
-def test_application_imports_only_declared_engine_surfaces() -> None:
-    """Declared surfaces keep the engine free to move its modules.
+def _consumer_sources() -> list[Path]:
+    sources: set[Path] = set()
+    for root in (*CONSUMER_ROOTS, *FX_CONSUMER_SOURCES):
+        sources.update([root] if root.is_file() else _python_sources(root))
+    return sorted(sources)
 
-    The flat ``gnode`` surface carries rings 0-1; each first-party provider
-    package is its own surface so adapters (and their HTTP client) load only
-    when asked for. Everything else inside the engine is private layout.
-    """
 
+def _fx_import_violations(path: Path) -> list[str]:
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    relative = path.relative_to(SOURCE_ROOT.parent)
     violations: list[str] = []
-    for root in CONSUMER_ROOTS:
-        for path in _python_sources(root):
-            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-            for node in ast.walk(tree):
-                if isinstance(node, ast.ImportFrom):
-                    modules = [node.module] if node.module and not node.level else []
-                elif isinstance(node, ast.Import):
-                    modules = [alias.name for alias in node.names]
-                else:
-                    continue
-                for module in modules:
-                    if module != "gnode" and not module.startswith("gnode."):
-                        continue
-                    if module in DECLARED_ENGINE_SURFACES:
-                        continue
-                    relative = path.relative_to(SOURCE_ROOT.parent)
-                    violations.append(f"{relative}:{node.lineno} imports {module}")
-    assert not violations, "consumers import only the declared engine surfaces:\n" + "\n".join(
-        violations
-    )
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            violations += [
+                f"{relative}:{node.lineno} imports {alias.name}; write from grida.fx import X"
+                for alias in node.names
+                if alias.name.split(".")[0] == "grida"
+            ]
+            continue
+        if not isinstance(node, ast.ImportFrom) or node.level or not node.module:
+            continue
+        if node.module.split(".")[0] == "grida" and node.module != "grida.fx":
+            violations.append(f"{relative}:{node.lineno} imports {node.module}, not grida.fx")
+        elif node.module == "grida.fx":
+            violations += [
+                f"{relative}:{node.lineno} imports grida.fx.{alias.name}, which it does not export"
+                for alias in node.names
+                if alias.name not in FX_SURFACE
+            ]
+    return violations
+
+
+def test_fx_is_imported_only_through_its_declared_surface() -> None:
+    """FX is imported only as ``from grida.fx import X`` with ``X`` in ``grida.fx.__all__``:
+    never a private module, never ``grida.fx.std``."""
+
+    violations = [found for path in _consumer_sources() for found in _fx_import_violations(path)]
+    assert not violations, "imports past FX's declared surface:\n" + "\n".join(violations)
 
 
 def test_product_source_never_statically_imports_optional_consumers() -> None:
@@ -474,23 +308,27 @@ def test_game_pipelines_do_not_import_other_games_or_collection_tooling() -> Non
     assert not violations, "game imports a sibling consumer:\n" + "\n".join(violations)
 
 
-#: Modules the gnode epic retired: each is gone, and nothing imports it.
+#: Modules earlier refactors and the move onto FX retired, the old engine's packages included:
+#: each is gone, and nothing imports it.
 RETIRED_MODULES = (
     "stage_gen.interfaces",
     "stage_gen.runs",
     "stage_gen.pipeline",
     "stage_gen.application.runs",
     "stage_gen.components._node_kit",
-    "stage_gen.orchestration.env_import",
-    "stage_gen.orchestration.graph_executor",
-    "stage_gen.orchestration.rekey",
-    "stage_gen.orchestration.services",
     "stage_gen.capabilities",
-    "gnode.graph",
-    "gnode.build",
-    "gnode.schedule",
-    "gnode.runner",
     "demo_game_tools.preparation",
+    "gnode",
+    "gnode_std",
+    "stage_gen.orchestration",
+    "stage_gen.model_routes",
+    "stage_gen.model_policy_maintenance",
+    "stage_gen.image_binding",
+    "stage_gen.image_product",
+    "stage_gen.config",
+    "stage_gen.identity",
+    "stage_gen.workflows._gnode",
+    "stage_gen.workflows._reference",
 )
 
 
@@ -503,8 +341,9 @@ def test_retired_modules_are_gone_and_imported_by_nothing() -> None:
         or (root / Path(*module.split("."))).is_dir()
     ]
     assert not present, f"retired modules are back: {present}"
-    violations: list[str] = []
-    for root in CONSUMER_ROOTS:
-        for path in _python_sources(root):
-            violations.extend(_import_violations(path, RETIRED_MODULES))
+    violations = [
+        violation
+        for path in _consumer_sources()
+        for violation in _import_violations(path, RETIRED_MODULES)
+    ]
     assert not violations, "imports of retired modules:\n" + "\n".join(violations)

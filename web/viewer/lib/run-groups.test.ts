@@ -25,8 +25,8 @@ function catalog(): Catalog {
   });
   workflows.push(
     like("figure-rig", { graph_kinds: ["contained-figure-rig-v1"] }),
-    like("strip-loop", { graph_kinds: ["gnode-graph-v2"] }),
-    like("tile-set", { graph_kinds: ["gnode-graph-v2"] }),
+    like("strip-loop", { graph_kinds: ["fx-graph-v1"] }),
+    like("tile-set", { graph_kinds: ["fx-graph-v1"] }),
   );
   return parseCatalog(document);
 }
@@ -35,22 +35,22 @@ describe("which workflow a run belongs to", () => {
   const known = catalog();
 
   test("a workflow run by the workflow its plan names, never by the shared graph kind", () => {
-    const gnode = { ...NONE, document: "plan.json", kind: "gnode-graph-v2" };
-    expect(workflowOf({ ...gnode, workflowId: "tile-set" }, known)).toBe("tile-set");
-    expect(workflowOf({ ...gnode, workflowId: "strip-loop" }, known)).toBe("strip-loop");
-    expect(workflowOf({ ...gnode, workflowId: "swatch-sheet" }, known)).toBe("swatch-sheet");
-    expect(workflowOf({ ...gnode, workflowId: "someone-elses" }, known)).toBeNull();
-    expect(workflowOf({ ...gnode, workflowId: "figure-rig" }, known)).toBeNull();
+    const planned = { ...NONE, document: "plan.json", kind: "fx-graph-v1" };
+    expect(workflowOf({ ...planned, workflowId: "tile-set" }, known)).toBe("tile-set");
+    expect(workflowOf({ ...planned, workflowId: "strip-loop" }, known)).toBe("strip-loop");
+    expect(workflowOf({ ...planned, workflowId: "swatch-sheet" }, known)).toBe("swatch-sheet");
+    expect(workflowOf({ ...planned, workflowId: "someone-elses" }, known)).toBeNull();
+    expect(workflowOf({ ...planned, workflowId: "figure-rig" }, known)).toBeNull();
   });
 
   test("a run that carries only a view by the graph kind it was joined from", () => {
-    expect(workflowOf({ ...NONE, viewKind: "gnode-run-view-v1", graphKind: "contained-figure-rig-v1" }, known)).toBe(
+    expect(workflowOf({ ...NONE, viewKind: "stage-gen-run-view-v1", graphKind: "contained-figure-rig-v1" }, known)).toBe(
       "figure-rig",
     );
     expect(workflowOf({ ...NONE, document: "graph.json", kind: "contained-figure-rig-v1" }, known)).toBe(
       "figure-rig",
     );
-    expect(workflowOf({ ...NONE, viewKind: "gnode-run-view-v1", graphKind: "unknown-v1" }, known)).toBeNull();
+    expect(workflowOf({ ...NONE, viewKind: "stage-gen-run-view-v1", graphKind: "unknown-v1" }, known)).toBeNull();
   });
 
   test("runs no workflow claims are game runs when a game wrote them, else other", () => {
@@ -58,7 +58,7 @@ describe("which workflow a run belongs to", () => {
     expect(isGameRun({ ...NONE, document: "case.json" })).toBe(true);
     expect(isGameRun({ ...NONE, document: "graph.json", kind: "contained-rig-review-calibration-v1" })).toBe(false);
 
-    const run = { document: "plan.json", kind: "gnode-graph-v2", workflowId: "tile-set" };
+    const run = { document: "plan.json", kind: "fx-graph-v1", workflowId: "tile-set" };
     const entries = [
       { name: "old", identity: { ...NONE, ...run }, updatedAt: "2026-09-01T00:00:00.000Z" },
       { name: "new", identity: { ...NONE, ...run }, updatedAt: "2026-09-30T00:00:00.000Z" },

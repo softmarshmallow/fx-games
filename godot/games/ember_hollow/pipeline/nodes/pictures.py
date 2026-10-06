@@ -11,8 +11,9 @@ from __future__ import annotations
 import hashlib
 from typing import Any
 
+from grida.fx import Ctx, node
+
 from ember_hollow_pipeline import build, templates
-from gnode import Ctx, node
 
 _GATE = {"gate": str, "args": dict}
 

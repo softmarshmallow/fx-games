@@ -1,15 +1,24 @@
 import { describe, expect, test } from "bun:test";
-import { parseViewContexts, viewPolicy, withUrls } from "./view-context";
+import {
+  parseViewContexts,
+  VIEW_CONTEXT_KIND,
+  VIEW_CONTEXTS_KIND,
+  VIEW_HELPER_PATH,
+  VIEW_HELPER_SOURCE,
+  VIEW_READY_KIND,
+  viewPolicy,
+  withUrls,
+} from "./view-context";
 
 const TEMPLATE = `views/${"a".repeat(64)}.html`;
 
 function contexts(overrides: Record<string, unknown> = {}) {
   return {
-    kind: "gnode-view-contexts-v1",
+    kind: "stage-gen-view-contexts-v1",
     view_origins: [],
     views: [
       {
-        kind: "gnode-view-context-v1",
+        kind: "stage-gen-view-context-v1",
         scope: "node",
         node_id: "compose#1",
         template: TEMPLATE,
@@ -39,7 +48,7 @@ describe("view contexts", () => {
   test("a workflow's own view reads every step by name, and the run's outputs", () => {
     const image = { kind: "image/png", digest: "d".repeat(64), size: 3, key: null, ref: `views/files/${"d".repeat(64)}.png` };
     const whole = {
-      kind: "gnode-view-context-v1",
+      kind: "stage-gen-view-context-v1",
       scope: "workflow",
       node_id: null,
       template: TEMPLATE,
@@ -47,12 +56,12 @@ describe("view contexts", () => {
       outputs: {},
       steps: { entity: { instances: [{ key: "ferry", status: "succeeded", steps: { draw: { outputs: { image } } } }] } },
     };
-    const [view] = parseViewContexts({ kind: "gnode-view-contexts-v1", views: [whole] }).views;
+    const [view] = parseViewContexts({ kind: "stage-gen-view-contexts-v1", views: [whole] }).views;
     expect([view.scope, view.nodeId, view.title]).toEqual(["workflow", null, "universe"]);
     const sent = withUrls(view, (ref) => `/a/${ref}`) as Record<string, any>;
     expect(sent.steps.entity.instances[0].steps.draw.outputs.image.url).toBe(`/a/${image.ref}`);
     const escaping = { ...whole, steps: { draw: { outputs: { image: { ...image, ref: "../x.png" } } } } };
-    expect(() => parseViewContexts({ kind: "gnode-view-contexts-v1", views: [escaping] })).toThrow();
+    expect(() => parseViewContexts({ kind: "stage-gen-view-contexts-v1", views: [escaping] })).toThrow();
   });
 
   test("a template outside the run's kept views, or a file escaping the run, is refused", () => {
@@ -76,6 +85,17 @@ describe("view contexts", () => {
     expect(policy).toContain("default-src 'none'");
     expect(policy).toContain("img-src http://localhost:3000 data: blob: https://cdn.example.com");
     expect(policy).not.toContain("allow-same-origin");
-    expect(policy).toContain("script-src 'unsafe-inline' http://localhost:3000/_gnode/view.js https://cdn.example.com");
+    expect(policy).toContain("script-src 'unsafe-inline' http://localhost:3000/_views/view.js https://cdn.example.com");
+  });
+
+  test("the kinds, the helper path and the ready message are Stage Gen's", () => {
+    expect([VIEW_CONTEXTS_KIND, VIEW_CONTEXT_KIND]).toEqual([
+      "stage-gen-view-contexts-v1",
+      "stage-gen-view-context-v1",
+    ]);
+    expect(VIEW_HELPER_PATH).toBe("/_views/view.js");
+    expect(VIEW_READY_KIND).toBe("stage-gen-view-ready");
+    expect(VIEW_HELPER_SOURCE).toContain(`kind: "${VIEW_READY_KIND}"`);
+    expect(VIEW_HELPER_SOURCE).toContain(`?.kind !== "${VIEW_CONTEXT_KIND}"`);
   });
 });

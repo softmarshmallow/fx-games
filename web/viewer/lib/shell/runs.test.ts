@@ -10,6 +10,8 @@ import {
   rootKey,
   runDirFor,
   runRoots,
+  viewCachePathFor,
+  viewKey,
 } from "./runs";
 import { relativeOf, runHref, tagFor } from "./run-ref";
 
@@ -18,6 +20,7 @@ const CHECKOUT = path.resolve(import.meta.dir, "../../../..");
 const saved = {
   STAGE_GEN_REPO_ROOT: process.env.STAGE_GEN_REPO_ROOT,
   STAGE_GEN_RUN_ROOTS: process.env.STAGE_GEN_RUN_ROOTS,
+  STAGE_GEN_VIEW_CACHE: process.env.STAGE_GEN_VIEW_CACHE,
 };
 const scratch: string[] = [];
 
@@ -72,7 +75,7 @@ describe("repository root", () => {
 });
 
 describe("run roots", () => {
-  test("default to out/ of the checkout when gnode view set none", () => {
+  test("default to out/ of the checkout when scripts/view.py set none", () => {
     delete process.env.STAGE_GEN_REPO_ROOT;
     delete process.env.STAGE_GEN_RUN_ROOTS;
     const [only, ...rest] = runRoots();
@@ -137,24 +140,48 @@ describe("run names", () => {
     for (const name of ["", ".hidden", "..", "../secret", "nested\\asset.png", "asset%2Fsecret.png"]) {
       expect(() => artifactPathFor(run, name)).toThrow("invalid artifact path");
     }
+    // FX's placed names: a take's folder, a cut name, any script's letters.
+    expect(artifactPathFor(run, "files/draw#2/image.png")).toBe(path.join(runDir, "files", "draw#2", "image.png"));
+    expect(artifactPathFor(run, "files/étoile~0123456789abcdef.png")).toBe(
+      path.join(runDir, "files", "étoile~0123456789abcdef.png"),
+    );
+    expect(() => artifactPathFor(run, "files/draw/.0123456789abcdef.part")).toThrow("invalid artifact path");
+  });
+
+  test("a view's files resolve in the run's view cache, and nowhere without one", async () => {
+    const root = await tempDir("stage-gen-out-");
+    const cache = await tempDir("stage-gen-views-");
+    process.env.STAGE_GEN_RUN_ROOTS = root;
+    delete process.env.STAGE_GEN_VIEW_CACHE;
+    const run = { root: runRoots()[0].key, tag: "runs~one" };
+    const template = `views/${"a".repeat(64)}.html`;
+    expect(viewCachePathFor(run, template)).toBeNull();
+    process.env.STAGE_GEN_VIEW_CACHE = cache;
+    expect(viewCachePathFor(run, template)).toBe(path.join(cache, viewKey(runDirFor(run)), template));
+    expect(() => viewCachePathFor(run, "views/../../x.html")).toThrow("invalid artifact path");
   });
 });
 
 describe("run discovery", () => {
-  test("finds every run shape under several roots, as gnode view does for workflow runs", async () => {
+  test("finds every run shape under several roots, as scripts/view.py does for FX runs", async () => {
     const out = await tempDir("stage-gen-out-");
     const spikes = await tempDir("stage-gen-spikes-");
     // A plan the retired executor wrote is no longer a run.
     await write(path.join(out, "old-run", "execution-plan.json"), { kind: "pipeline-execution-graph-v1" });
     await write(path.join(out, "game-run", "manifest.json"), { kind: "prepared-game-runtime-v12" });
     await write(path.join(out, "view-only", "execution-view.json"), { kind: "x" });
-    await write(path.join(spikes, "canary-01", "wren-01", "plan.json"));
+    const plan = { kind: "fx-graph-v1" };
+    await write(path.join(spikes, "canary-01", "wren-01", "plan.json"), plan);
     await write(path.join(spikes, "canary-01", "wren-01", "events.jsonl"), "");
-    await write(path.join(spikes, "review", "facial-4k", "yuzu", "run-01", "plan.json"));
+    await write(path.join(spikes, "review", "facial-4k", "yuzu", "run-01", "plan.json"), plan);
     await write(path.join(spikes, "review", "facial-4k", "yuzu", "run-01", "events.jsonl"), "");
     // A run's own folders are not searched again.
-    await write(path.join(spikes, "review", "facial-4k", "yuzu", "run-01", "inner", "plan.json"));
+    await write(path.join(spikes, "review", "facial-4k", "yuzu", "run-01", "inner", "plan.json"), plan);
     await write(path.join(spikes, "review", "facial-4k", "yuzu", "run-01", "inner", "events.jsonl"), "");
+    // A plan and record of another engine are foreign: neither listed nor searched below.
+    await write(path.join(spikes, "old", "run-01", "plan.json"), { kind: "other-graph-v2" });
+    await write(path.join(spikes, "old", "run-01", "events.jsonl"), "");
+    await write(path.join(spikes, "old", "run-01", "inner", "manifest.json"), { kind: "x" });
     await write(path.join(spikes, "scratch", "notes.txt"), "not a run");
     await write(path.join(spikes, "graph-only", "graph.json"));
     process.env.STAGE_GEN_RUN_ROOTS = [out, spikes].join(path.delimiter);

@@ -50,12 +50,9 @@ def test_explicit_product_marker_only_overrides_source_string_hints(tmp_path: Pa
     }
 
 
-def test_named_import_from_package_follows_submodule_and_live_tests_are_excluded(
-    tmp_path: Path,
-) -> None:
+def test_named_import_from_package_follows_submodule(tmp_path: Path) -> None:
     _write(tmp_path, "tests/test_indirect.py", "from tests.helpers import optional\n")
     _write(tmp_path, "tests/helpers/optional.py", "import the_grain_pipeline\n")
-    _write(tmp_path, "tests/live/test_provider.py", "import bellweather_pipeline\n")
     assert collect_owners(tmp_path) == {"tests/test_indirect.py": "games"}
 
 

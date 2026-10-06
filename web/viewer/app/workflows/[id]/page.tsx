@@ -1,4 +1,4 @@
-// One workflow, read from the catalog `gnode view` exported: what it promises, the
+// One workflow, read from the catalog `scripts/view.py` exported: what it promises, the
 // commands that run it, the graph it plans offline from its committed sample inputs,
 // its steps, and its runs under the viewer's roots.
 //
@@ -33,7 +33,7 @@ export default async function WorkflowPage({ params }: { params: Promise<{ id: s
         </p>
         <h1 className={h1}>{id}</h1>
         <p className={refusal ? errorBanner : metaLine}>
-          {refusal ?? "No catalog. Start the viewer with gnode view to read workflows."}
+          {refusal ?? "No catalog. Start the viewer with uv run python scripts/view.py to read workflows."}
         </p>
       </main>
     );
@@ -48,8 +48,8 @@ export default async function WorkflowPage({ params }: { params: Promise<{ id: s
   const now = Date.now();
   const commands = [
     ...(manifest.tryIt?.commands ?? []),
-    `gnode schema ${workflow.id}`,
-    `gnode plan ${workflow.id} --help`,
+    `uv run python -m grida.fx schema ${workflow.id}`,
+    `uv run python -m grida.fx plan ${workflow.id} --help`,
   ];
   const related = manifest.related
     .map((other) => findWorkflow(catalog, other))

@@ -14,8 +14,8 @@ from __future__ import annotations
 from typing import Any
 
 import jsonschema
+from grida.fx import Ctx, node
 
-from gnode import Ctx, node
 from stage_gen.components.character_3d.profiles import articulation, diagnostic_samples
 from stage_gen.components.character_3d.quality_bar import numeric_tools
 from stage_gen.components.character_3d.requirements import validate_export_space

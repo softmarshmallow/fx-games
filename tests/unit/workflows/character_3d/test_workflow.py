@@ -1,6 +1,6 @@
-"""Character-3d through gnode, offline: every stage, rebuilds, refusals, resume and support.
+"""Character-3d on FX, offline: every stage, rebuilds, refusals, resume and support.
 
-Blender is the stand-in in ``stub_blender.py``, found through ``GNODE_TOOL_BLENDER``; its
+Blender is the stand-in in ``stub_blender.py``, found through ``GRIDA_FX_TOOL_BLENDER``; its
 models are small JSON documents. The paid calls are stand-ins too: the agents follow a
 script per episode (draw a canonical and each part's views, build one assembly, accept or
 reject as the test says), the image calls return flat pictures of the size asked for, and
@@ -21,18 +21,11 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from grida.fx import Answer, CallRefused, InputFile, RunResult, StandInCall, plan_async, run_async
 from PIL import Image
 
-from gnode import (
-    CallRecord,
-    CallRefused,
-    HostServices,
-    Route,
-    RunOutcome,
-    WorkflowRun,
-    plan_async,
-)
 from stage_gen.workflows.character_3d import support
+from tests.unit._fx import failures, scratch_project
 from tests.unit.workflows.character_3d.stub_blender import glb, unglb
 
 PACKAGE = Path(__file__).resolve().parents[4] / "src/stage_gen/workflows/character_3d"
@@ -55,8 +48,8 @@ def _png(size: str) -> bytes:
     return buffer.getvalue()
 
 
-def _model(file: Any) -> dict[str, Any]:
-    return unglb(Path(file.location).read_bytes())
+def _model(file: InputFile) -> dict[str, Any]:
+    return unglb(file.read_bytes())
 
 
 def _wait_for(path: Path, seconds: float = 60) -> None:
@@ -69,8 +62,8 @@ def _wait_for(path: Path, seconds: float = 60) -> None:
         time.sleep(0.05)
 
 
-def _call(name: str, **arguments: Any) -> dict[str, Any]:
-    return {"text": "", "tool_calls": [{"id": f"c-{name}", "name": name, "arguments": arguments}]}
+def _call(name: str, **arguments: Any) -> Answer:
+    return Answer.turn(tool_calls=[{"id": f"c-{name}", "name": name, "arguments": arguments}])
 
 
 def _verdict(subject: Mapping[str, Any], criteria: list[str], accept: bool) -> dict[str, Any]:
@@ -123,24 +116,17 @@ class StandIn:
             kind: (PACKAGE / "prompts" / name).read_text() for kind, name in EPISODES.items()
         }
 
-    def services(self, store: Any) -> HostServices:
-        async def turn(route: Route, request: Mapping[str, Any], take: int) -> CallRecord:
-            del route, take
+    def __call__(self, call: StandInCall) -> Answer:
+        request = call.request
+        if call.capability == "agent.turn":
             kind = next(k for k, text in self.prompts.items() if request["system"].startswith(text))
             self.calls.append(f"agent.{kind}")
             self.shown[kind] = len(request["messages"][0].get("images", []))
-            return CallRecord({}, self._turn(kind, request["messages"]), 0.01)
-
-        async def image(route: Route, request: Mapping[str, Any], take: int) -> CallRecord:
-            del route, take
+            return self._turn(kind, request["messages"])
+        if call.capability in ("image.generate", "image.edit"):
             self.calls.append("image")
-            png = _png(request["size"])
-            return CallRecord(
-                {"image": store.put_bytes(png, kind="image/png", name="image")}, None, 0.2
-            )
-
-        async def mesh(route: Route, request: Mapping[str, Any], take: int) -> CallRecord:
-            del route, take
+            return Answer(files={"image": _png(request["size"])})
+        if call.capability == "mesh.generate":
             self.calls.append("mesh")
             self.meshed.append(sorted(request["views"]))
             # Tripo's multiview vocabulary, as the real adapter refuses it.
@@ -158,30 +144,16 @@ class StandIn:
                 "draw": self.asked[asked],
                 "damaged": self.asked[asked] <= self.damaged,
             }
-            model = store.put_bytes(glb(document), kind="model/gltf-binary", name="model")
-            return CallRecord({"model": model}, {"facts": {"task": asked}}, 1.2)
-
-        async def rig(route: Route, request: Mapping[str, Any], take: int) -> CallRecord:
-            del route, take
+            # The engine reads the model's kind from its bytes.
+            return Answer(files={"model": glb(document)})
+        if call.capability == "mesh.rig":
             self.calls.append("rig")
-            document = _model(request["model"])
-            rigged = glb({**document, "rigged": True})
-            model = store.put_bytes(rigged, kind="model/gltf-binary", name="model")
-            return CallRecord({"model": model}, {"facts": {"riggable": True}}, 0.25)
+            rigged = glb({**_model(request["model"]), "rigged": True})
+            facts = {"riggable": True, "checked_rig_type": None, "advisory_override": False}
+            return Answer(files={"model": rigged}, data={"facts": facts})
+        raise AssertionError(f"no stand-in answers {call.capability}")
 
-        return HostServices(
-            store=store,
-            capabilities={
-                "agent.turn": turn,
-                "image.generate": image,
-                "image.edit": image,
-                "mesh.generate": mesh,
-                "mesh.rig": rig,
-            },
-            live=True,
-        )
-
-    def _turn(self, kind: str, messages: list[dict[str, Any]]) -> dict[str, Any]:
+    def _turn(self, kind: str, messages: list[dict[str, Any]]) -> Answer:
         opening = json.loads(messages[0]["content"])
         tools = [m for m in messages if m["role"] == "tool"]
         for message in tools:
@@ -253,10 +225,7 @@ class StandIn:
 
 
 def _project(tmp_path: Path) -> Path:
-    project = tmp_path / "project"
-    project.mkdir(parents=True, exist_ok=True)
-    (project / "gnode.yaml").write_text("gnode: project/v1\n", encoding="utf-8")
-    return project
+    return scratch_project(tmp_path / "project")
 
 
 def _inputs(tmp_path: Path, **settings: Any) -> Path:
@@ -278,17 +247,18 @@ def _part(tmp_path: Path, role: str) -> str:
     return path.name
 
 
-async def _run(tmp_path: Path, stand_in: StandIn, run: str = "one", **settings: Any) -> RunOutcome:
+async def _run(tmp_path: Path, stand_in: StandIn, run: str = "one", **settings: Any) -> RunResult:
     project = _project(tmp_path)
-    plan = await plan_async(
-        "character-3d", input_files=[_inputs(tmp_path, **settings)], cwd=project
+    return await run_async(
+        "character-3d",
+        input_files=[_inputs(tmp_path, **settings)],
+        cwd=project,
+        run_dir=project / "runs" / run,
+        stand_in=stand_in,
     )
-    assert plan.ok, plan.problems
-    services = stand_in.services(plan.planner.store)
-    return await WorkflowRun(plan, run_dir=project / "runs" / run, services=services).run()
 
 
-def _result(outcome: RunOutcome) -> dict[str, Any]:
+def _result(outcome: RunResult) -> dict[str, Any]:
     document: dict[str, Any] = json.loads((outcome.run_dir / "outputs/result.json").read_text())
     return document
 
@@ -297,7 +267,7 @@ async def test_a_brief_becomes_an_accepted_rigged_character(tmp_path: Path, blen
     stand_in = StandIn()
     outcome = await _run(tmp_path, stand_in)
 
-    assert outcome.ok, outcome.failed
+    assert outcome.ok, failures(outcome)
     assert Counter(stand_in.calls) == {
         "agent.draw": 4,
         "image": 3,
@@ -325,7 +295,7 @@ async def test_a_mesh_is_made_from_the_sides_and_its_review_sees_every_view(
     stand_in = StandIn(extra_views=("three_quarter",))
     outcome = await _run(tmp_path, stand_in)
 
-    assert outcome.ok, outcome.failed
+    assert outcome.ok, failures(outcome)
     assert stand_in.meshed == [["back", "front"]]
     assert stand_in.shown["part"] > StandIn().shown.get("part", 0)
     assert _result(outcome)["status"] == "accepted"
@@ -337,7 +307,7 @@ async def test_without_review_the_character_is_delivered_unreviewed(
     stand_in = StandIn()
     outcome = await _run(tmp_path, stand_in, review="none")
 
-    assert outcome.ok, outcome.failed
+    assert outcome.ok, failures(outcome)
     assert not any(
         call in stand_in.calls for call in ("agent.references", "agent.part", "agent.rig")
     )
@@ -356,7 +326,7 @@ async def test_supplied_parts_are_fitted_to_the_reference_and_rigged(
         tmp_path, stand_in, parts=parts, reference="sheet.png", partition="head_body_hair"
     )
 
-    assert outcome.ok, outcome.failed
+    assert outcome.ok, failures(outcome)
     assert "image" not in stand_in.calls and "mesh" not in stand_in.calls
     assert stand_in.shown["assemble"] == 1  # the reference sheet the parts are fitted to
     assert _result(outcome)["status"] == "accepted"
@@ -383,7 +353,7 @@ async def test_a_rejected_rig_rebuilds_the_body_from_a_new_mesh(
     stand_in = StandIn(reject={"rig": 1})
     outcome = await _run(tmp_path, stand_in)
 
-    assert outcome.ok, outcome.failed
+    assert outcome.ok, failures(outcome)
     assert stand_in.calls.count("mesh") == 2 and stand_in.calls.count("rig") == 2
     assert stand_in.calls.count("agent.rig") == 2
     assert stand_in.calls.count("image") == 3  # the references are not drawn again
@@ -398,7 +368,7 @@ async def test_a_rig_the_audit_refuses_is_rebuilt_without_paying_a_reviewer(
     stand_in = StandIn(damaged=1)
     outcome = await _run(tmp_path, stand_in)
 
-    assert outcome.ok, outcome.failed
+    assert outcome.ok, failures(outcome)
     assert stand_in.calls.count("mesh") == 2
     assert stand_in.calls.count("agent.rig") == 1  # the structural rejection is free
     assert _result(outcome)["status"] == "accepted"
@@ -412,8 +382,8 @@ async def test_a_rig_rejected_on_every_build_is_refused_with_the_reason(
 
     assert not outcome.ok
     assert stand_in.calls.count("mesh") == 2
-    failed = [r for i, r in outcome.results.items() if i.startswith("result#")]
-    assert failed and "failed its independent review" in str(failed[0].error)
+    failed = [f for i, f in outcome.failures.items() if i.startswith("result#")]
+    assert failed and "failed its independent review" in failed[0].message
 
 
 async def test_running_again_pays_for_nothing(tmp_path: Path, blender: Path) -> None:
@@ -429,10 +399,12 @@ async def test_a_killed_run_resumes_to_the_same_character(tmp_path: Path, blende
     hold.touch()
     first = StandIn()
     project = _project(tmp_path)
-    plan = await plan_async("character-3d", input_files=[_inputs(tmp_path)], cwd=project)
+    inputs = _inputs(tmp_path)
     run_dir = project / "runs" / "one"
     task = asyncio.ensure_future(
-        WorkflowRun(plan, run_dir=run_dir, services=first.services(plan.planner.store)).run()
+        run_async(
+            "character-3d", input_files=[inputs], cwd=project, run_dir=run_dir, stand_in=first
+        )
     )
     await asyncio.to_thread(_wait_for, tmp_path / "hold.reached")
     task.cancel()
@@ -442,12 +414,11 @@ async def test_a_killed_run_resumes_to_the_same_character(tmp_path: Path, blende
     assert "rig" in first.calls and "agent.rig" not in first.calls
 
     resumed = StandIn()
-    replan = await plan_async("character-3d", input_files=[_inputs(tmp_path)], cwd=project)
-    outcome = await WorkflowRun(
-        replan, run_dir=run_dir, services=resumed.services(replan.planner.store)
-    ).run()
+    outcome = await run_async(
+        "character-3d", input_files=[inputs], cwd=project, run_dir=run_dir, stand_in=resumed
+    )
 
-    assert outcome.ok, outcome.failed
+    assert outcome.ok, failures(outcome)
     assert resumed.calls == ["agent.rig"]
     whole = await _run(tmp_path / "again", StandIn())
     for name in ("character.glb", "result.json"):
@@ -458,16 +429,17 @@ async def test_a_killed_run_resumes_to_the_same_character(tmp_path: Path, blende
 
 async def test_support_binds_the_closure_and_the_settings(tmp_path: Path, blender: Path) -> None:
     project = _project(tmp_path)
-    plan = await plan_async("character-3d", input_files=[_inputs(tmp_path)], cwd=project)
+    inputs = _inputs(tmp_path)
+    plan = await plan_async("character-3d", input_files=[inputs], cwd=project)
     build = support.blender_build(blender)
-    target = support.support_target(plan, blender=build)
+    target = support.support_target(plan, inputs=support.planned_inputs([inputs]), blender=build)
 
     assert set(target["closure"]) == {
         "workflow_sha256",
-        "lock",
         "types",
         "contracts",
         "routes",
+        "prices",
         "blender",
     }
     assert set(target["closure"]["routes"]) == {
@@ -495,20 +467,30 @@ async def test_support_binds_the_closure_and_the_settings(tmp_path: Path, blende
     }
     assert support.admit(record, target)["support_qualified"] is True
 
-    other_brief = tmp_path / "other"
+    other_inputs = _inputs(tmp_path / "other")
     other = await plan_async(
-        "character-3d", input_files=[_inputs(other_brief)], cwd=_project(other_brief)
+        "character-3d", input_files=[other_inputs], cwd=_project(tmp_path / "other")
     )
-    assert support.admit(record, support.support_target(other, blender=build))["mode"] == (
-        "supported"
+    other_target = support.support_target(
+        other, inputs=support.planned_inputs([other_inputs]), blender=build
     )
-    stricter = await plan_async(
-        "character-3d", input_files=[_inputs(tmp_path / "s", rounds=3)], cwd=project
-    )
+    assert support.admit(record, other_target)["mode"] == "supported"
+    stricter_inputs = _inputs(tmp_path / "s", rounds=3)
+    stricter = await plan_async("character-3d", input_files=[stricter_inputs], cwd=project)
     with pytest.raises(support.SupportRefused, match="changed: rounds"):
-        support.admit(record, support.support_target(stricter, blender=build))
+        support.admit(
+            record,
+            support.support_target(
+                stricter, inputs=support.planned_inputs([stricter_inputs]), blender=build
+            ),
+        )
     with pytest.raises(support.SupportRefused, match="changed: blender"):
-        support.admit(record, support.support_target(plan, blender={"sha256": "e" * 64}))
+        support.admit(
+            record,
+            support.support_target(
+                plan, inputs=support.planned_inputs([inputs]), blender={"sha256": "e" * 64}
+            ),
+        )
 
 
 def test_a_cohort_dry_run_plans_every_brief_under_one_target(
@@ -575,12 +557,10 @@ async def test_a_calibration_episode_judges_a_frozen_rig_with_the_workflows_revi
     project = _project(tmp_path / "episode")
     plan = await plan_async("character-3d-calibration", input_files=[inputs], cwd=project)
     assert plan.ok, plan.problems
-    assert plan.planner.project.root == project.resolve()
-    services = stand_in.services(plan.planner.store)
 
-    outcome = await WorkflowRun(plan, run_dir=tmp_path / "run", services=services).run()
+    outcome = await run_async(plan, run_dir=tmp_path / "run", stand_in=stand_in)
 
-    assert outcome.ok, outcome.failed
+    assert outcome.ok, failures(outcome)
     assert stand_in.calls == ["agent.rig"]
     verdict = json.loads((outcome.run_dir / "outputs/review.json").read_text())
     assert verdict["accepted"] is False and verdict["asset_id"] == "rig"
@@ -588,6 +568,4 @@ async def test_a_calibration_episode_judges_a_frozen_rig_with_the_workflows_revi
     assert len(list((outcome.run_dir / "outputs/atlas").glob("*.png"))) == 13
     main = await plan_async("character-3d", input_files=[_inputs(tmp_path)], cwd=_project(tmp_path))
     reviewer = "./nodes/rig.py#review"
-    assert {i.type_identity for i in plan.instances if i.uses == reviewer} == {
-        i.type_identity for i in main.instances if i.uses == reviewer
-    }
+    assert plan.document["types"][reviewer] == main.document["types"][reviewer]

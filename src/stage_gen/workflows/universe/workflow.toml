@@ -1,5 +1,5 @@
 # Only what the workflow file cannot say. Steps, titles and the sample plan come from
-# workflow.yaml through gnode.
+# workflow.yaml through FX.
 schema_version = 1
 kind = "stage-gen-workflow-v1"
 id = "universe"
@@ -13,9 +13,9 @@ for each admitted entity."""
 [try]
 input = "The committed lantern_ferry world in inputs/lantern_ferry: a poster, a synopsis, an expansion direction and the inputs.yaml that names them"
 commands = [
-  "gnode plan universe --inputs src/stage_gen/workflows/universe/inputs/lantern_ferry/inputs.yaml",
-  "gnode run universe --inputs src/stage_gen/workflows/universe/inputs/lantern_ferry/inputs.yaml --live --max-usd 1",
-  "gnode inspect universe --verify",
+  "uv run python -m grida.fx plan universe --inputs src/stage_gen/workflows/universe/inputs/lantern_ferry/inputs.yaml",
+  "uv run python -m grida.fx run universe --inputs src/stage_gen/workflows/universe/inputs/lantern_ferry/inputs.yaml --live --max-usd 1",
+  "uv run python -m grida.fx inspect universe --verify",
 ]
 
 [[outputs]]
