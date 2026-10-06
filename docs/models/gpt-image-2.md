@@ -56,9 +56,8 @@ does not expose reference-image or masked-edit inputs required by the current
 recipe image nodes. At the time this predecessor record was written, Stage Gen
 therefore had no fal image-generation adapter or binding, direct OpenAI was the
 native route, and separate background removal remained available. That status
-is historical: the current GPT Image 2.5 route catalog includes explicit fal
-generation and edit routes. No provider is an automatic
-fallback.
+is historical: Grida FX's built-in route table now has fal generation and edit
+routes for GPT Image 2.5 Sunburst. No provider is an automatic fallback.
 
 Primary sources:
 
@@ -131,13 +130,12 @@ degraded `chroma`. Opaque concepts and backdrops stay opaque in every mode.
 
 ## Retry and provenance
 
-Use one initial attempt plus five blind retries. Validation failures are
-retryable. Record the exact slug, endpoint capability snapshot/version when
-available, prompt, references/hashes, request parameters, returned media type,
-usage, attempts, normalization, and final hash.
-
-Provider credentials, shared retry procedure, and further primary source links
-are maintained in [provider operations](providers.md).
+The adapter of the time made one initial attempt plus five blind retries, and
+treated validation failures as retryable. It recorded the exact slug, endpoint
+capability snapshot or version when available, prompt, references and hashes,
+request parameters, returned media type, usage, attempts, normalization, and
+final hash. Grida FX now owns retries and the run record; keys and further
+primary source links are in [provider operations](providers.md).
 
 ## Deferred integration documentation
 

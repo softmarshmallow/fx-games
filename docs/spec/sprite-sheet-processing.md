@@ -337,7 +337,8 @@ conditions holds:
 
 The processor does not repair, guess, or downgrade a failed contract. A recipe
 may use the failure as evidence for an explicit regeneration attempt, subject
-to that recipe's retry boundary.
+to that recipe's regeneration allowance (a judge's `on_reject: regenerate`), which
+is not a provider retry.
 
 Every failed attempt must persist sanitized processing provenance with a
 stable machine-readable failure code and an explicit human-readable failure

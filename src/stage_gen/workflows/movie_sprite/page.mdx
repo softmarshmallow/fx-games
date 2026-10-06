@@ -15,7 +15,7 @@ picture the face workflow starts from.
 <Try>
 <Agent>
 
-Use Stage Gen's movie sprite workflow (`gnode schema movie-sprite` lists its inputs) to turn <Ref input="character">this character</Ref> into a transparent idle loop. Keep the face still, because I will add blinks separately.
+Use Stage Gen's movie sprite workflow (`uv run python -m grida.fx schema movie-sprite` lists its inputs) to turn <Ref input="character">this character</Ref> into a transparent idle loop. Keep the face still, because I will add blinks separately.
 
 Plan it offline, generate one eight-second 720p take with a $2 limit, and show me the take. Finish it only after I say it is good.
 
@@ -97,8 +97,10 @@ take, look at it, then finish it. The finished loop's first frame becomes the ca
 the separate portrait-motion workflow. Games decide how to display the resulting videos and images.
 The [contract](contract.md) holds the graph, the call and cache behaviour, and an offline example.
 
-Install the Python dependencies with `uv sync --frozen`, and install `ffmpeg` and `ffprobe` on
-PATH. The command line is `gnode plan|run movie-sprite`; in Python, `gnode.run("movie-sprite", ...)`.
+Install the Python dependencies with `uv sync --frozen`, build the engine with
+`uv run python third_party/fx/tools/build_engine.py` (again after each pull), and install `ffmpeg`
+and `ffprobe` on PATH. The command line is `uv run python -m grida.fx plan|run movie-sprite`; in
+Python, `grida.fx.run("movie-sprite", ...)`.
 
 ### Author the take
 
@@ -122,8 +124,8 @@ finish: finish.json
 
 Only `character` is required. A fixed template and these sections become **one video prompt**,
 and the fitted picture is passed as both the first and the last frame; this route has no
-middle-frame or extra-reference inputs. `gnode plan movie-sprite --inputs take.yaml` shows the
-steps and the price, offline.
+middle-frame or extra-reference inputs. `uv run python -m grida.fx plan movie-sprite --inputs
+take.yaml` shows the steps and the price, offline.
 
 The template holds the head, neck and shoulders still, keeps motion local elsewhere, and asks
 for a fixed camera, green backing and no sound. Directions can explicitly ask for blinking or
@@ -152,11 +154,13 @@ Draw the take with a spending ceiling:
 uv run python -m grida.fx run movie-sprite --inputs take.yaml --live --max-usd 2
 ```
 
-The application binds fal's Gemini Omni Flash 1.1 image-to-video route. It draws whole seconds
-from 3 to 10, at `360p`, `720p`, `1080p` or `4k`, in `9:16` or `16:9`. Credentials use `FAL_KEY`.
-The take is recorded as a job: if the run stops while the clip renders, running the same command
-again collects it rather than paying for another. `gnode reroll` draws a new take on purpose, and
-`gnode pick` chooses which one is finished; see [provider configuration](../../../../docs/models/providers.md).
+The workflow's `fx.yaml` names fal's Gemini Omni Flash 1.1 image-to-video route. It draws whole
+seconds from 3 to 10, at `360p`, `720p`, `1080p` or `4k`, in `9:16` or `16:9`. Credentials use
+`FAL_KEY`; see [provider configuration](../../../../docs/models/providers.md). The take is recorded
+as a job: if the run stops while the clip renders, running the same command again collects it
+rather than paying for another. `python -m grida.fx reroll <run> take` asks for a new take on
+purpose, which the next live run draws, and `python -m grida.fx pick <run> take <n>` chooses which
+one is finished.
 
 The run folder's step views play the take and the finished loop. Change `finish.json` and run
 again: the plate, the brief and the take come from the cache, and only finishing runs.

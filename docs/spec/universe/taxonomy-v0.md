@@ -162,7 +162,7 @@ independent of prepared `game.toml` closures.
 
 The universe contract will own semantic subjects, entity concept images, and
 text-explanation requirements. A future consumer will own browsing, layout,
-interaction, and presentation. Generic `gnode` machinery will own execution
+interaction, and presentation. The generic engine, Grida FX, owns execution
 mechanics only; it MUST NOT acquire storyworld, genre, or universe-taxonomy
 semantics.
 
@@ -848,9 +848,9 @@ profile, not to V0.
 
 Genre profiles MUST NOT redefine the meaning of an existing V0 class, make
 their vocabulary mandatory outside their declared scope, or push genre
-semantics into generic `gnode` rings. They MUST NOT add canonical non-entity
-visuals or relax the closed physical package boundary; rendered genre views
-remain in separate consumer-owned output roots.
+semantics into Grida FX or Stage Gen's generic components. They MUST NOT add
+canonical non-entity visuals or relax the closed physical package boundary;
+rendered genre views remain in separate consumer-owned output roots.
 
 ## Versioning and next authority
 

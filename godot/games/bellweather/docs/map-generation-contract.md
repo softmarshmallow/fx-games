@@ -697,7 +697,7 @@ identity remains granular:
 - changing occupancy invalidates package closure, composed terrain evidence, the layer-and-ground composite, gameplay binding, manifest projection, and map review without changing the appearance-only atlas call;
 - changing any ladder or portal authored record, including placement, invalidates that presentation branch and the map review; the current graph deliberately binds the complete block to its image call;
 - composite identity binds occupancy and the ordered final layer and ground artifacts, while map-review identity additionally waits for and binds every declared ladder or portal validation; and
-- every generated artifact records the map source digest, selected reference digests, effective prompt, provider/model identity, validation, and derivation.
+- the build's run records, for every generated artifact, its request (the effective prompt and the selected reference digests), its route, its validation, and its derivation.
 
 Generated provenance contains only portable package-relative references. It
 never persists temporary paths, signed URLs, credentials, or an unbound image

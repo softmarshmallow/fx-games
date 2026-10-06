@@ -9,10 +9,12 @@ cd godot
 ```
 
 The repository development environment supplies Python, the Stage Gen SDK,
-Pillow and pytest. Afterlight's synthetic audio preparation checks also use FFmpeg. Set
+Grida FX, Pillow and pytest. Afterlight's synthetic voice preparation checks run an FX
+workflow, so FX's engine must be built once
+(`uv run python third_party/fx/tools/build_engine.py`); they also use FFmpeg. Set
 `GODOT` to the engine executable when `godot` is not on `PATH`. From the repository
-root, `uv run python scripts/check.py --scope godot` delegates to the same
-coordinator and then runs the remaining root boundary tests. Neither command
+root, `uv run python scripts/check.py --scope godot` builds FX's engine, delegates to the
+same coordinator and then runs the remaining root boundary tests. Neither command
 uses providers or requires the optional game-preparation packages.
 
 ## What the default proves

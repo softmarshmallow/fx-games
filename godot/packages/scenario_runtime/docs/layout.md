@@ -86,7 +86,7 @@ godot/
 └── tools/, tests/, docs/            # Godot collection coordination and ownership
 
 src/stage_gen/                      # Asset product; no Scenario/compiler dependency
-src/gnode/                          # Asset graph SDK; no Godot/game dependency
+third_party/fx/                     # Grida FX engine (submodule); no Godot/game dependency
 ```
 
 A game's `narrative/` contains executable *data*, never downloaded GDScript or a

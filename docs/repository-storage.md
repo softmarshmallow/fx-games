@@ -1,12 +1,14 @@
 # Repository storage policy
 
 Generated run output belongs below the configured output directory and stays
-gitignored. Commit only small, deliberate fixtures needed to build, test, or
-explain a contract. A canonical prepared game may also commit its explicitly
-digest-bound image inputs within each `godot/games/<game>/inputs/` closure and its
-digest-bound typefaces within that closure; those are authored
-package members, not generated run output. Bellweather keeps complete closures
-under `inputs/default/` and `inputs/waves/`; the other prepared games use `inputs/`.
+gitignored: Grida FX writes this repository's runs to `out/runs` and its store
+to `out/fx-cache`, and a project folder's own `.fx/` is ignored too. Commit
+only small, deliberate fixtures needed to build, test, or explain a contract. A
+canonical prepared game may also commit its explicitly digest-bound image
+inputs within each `godot/games/<game>/inputs/` closure and its digest-bound
+typefaces within that closure; those are authored package members, not
+generated run output. Bellweather keeps complete closures under
+`inputs/default/` and `inputs/waves/`; the other prepared games use `inputs/`.
 
 README-only repository marketing assets live under `.github/assets/readme/`.
 Use efficient WebP stills and optimized GIF animations for repository presentation.

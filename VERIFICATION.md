@@ -1,8 +1,9 @@
 # Verification
 
-All offline gates strip provider credentials and disable dotenv loading. A failed
-step is reported while the remaining steps still run. Live calls and semantic or
-listening review are separate, explicit checks.
+All offline gates strip provider credentials and hold Grida FX offline: no `.env` is read
+(`GRIDA_FX_DISABLE_DOTENV=1`), no request leaves (`GRIDA_FX_NETWORK=off`), and node bodies run
+on the gate's own Python (`GRIDA_FX_PYTHON`). A failed step is reported while the remaining
+steps still run. Live calls and semantic or listening review are separate, explicit checks.
 
 ## Owned gates
 
@@ -15,12 +16,17 @@ uv run --group games python scripts/check.py --scope games
 uv run --group games python scripts/check.py --scope godot
 ```
 
-The default product gate requires Python tools only. Among its steps it checks every
-workflow file's `gnode.lock` (`gnode lock <id> --check`), runs real offline looping-parallax
-and movie-sprite runs through `gnode` with their `gnode inspect --verify` (movie-sprite finishes
-its supplied clip, and only plans its paid take, so the gate needs FFmpeg), the universe plan
-(both phases and their ceilings, offline),
-`scripts/catalog.py --check --allow-missing-examples`, and `gnode --help`.
+Every scope first builds FX's engine from the pinned submodule
+(`uv run python third_party/fx/tools/build_engine.py`, which needs cargo and Rust 1.89 or
+newer); when `GRIDA_FX_BIN` names an engine, it only checks that one with `--version`. Beyond
+that, the default product gate requires Python tools only. Among its steps it checks each workflow
+home's `fx.lock` (`python -m grida.fx lock src/stage_gen/workflows/<folder> --check`), and in a
+scratch project with its own `fx.yaml` it runs real offline looping-parallax and movie-sprite
+runs with `python -m grida.fx run` and their `inspect --verify` (movie-sprite finishes its
+supplied clip, and only plans its paid take, so the gate needs FFmpeg). It plans
+portrait-motion's two paths, the universe (both phases and their ceilings, offline) and
+character-3d's committed brief, then runs `scripts/catalog.py --check --allow-missing-examples`
+and `python -m grida.fx --help`.
 
 ## Web
 
@@ -32,7 +38,7 @@ tests, which hold the hand-authored `web/ui` contract fixtures to the Python mod
 flag lets a clean clone build without the local example store; a present but mismatched
 example still fails. A release build of the site drops the flag, so every approved example
 must be in the store. `bun run --cwd viewer build` builds the [viewer](docs/viewer.md),
-which `gnode view` otherwise runs in development mode.
+which `uv run python scripts/view.py` otherwise runs in development mode.
 
 ## Docs
 
@@ -40,12 +46,15 @@ The docs scope checks links and backtick paths in the doctrine, `docs/`, `librar
 Godot docs, every workflow's prose and the games' example pages; that every specification,
 game consumer spec and workflow `contract.md` names a true checker; that the front-page
 documents and every workflow's `page.mdx` and `contract.md` use none of the retired words
-the [glossary](docs/glossary.md) lists; the prompt fixtures' originality rules; and the
-generated-media inventory. The product gate, not this scope, holds the remaining docs claims:
-`tests/contract/test_documented_commands.py` parses every documented `gnode` command with
-the real parser, and `tests/contract/test_workflow_contract_docs.py` holds each workflow's
-graph contract to its offline sample plan (`uv run python scripts/write_workflow_contracts.py
---check` runs the same check by hand).
+the [glossary](docs/glossary.md) lists; that a user skill under `skills/` names nothing of
+this repository; the prompt fixtures' originality rules; and the generated-media inventory.
+The product gate, not this scope, holds the remaining docs claims:
+`tests/contract/test_documented_commands.py` holds every documented `python -m grida.fx`
+command to what `python -m grida.fx <verb> --help` states, and every `scripts/view.py` command
+to the viewer's help, and refuses a retired command line or a bare `grida-fx`;
+`tests/contract/test_workflow_contract_docs.py` holds each workflow's graph contract to its
+offline sample plan (`uv run python scripts/write_workflow_contracts.py --check` runs the same
+check by hand).
 
 ## Godot
 
@@ -83,16 +92,17 @@ whole-game or visual acceptance.
 
 ## Evidence boundaries
 
-An offline plan proves input resolution, route admission and graph construction.
-A dry run proves execution with deterministic fake operations. Neither proves that
-a provider accepted a request or that generated media is useful. The public
+An offline plan proves input resolution, route admission, prices and graph construction.
+A stand-in run (`grida.fx.run(..., stand_in=...)`, or `--stand-in`) proves execution with
+answers a test supplies, through the same answer checks, offline and for nothing. Neither
+proves that a provider accepted a request or that generated media is useful. The public
 supplied-layer example also performs real local PNG processing without a provider.
 
 Installed-package checks use an environment and working directory outside the
 checkout. Cache tests verify admitted bytes and lineage, target tests verify the
 selected dependency closure, and failed-run inspection must remain available.
 
-Provider adapter changes require current provider-contract review and explicitly
-opted-in live canaries. Accepted generated visuals require independent semantic
-review; audio quality claims require a listening verdict. Publication and release
-are separate from every verification gate above.
+Provider adapters belong to FX, and route or adapter changes require current
+provider-contract review and explicitly opted-in live canaries. Accepted generated visuals
+require independent semantic review; audio quality claims require a listening verdict.
+Publication and release are separate from every verification gate above.

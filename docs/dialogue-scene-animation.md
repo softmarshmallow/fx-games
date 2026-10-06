@@ -75,14 +75,14 @@ breathing idle, lip sync, or another concrete motion. The spike must then name
 one output format and one consumer without moving engine assumptions into
 reusable components.
 
-Every AI/provider call would still receive one initial attempt plus five blind
-retries with capped backoff, including retries for malformed or semantically
-invalid success envelopes. Every produced visual payload, including a full
-animation rather than a representative frame, would require review by a
-different subagent from its producer. The verifier receives the motion spec
-and output, not the generation prompt, and returns `pass` or `fail` with a short
-reason. At most two bounded regeneration attempts follow a failed visual
-verdict.
+Every AI/provider call would still go through Grida FX, whose engine is the one
+retry owner: at most six sends, a deterministic refusal ending the call, and a
+malformed or schema-invalid answer failing its attempt inside that boundary.
+Every produced visual payload, including a full animation rather than a
+representative frame, would require review by a different subagent from its
+producer. The verifier receives the motion spec and output, not the generation
+prompt, and returns `pass` or `fail` with a short reason. At most two bounded
+regeneration attempts follow a failed visual verdict.
 
 These experiments must preserve prompt, seed when available, model/provider,
 reference digests, timing, masks/layers, deterministic transforms, output

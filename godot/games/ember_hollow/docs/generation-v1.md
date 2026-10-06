@@ -6,7 +6,7 @@
 > **Checked by:** `tests/contract/test_generation_pipeline_docs.py`, `tests/unit/games/oblique_survival/test_workflow.py`.
 
 > **Contract maturity: exact-current authored contracts.** Executable
-> authority: the gnode build `godot/games/ember_hollow/pipeline/workflow.py` over
+> authority: the FX build `godot/games/ember_hollow/pipeline/workflow.py` over
 > `godot/games/ember_hollow/pipeline/src/ember_hollow_pipeline/`. The camera vocabulary it
 > implements is ratified in the
 > [view and style taxonomy](../../_shared/docs/formats/view-and-style-taxonomy.md) and its
@@ -83,8 +83,8 @@ a `game.toml` closure.
 | `seasons.toml` | `oblique-survival-seasons-v1` | the calendar and what each season holds — see [seasons](seasons.md) |
 | `weather.toml` | `oblique-survival-weather-v1` | the world conditions and the layers each one drives |
 | `music.toml` | — | one instrumental loop per clock cue, and the `[transition]` between them |
-| `ui.toml` | `game-ui-v5` | optional: the screen-fixed interface — the `panel_frame` and `button_rect` nine-slice sheets and the `preview_icons` grid the host's HUD is dressed in, and the `cursor_set` it is played with, each pointer with the hotspot the gate measured — the shared [authored game UI contract](../../_shared/docs/formats/ui.md), planned through the game_ui component's own triplet; no `inventory_panel`, the host draws its slots as plain wells inside the generated frame |
-| `shell.toml` | `game-shell-v3` | optional: the screens around the game — the opening cinematic's shot list, each shot drawn as a still or filmed as a clip, the title screen's backdrop and text-free emblem, and the loading screen — the shared [authored game shell contract](shell.md), planned through the game_shell component's own triplet. Every string on them is composited by the host in the package's declared typeface, never drawn into a plate |
+| `ui.toml` | `game-ui-v5` | optional: the screen-fixed interface — the `panel_frame` and `button_rect` nine-slice sheets and the `preview_icons` grid the host's HUD is dressed in, and the `cursor_set` it is played with, each pointer with the hotspot the gate measured — the shared [authored game UI contract](../../_shared/docs/formats/ui.md), planned through the shared UI sheet steps (`demo_game_tools.steps.ui_atlas`); no `inventory_panel`, the host draws its slots as plain wells inside the generated frame |
+| `shell.toml` | `game-shell-v3` | optional: the screens around the game — the opening cinematic's shot list, each shot drawn as a still or filmed as a clip, the title screen's backdrop and text-free emblem, and the loading screen — the shared [authored game shell contract](shell.md), planned through the shell's own steps (`pipeline/nodes/shell.py`). Every string on them is composited by the host in the package's declared typeface, never drawn into a plate |
 | `sounds.toml` | — | one clip per thing the player does, with its exact duration and its playback gain |
 
 `publication_authorized` is `false` in every manifest the build writes. A package cannot authorize its own publication, and
@@ -143,7 +143,7 @@ a consumer that knows one strip per state still reads it.
 
 ## The build
 
-The game's folder is a gnode project. `pipeline/workflow.py:build` reads the package with
+The game's folder is an FX project. `pipeline/workflow.py:build` reads the package with
 the game's own reader and writes one group of steps per asset. One build serves every
 scope: a scope selects which assets are built and changes nothing about the ones it
 keeps, so a narrow build's answers are the wide build's too.
@@ -193,11 +193,11 @@ finishes the picture (alpha lifted, a plate mirrored, a strip repacked, a sheet 
 writes the record the manifest reads. Auditioned takes are adopted through the same
 gate instead of drawn.
 
-**Routes are the game's.** `gnode.yaml` binds each kind of call to one route; a step that
-needs a feature its route lacks (a transparent background, say) is refused while
-planning, before any key is checked, and nothing replaces a failed or uncredentialed
-provider automatically. The opening's clips publish through an ffmpeg built with
-libtheora, declared as the `ffmpeg-theora` tool (`GNODE_TOOL_FFMPEG_THEORA`).
+**Routes are the game's.** `fx.yaml` binds each kind of call to one route; a step that
+needs a feature its route lacks (`alpha`, say) is refused while planning, before any key
+is checked, and nothing replaces a failed or uncredentialed provider automatically. The
+opening's clips publish through an ffmpeg built with libtheora, declared as the
+`ffmpeg-theora` tool (`GRIDA_FX_TOOL_FFMPEG_THEORA`).
 
 **Reviews are evidence, never gates.** A family review that rejects is recorded, and the
 build goes on; only a review that contradicts itself (a failed check naming no finding)
@@ -229,7 +229,7 @@ question it changes.
 
 Every threshold here is refusal-bearing — a gate that only reports is not a
 gate, and the two that only report say so. A refusal is a redraw: the judge sends
-the take back, at most six takes, and each provider call keeps its own single
+the take back, at most six takes, and FX's engine stays each provider call's one
 retry owner inside that.
 
 | Gate | Threshold | What it refuses |
@@ -265,7 +265,7 @@ A run publishes `oblique-survival-manifest-v3` at `manifest.json`, beside the
 `seasons`, `layout`, `gameplay`, `reviews`, `run`, `status`, and
 `publication_authorized`.
 
-`ui` is the shared block every consumer of the game_ui component reads — one
+`ui` is the shared block every consumer of the [UI contract](../../_shared/docs/formats/ui.md) reads — one
 `ui.<role>` entry per sheet with the geometry the gate detected (cells, insets,
 content and safe rects, band fill, draw scale; for the cursor set, a measured
 hotspot per glyph) and the sheet's `asset` — and it is `null` for a package
@@ -295,7 +295,7 @@ per family — `ok`, `partial`, `missing` or `none` — so a run that lost one
 family is still playable and says which.
 
 `run` carries the package and scope it was built for (as `run_id`), the scope and the
-package's source digest; `graph_sha256` is null, since the build's record is the gnode
+package's source digest; `graph_sha256` is null, since the build's record is the FX
 run's. A block published at a version a consumer does not read must be refused by name
 rather than skipped.
 
@@ -320,7 +320,7 @@ uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs --
   --max-usd 40 --deliver package=../../../out/<tag>/{key}
 ```
 
-Runs land in `out/runs/` and the call cache in `out/gnode-cache/`, so a second build
+Runs land in `out/runs/ember-hollow/` and the store in `out/fx-cache/`, so a second build
 pays only for what changed; `--deliver` copies the folder the host plays out of a
 successful build. Budget the widest scope at roughly **USD 19–34** at first takes for the
 committed fixture, from the planner's own low estimate; the build's ceiling, every take

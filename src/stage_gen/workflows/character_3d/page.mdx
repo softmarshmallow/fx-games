@@ -18,7 +18,7 @@ stops and says why.
 <Try>
 <Agent>
 
-Use Stage Gen to make a rigged 3D character from <Ref input="brief">this brief</Ref>. Follow the 3D character workflow (`gnode schema character-3d` lists its inputs): plan it offline and show me the plan, then run it live with a $30 limit.
+Use Stage Gen to make a rigged 3D character from <Ref input="brief">this brief</Ref>. Follow the 3D character workflow (`uv run python -m grida.fx schema character-3d` lists its inputs): plan it offline and show me the plan, then run it live with a $30 limit.
 
 When it finishes, show me the character and what the rig reviewer said about it.
 
@@ -33,7 +33,7 @@ uv run python -m grida.fx plan character-3d --inputs src/stage_gen/workflows/cha
 uv run python -m grida.fx run character-3d --inputs src/stage_gen/workflows/character_3d/inputs/sample/inputs.yaml --live --max-usd 30
 ```
 
-Needs Blender and your OpenRouter and Tripo keys. `gnode doctor character-3d` says whether Blender is found.
+Needs Blender and your OpenRouter and Tripo keys. `uv run python -m grida.fx doctor character-3d` says whether Blender is found; `GRIDA_FX_TOOL_BLENDER` names it when it is not on `PATH`.
 
 </Shell>
 </Try>
@@ -97,7 +97,7 @@ earlier version of the workflow, so its folder is laid out the way that version 
 
 ## Run it yourself
 
-`gnode run character-3d` takes one written character brief, or a character's parts, and returns a
+`uv run python -m grida.fx run character-3d` takes one written character brief, or a character's parts, and returns a
 small, textured, rigged character as a GLB with a short set of diagnostic clips, ready for a game
 engine to load and drive with its own animations. If a stage cannot be made good within its takes,
 the run stops and says why. The [contract](contract.md) holds the exact review, admission, rebuild
@@ -142,7 +142,7 @@ that stopped, pays for nothing it already has. The run folder holds `outputs/cha
 `outputs/result.json` (accepted, or delivered unreviewed, with the findings that travel with it),
 `outputs/references.png` and `outputs/atlas/`, the labeled pose rows, face strip and torso images
 the rig reviewer judged.
-`gnode inspect character-3d` shows every step, take and verdict.
+`uv run python -m grida.fx inspect character-3d` shows every step, take and verdict.
 
 ### Choosing whether to review
 

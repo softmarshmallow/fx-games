@@ -2,15 +2,15 @@
 
 These records capture hosted-model and provider request surfaces. Individual
 records distinguish measured evidence from documentation research and summarize
-the repository route that consumes a model. The sealed route snapshots in an
-execution graph remain runtime authority; re-check current metadata and live
-behavior before widening an adapter contract.
+the route that consumes a model. Grida FX's route table and each project's
+`fx.yaml` remain the runtime authority; re-check current metadata and live
+behavior before widening a route.
 
 ## Model records
 
-- [GPT Image 2.5](gpt-image-2.5.md) — the current Stage Gen image family;
-  capability-first policies select exact Sunburst routes at maximum quality
-  through OpenAI Images, fal, or OpenRouter without a native-alpha capability.
+- [GPT Image 2.5](gpt-image-2.5.md) — the current Stage Gen image family:
+  Sunburst routes at maximum quality through OpenAI Images, fal, or OpenRouter,
+  the last without native alpha.
 - [GPT Image 2](gpt-image-2.md) — legacy provider capabilities and measured
   native-alpha evidence retained as historical record.
 - [Eleven Text to Sound v2](../spec/model-eleven-text-to-sound-v2.md) — measured
@@ -21,8 +21,9 @@ behavior before widening an adapter contract.
 
 ## Provider operations
 
-- [Provider operations](providers.md) — credentials, endpoints, retry ownership,
-  response handling, and experimental boundaries shared by provider adapters.
+- [Provider operations](providers.md) — keys, the routes each workflow and game
+  picks and why, and what this repository measured about them; Grida FX owns the
+  adapters, retries and billing.
 - [GPT Image 2.5](gpt-image-2.5.md) — the current Sunburst route split and its provider
   contract.
 
@@ -32,6 +33,6 @@ behavior before widening an adapter contract.
   texturing, parts, topology, rigging and motion across direct APIs, fal,
   app features and local research models; checked 2026-09-09, without inference.
 
-Model records describe observed external capabilities. The checked-in route
-catalog, workload policies, and sealed execution graph remain authoritative for
-what Stage Gen currently uses.
+Model records describe observed external capabilities. Each project's
+`fx.yaml` and the route tables it reads remain authoritative for what Stage Gen
+currently uses.

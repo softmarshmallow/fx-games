@@ -15,9 +15,9 @@ Arrow keys move; Space jumps; E interacts.
 
 The run directory is explicit. Starting the game never generates assets. The
 example path above uses existing local output; a fresh clone has no `out/` media.
-Authored inputs live in `inputs/default/` and `inputs/waves/`, and the game's folder is the gnode
-project that builds their assets: `gnode plan pipeline/workflow.py:build --arg
-package=inputs/default` (see [the pipeline README](pipeline/README.md)). Existing TOML is this
+Authored inputs live in `inputs/default/` and `inputs/waves/`, and the game's folder is the FX
+project that builds their assets: `uv run python -m grida.fx plan pipeline/workflow.py:build
+--arg package=inputs/default` (see [the pipeline README](pipeline/README.md)). Existing TOML is this
 game's configuration.
 
 ## Source ownership
@@ -33,8 +33,9 @@ game's configuration.
   the examples this game made: its parallax backgrounds, terrain tiles, UI kit and animation set.
   Each needs the whole game package, so none is a product workflow. `demo-games example export
   bellweather` checks each one against its runs and pins and writes it into the local example
-  store through the product's public `stage_gen.examples` contract. All four were made by the
-  build before gnode and are kept as records of it until one is imported from a gnode run.
+  store through the product's public `stage_gen.examples` contract. All four were made by this
+  game's earlier builder, before it ran on Grida FX, and are kept as records of it until one is
+  imported from an FX run.
 
 ## Scenario invocation
 

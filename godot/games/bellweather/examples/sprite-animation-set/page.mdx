@@ -28,11 +28,11 @@ Plan it first. Then build the content part live, and show me every animation pla
 
 ```sh
 cd godot/games/bellweather
-uv run gnode plan pipeline/workflow.py:build --arg package=inputs/my-game --arg part=content
+uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs/my-game --arg part=content
 ```
 
 ```sh
-uv run gnode run pipeline/workflow.py:build --arg package=inputs/my-game --arg part=content \
+uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs/my-game --arg part=content \
   --live --max-usd 140
 ```
 

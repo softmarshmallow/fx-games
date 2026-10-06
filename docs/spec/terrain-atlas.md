@@ -125,11 +125,12 @@ entries invalidate the contract.
 
 ## Admission
 
-The provider caller owns one initial attempt plus at most five retries. Every
-attempt includes transport, decode, and paintover-source admission. The local
-assembly runs after one admitted source and fails closed; it is not a provider
-retry. Thresholds are versioned recipe constants and are not retuned to admit
-failed media:
+Grida FX's engine owns the provider call: transport, decoding and the PNG and
+size check, at most six sends. Paintover-source admission is a judge step after
+it: a refused painting is drawn again, at most six takes in all, and each take is
+a new billed draw rather than a provider retry. The local assembly runs after one
+admitted source and fails closed. Thresholds are versioned constants and are not
+retuned to admit failed media:
 
 | Measurement | Threshold |
 | --- | --- |

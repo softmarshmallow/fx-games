@@ -69,7 +69,7 @@ build re-proves the room every time it plans.
 
 ## Building the room
 
-The game's folder is a gnode project; `pipeline/workflow.py:room` reads one room
+The game's folder is an FX project; `pipeline/workflow.py:room` reads one room
 package with the room's own reader and writes one step per asset. From
 `godot/games/the_grain`:
 
@@ -124,10 +124,10 @@ The last step reads the room again from its own files and writes
 ```
 <!-- pipeline-graph-contract:end -->
 
-**The interface is generated, and the nodes that generate it are not this
-recipe's.** Panels and buttons are the one thing every genre draws the same
-way, so the room plans the shared `2d/ui/atlas.*` triplet declared beside the
-[UI contract](../../_shared/docs/formats/ui.md) rather than a private copy of it, reading its own
+**The interface is generated, and the node types that generate it are not this
+build's.** Panels and buttons are the one thing every genre draws the same
+way, so the room plans the shared UI sheet steps (`demo_game_tools.steps.ui_atlas`)
+declared beside the [UI contract](../../_shared/docs/formats/ui.md) rather than a private copy of them, reading its own
 `ui.toml` beside `room.toml`. The HUD bar, the narration plate and the win
 card are one `panel_frame` sheet stretched to three sizes; the verb bar is one
 `button_rect` sheet read at four states, with the chosen verb shown in the
@@ -170,10 +170,10 @@ style anchor's clause, which a template fills from the anchor once it is picked.
 
 ### Image routing
 
-The game's `gnode.yaml` names the routes: images on GPT Image 2.5 Sunburst over OpenAI, structured
+The game's `fx.yaml` names the routes: images on GPT Image 2.5 Sunburst over OpenAI, structured
 calls on OpenRouter. The backdrop is an opaque reference edit at the authored exact frame; hotspot
-sprites, item icons and the UI sheets are transparent reference edits, and declare
-`transparent_background`, so a route that cannot paint alpha is refused while planning. Missing
+sprites, item icons and the UI sheets are transparent reference edits, and require
+`alpha`, so a route that cannot paint alpha is refused while planning. Missing
 credentials and provider failures never trigger a fallback route.
 
 ## Runtime manifest — `pointclick-room-runtime-v3`

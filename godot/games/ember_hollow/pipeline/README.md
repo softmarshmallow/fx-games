@@ -9,25 +9,25 @@ Install the optional game tools from the repository root:
 uv sync --group games
 ```
 
-The game's folder is a gnode project. `gnode.yaml` names the routes, `gnode.lock` pins the
+The game's folder is an FX project. `fx.yaml` names the routes, `fx.lock` pins the
 node types in `pipeline/nodes/`, and `pipeline/workflow.py:build` reads the package with the
 game's own reader and writes one group of steps per asset, at one rung of the scope ladder
 (`minimal`, `props`, `actors`, `full`; the default is `full`). From the game's folder:
 
 ```sh
 cd godot/games/ember_hollow
-gnode plan pipeline/workflow.py:build --arg package=inputs --arg scope=minimal
-gnode run pipeline/workflow.py:build --arg package=inputs --arg scope=full --live \
+uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs --arg scope=minimal
+uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs --arg scope=full --live \
   --max-usd 40 --deliver package=../../../out/ember-hollow/{key}
 ```
 
 Planning is offline and spends nothing; `--live` is the explicit provider opt-in, and
-launching the Godot project never generates assets. Runs land in `out/runs/` and the call
-cache in `out/gnode-cache/`, so a second run pays only for what changed. `--deliver`
+launching the Godot project never generates assets. Runs land in `out/runs/ember-hollow/`
+and the store in `out/fx-cache/`, so a second run pays only for what changed. `--deliver`
 copies the folder the host plays (`package/`, `ui/`, `shell/`, the review records and
 `manifest.json`) out of a successful build. A package must sit inside this folder: its
 references and takes are project files, read by content. The opening's clips publish
-through an ffmpeg built with libtheora: set `GNODE_TOOL_FFMPEG_THEORA` to it (Homebrew's
+through an ffmpeg built with libtheora: set `GRIDA_FX_TOOL_FFMPEG_THEORA` to it (Homebrew's
 `ffmpeg@7` has it).
 
 The auditioned takes the package adopts are first-party media kept beside the package,

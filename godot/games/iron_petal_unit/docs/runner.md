@@ -11,7 +11,7 @@
 > `godot/games/iron_petal_unit/pipeline/src/iron_petal_unit_pipeline/content/`,
 > `godot/games/iron_petal_unit/pipeline/src/iron_petal_unit_pipeline/audio/`, and the runner member resolution
 > in `godot/games/iron_petal_unit/pipeline/src/iron_petal_unit_pipeline/validation.py`. The asset
-> build is the gnode builder `godot/games/iron_petal_unit/pipeline/workflow.py` over the node
+> build is the FX builder `godot/games/iron_petal_unit/pipeline/workflow.py` over the node
 > types in `pipeline/nodes/`, the playable
 > simulation in `godot/games/iron_petal_unit/gameplay/` and its host in
 > `godot/games/iron_petal_unit/scenes/` (decision 0065). The browser runner it replaced
@@ -78,13 +78,14 @@ component of 32 pixels or more may be discarded. A disconnected visible rider, m
 propulsion assembly fails provider admission instead of being silently dropped from the runtime
 frame.
 
-These are provider-neutral image requirements, not recipe-owned model choices. Planning seals one
-exact GPT Image 2.5 Sunburst route per image node at maximum quality. OpenAI is the checked-in
-default for the runner's transparent and masked workloads; setting
-`STAGE_GEN_IMAGE_PROVIDER=fal` replans the graph onto fal's equivalent native-alpha routes. An
-OpenRouter override is refused offline because its opaque reference-conditioned surface cannot
-serve transparency or real masks. Credentials never select a route, and a failed provider is never
-replaced automatically.
+These are provider-neutral image requirements, not model choices the game owns. The game's
+`fx.yaml` binds every image step to one GPT Image 2.5 Sunburst route, and FX's image adapters
+always ask it for maximum quality. OpenAI (`gpt-image-2.5-sunburst@openai`) is the checked-in
+route for the runner's transparent and masked workloads; binding `image.generate` and
+`image.edit` to fal's (`openai/gpt-image-2.5/sunburst@fal`) moves the graph onto its equivalent
+native-alpha routes. An OpenRouter route is refused while planning, because its opaque
+reference-conditioned surface has neither the `alpha` nor the `mask` feature. Credentials never
+select a route, and a failed provider is never replaced automatically.
 
 ## Gameplay: named profiles
 
@@ -250,8 +251,8 @@ vanishing point slide along with it and has no repeat unit at all. Orthographic
 and oblique are both parallel; orthographic - a flat front elevation showing no
 top face - is the truthful default for a strict side view.
 
-Three admission checks hold the ground honest, all inside the provider's own
-retry attempt so a bad painting re-rolls rather than ending the run.
+Three admission checks hold the ground honest, all in the painting's judge, so a
+bad painting is drawn again rather than ending the run.
 
 **Walking-surface coverage.** A top-exposed cell must be painted nearly whole.
 Where a solid cell is left transparent the canonicalizer's deterministic
@@ -263,7 +264,7 @@ below it could not: a cell four fifths made of fallback passed the old one.
 That floor stays a gross one. Deriving it from how far publication can reach
 was tried and put it at 0.90625, which is exactly where a normal four-to-five
 pixel alpha ramp lands, so it refused correct paintings about half the time and
-spent one segment's whole retry budget. A coverage over a cell is a proxy for
+spent one segment's whole budget of takes. A coverage over a cell is a proxy for
 the thing that matters anyway.
 
 **Published base.** So the thing that matters is measured directly, on the
@@ -495,20 +496,20 @@ event a package may leave silent, because silence is a legitimate
 announcement where a verb's consequence is not. An effect is realized one of
 three ways. `oscillator_sweep_v1` authors waveform, start/end frequency,
 duration, gain, and optional strength-driven pitch response at zero provider
-cost; the consumer synthesizes it and owns only Web Audio lifecycle.
+cost; the consumer synthesizes it and owns only its playback.
 `generated_clip_v1` authors a verbatim prompt, an exact duration of at least
 half a second, optional prompt influence, and the same playback gain and pitch
 response; the graph buys it once as `audio/<effect_id>.mp3` through the
-`sound_effect_generation` route, admits it on container, duration, and level,
+`sound.generate` route, admits it on container, duration, and level,
 and the consumer decodes and plays it. `spoken_line_v1` - a *bark*, the
 industry's word for a short event-triggered one-liner - authors verbatim text
 with its delivery annotations, the catalog `voice_id` that reads it, a
 stability, the longest read its frame budget tolerates, and the same playback
-mix; the graph buys it once through the `speech_generation` route on the
+mix; the graph buys it once through the `speech.generate` route on the
 provider voice `voices.toml` casts, admits it on container, level, and that
 length ceiling, and publishes the *measured* length, since the route never
-took one. Both bought kinds carry a `take` reroll ordinal that re-keys that
-one draw alone, and may instead `pin` a reviewed audition - the mp3 and the
+took one. A take of either bought kind is chosen with `reroll` and `pick`, which
+write the game's takes file, and either may instead `pin` a reviewed audition - the mp3 and the
 sidecar that produced it, committed under `runner/audio/` and digest-locked
 into the closure - which a local node republishes through the same gates
 with no provider operation. The bindings are the same in every case, so a cue
@@ -561,7 +562,7 @@ document's kind moves on structural change only (C-R3). Its `ground`
 field is the same closed union as the authored track. Atlas mode publishes one
 atlas path. Structural mode publishes `cell_px = 64` and an authored-order
 `chunks` array whose `segment_id`, image path, columns, and rows must match the
-occupancy chunks one for one. The browser preloads those exact image dimensions
+occupancy chunks one for one. The host preloads those exact image dimensions
 and draws the corresponding full raster for every streamed chunk; all physics
 continues to read occupancy.
 
@@ -662,8 +663,8 @@ pointer capture preserves release when a finger leaves the canvas.
 
 ## Building the assets
 
-The game builds its assets with gnode, from its own folder: `gnode.yaml` names the routes,
-`gnode.lock` pins the node types in `pipeline/nodes/`, and the builder
+The game builds its assets with Grida FX, from its own folder: `fx.yaml` names the routes,
+`fx.lock` pins the node types in `pipeline/nodes/`, and the builder
 `pipeline/workflow.py:build` reads the package with the game's own reader and writes one
 group of steps per asset. Planning never spends; a live run needs `--live` and a ceiling.
 
@@ -678,11 +679,11 @@ uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs --
 delivered folder. The package must sit inside the project, because its references are
 project files read by content.
 
-Every painting and draw is a standard gnode call (`gnode/image.edit@1`,
-`music.generate`, `sound.generate`, `speech.generate`) judged by the game's own
+Every painting and draw is a standard FX built-in (`fx/image.edit@1`,
+`fx/music.generate@1`, `fx/sound.generate@1`, `fx/speech.generate@1`) judged by the game's own
 admission, which asks for another take when it rejects one: at most six takes, then the
 step fails. A call that fails is never drawn again on top of its own retries. The rebase
-readings and the cut-in reviews are `gnode/structured.generate@1`; the cut-in placement is
+readings and the cut-in reviews are `fx/structured.generate@1`; the cut-in placement is
 one agent episode inside `place_portrait`. A pinned take is republished from the package
 and buys nothing. The last step reads the whole package closure again, lays every
 published file out at the path the host reads it from, and writes `manifest.json`.
@@ -811,4 +812,4 @@ alongside siblings, registers its files into the same exact closure
   and rises stay within the jump profile (`invalid_runner_track`).
 
 `demo-games package validate` and `demo-games package digest` admit and digest the
-package; building it is gnode's (above).
+package; building it is the FX build's (above).

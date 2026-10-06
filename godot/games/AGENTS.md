@@ -4,8 +4,8 @@ Each named game owns its Godot project, gameplay, authored inputs, asset prepara
 runtime bindings and tests. Read the game's README before changing its composition.
 There is no globally selected game or mandatory whole-game input format.
 
-- Use the public Stage Gen API from game preparation code. The asset product never
-  imports these games. Code under `_shared` serves multiple actual consumers and
+- Use the public Stage Gen API from game preparation code, and Grida FX (`grida.fx`)
+  for its builders and node types. The asset product never imports these games. Code under `_shared` serves multiple actual consumers and
   must not import a named game or the collection's developer tools.
 - Keep game-specific behavior, camera, story, UI and content interpretation in its
   game. The Grain owns its room, dialogue and case composition. Independent SDK

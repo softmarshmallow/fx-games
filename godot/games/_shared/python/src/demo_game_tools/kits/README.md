@@ -2,7 +2,9 @@
 
 What several games prepare alike, owned by no single game: the contracts, prompts,
 validators and composition one kind of game asset needs. The asset product never imports
-these kits; the games under `godot/games/` and their shared preparation code do.
+these kits; the games under `godot/games/` and their shared preparation code do. The Grida FX
+step families that draw and judge these assets with them live beside the kits, in
+`demo_game_tools.steps`.
 
 | Kit | Public surface | Output or responsibility |
 |---|---|---|
@@ -11,9 +13,9 @@ these kits; the games under `godot/games/` and their shared preparation code do.
 | Terrain | `sideview_terrain`, `painted_terrain` | Mask-driven atlas or occupancy-conditioned painting |
 | Structural terrain painting | `painted_terrain.structural_ground` | Occupancy-preserving paintings and compatible segment seams |
 | Interface art | `ui_art.UiArt`, `ui_art.nodes` | Individually selected nine-slice, icon, cursor, or panel presets |
-| Effects art | `effects_art.EffectsArt`, `effects_art.nodes` | Cut-in plates, masks, placement, and dust atlases; no event bindings |
+| Effects art | `effects_art.EffectsArt`, `effects_art.cut_in` | Cut-in plates, masks, placement, and dust atlases; no event bindings |
 | Screen pictures | `screen_art.ScreenLayout`, `screen_art.validate_plate` | One image with explicit geometry and optional reserved regions |
-| Music | `music.MusicTrack`, `music.nodes` | One generated track or a caller-selected collection; no playlist policy |
+| Music | `music.MusicTrack`, `music.music_track_prompt` | One generated track or a caller-selected collection; no playlist policy |
 | Voice identity | `voice_profile.VoiceProfile` | Casting, rights, and explicit provider voice binding |
 | Spatial generation | `worldgen` | Caller-defined fields, point processes, masks, and placements |
 | Optional domain design | `sideview_map_design` | Profile-constrained tile-layout generation and diagnostics |

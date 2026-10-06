@@ -48,7 +48,7 @@ the front-end — the words — is a design choice, and it is the one the study 
 | Boundary | Owns | Does not own |
 | --- | --- | --- |
 | `demo_game_tools.kits.sideview_map_design` | Capability profiles as data, the chunk grammar and its expander, the design validator over geometry, movement, and reachability, and the persisted `platformer-chunk-map-v1` design artifact | Art, atlases, the authored TOML package, the generation graph, or any specific game's numbers |
-| Caller (a recipe, script, or authoring tool) | Constructing the profile, supplying the brief, building the structured-generation service, and deciding whether a design is applied at all | The rules a design is judged against; those are the profile's, and the validator is authoritative over them |
+| Caller (a game's build, script, or authoring tool) | Constructing the profile, supplying the brief, asking for the composition (a `structured.generate` step), and deciding whether a design is applied at all | The rules a design is judged against; those are the profile's, and the validator is authoritative over them |
 | `maps/<map_id>.toml` | The authored `occupancy` matrix, climbable variants and placements, and every visual and reference declaration | How that geometry was composed; a map source records no design lineage |
 | Recipe and consumer | Terrain atlas selection, collision bodies, camera framing, and pixel projection | Whether the shape is playable; that is settled before any provider work begins |
 
@@ -200,12 +200,14 @@ compiled width.
 
 Two transport facts constrain the generated schema and must not be tidied away. The branch
 discriminator is a typed single-value enum rather than `const`, because the provider rejects
-`const` outright. And strict canonicalization strips numeric bounds and forces every declared
-property to be required, which makes schema bounds **advisory** — a `tower` with one storey has
-been observed sailing past a schema minimum of two — and means an optional property must be
-expressed as a separate branch. `storeys` lives only on `tower` for that reason. The validator
-in `design.check` is the authority; the schema is a convenience that removes error classes it
-happens to catch.
+`const` outright. And the schema states shape only, with no numeric bounds: strict output
+dropped them on the way to the provider (a `tower` with one storey was observed sailing past a
+schema minimum of two), and Grida FX checks each answer against the schema as written, so a
+bound would turn an out-of-range answer into a failed call with no feedback. Strict output also
+makes every declared property required, so an optional property must be expressed as a separate
+branch; `storeys` lives only on `tower` for that reason. The validator in `design.check` owns
+every bound and refuses with feedback the next composition reads; the schema is a convenience
+that removes error classes it happens to catch.
 
 Feedback is translated before it goes back to the model. Every emitted column remembers the chunk
 that produced it, so a validator complaint about a compiled surface id arrives as

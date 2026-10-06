@@ -2,7 +2,7 @@
 
 Stage Gen provides asset-pipeline authoring, execution and inspection. Consumers own what
 those assets mean in a complete application. Dependencies point from consumers to workflows
-and components, then to GNode; the product never imports its example games.
+and components, then to Grida FX, the engine; the product never imports its example games.
 
 ## Two products in one repository
 
@@ -14,39 +14,44 @@ are defined in the [Godot project charter](godot/CHARTER.md).
 The Godot directory serves as engine-specific examples for Stage Gen. Internally, it can
 evolve as its own project: sharing game systems, extracting packages or reviewing
 visual-novel implementations does not expand the main product's scope. The asset product
-remains useful without Godot. GNode and the Stage Gen application are layers of that main
-product; this is distinct from the two-product ownership boundary. Co-location does not
-require common game formats or synchronized releases.
+remains useful without Godot. It runs on Grida FX, a separate public product
+pinned as a submodule at `third_party/fx`; that boundary is distinct from the two-product
+ownership boundary. Co-location does not require common game formats or synchronized releases.
 
 ## Layers
 
-Each layer imports only the layers above it in this list, with two named exceptions: the
-character-3d run reader in `workflow.py` imports `stage_gen.runs` for the run-view file, and `_checks.py` imports the CLI parser lazily to parse `[try]` commands. The
-import rules below are what the tests enforce; this ordering is not tested.
+Each layer imports only the layers above it in this list, with one named exception: the glue
+reads the registry's declarations in `_registry.py` (`_fx.py` does, and `stage_gen.runview`
+lazily, to find an installed workflow's file again). The import rules below are what the
+tests enforce; this ordering is not tested.
 
 1. **Grida FX** (`third_party/fx`, imported as `grida.fx`) is the engine, a separate product
    pinned as a submodule. It owns the workflow file with its expander, planner, node host,
-   call cache, runner and spending ceiling, the run record, the `python -m grida.fx` command,
-   its built-in node types (`fx/…`), and the provider adapters with their retries. FX imports
-   no Stage Gen package, workflow, game or brand, and Stage Gen imports only its public names.
-2. **Glue** (`src/stage_gen/workflows/_fx.py`, `src/stage_gen/runview/`, `src/stage_gen/viewer.py`):
-   Stage Gen reads FX plans for its catalog and checks, projects FX run folders to run views,
-   and starts the viewer. It adds no graph engine of its own: every workflow, game build and
-   user project is an FX workflow file or Python builder.
-3. **Components** (`src/stage_gen/components/`): bounded building blocks with their node types,
-   graph fragments, contracts and services. A component never runs alone and never imports
-   a workflow. Shared workflow-neutral media inspection and transforms belong in
-   `src/stage_gen/media/`. See the [component contract](src/stage_gen/components/README.md).
+   store, runner and spending ceiling, the run record, the `python -m grida.fx` command, its
+   built-in node types (`fx/<type>@1`), its route table, the provider adapters with their
+   retries, and the key loader. FX imports no Stage Gen package, workflow, game or brand, and
+   Stage Gen imports only its public names.
+2. **Glue** (`src/stage_gen/workflows/_fx.py`, `src/stage_gen/runview/`): Stage Gen reads FX
+   plans for its catalog and checks and writes the scratch projects its code plans in, and
+   projects FX run folders to run views and view contexts (`stage-gen-run-view-v1`). It adds
+   no graph engine of its own: every workflow, game build and user project is an FX workflow
+   file or Python builder.
+3. **Components** (`src/stage_gen/components/`): bounded building blocks, such as contracts,
+   prompts, validators and deterministic processing, that a workflow's node types call. A
+   component never runs alone and never imports a workflow. Shared workflow-neutral media
+   inspection and transforms belong in `src/stage_gen/media/`. See the
+   [component contract](src/stage_gen/components/README.md).
 4. **Examples.** An example is a frozen export of real runs (`workflow-example-v1`), pinned
    by sha256 in its owner's manifest and kept in the local, gitignored store
-   `out/examples/<owner>/<id>/`; `stage_gen.examples` is its public contract, which imports
-   only GNode and which workflow importers and games use. `library/` holds committed,
-   approved character-3d examples that the catalog builds from tracked files.
+   `out/examples/<owner>/<id>/`; `stage_gen.examples` is its public contract, which reads FX
+   runs through `stage_gen.runview`, imports no workflow, and which workflow importers and
+   games use. `scripts/examples.py promote` refuses a stand-in run. `library/` holds
+   committed, approved character-3d examples that the catalog builds from tracked files.
 5. **Workflows** (`src/stage_gen/workflows/<id>/`): the product unit. A workflow composes
    components into one named deliverable and owns its layout, generation and validation
-   assumptions. Its folder holds `workflow.yaml` beside its own `gnode.yaml`, `workflow.py`
-   (the code facts read from the workflow file: typed steps over the real node types,
-   persisted identity, an offline sample plan and which runs it owns),
+   assumptions. Its folder holds `workflow.yaml` beside its own `fx.yaml` and `fx.lock`,
+   `workflow.py` (the code facts read from the workflow file: typed steps over the real node
+   types, persisted identity, an offline sample plan and which runs it owns),
    `workflow.toml` (what code cannot know: title, promise, summary, tools, output notes,
    try-it commands and pinned examples), `page.mdx`, `contract.md`, `example.py`
    where it has an importer, `inputs/` where it has sample inputs, and its implementation.
@@ -56,13 +61,17 @@ import rules below are what the tests enforce; this ordering is not tested.
    `[try]` command does not parse, `page.mdx` restates the manifest's summary or an output
    note, the README workflow table differs from the manifests, or a stated identity differs
    from the identity golden.
-6. **Runs.** A run is one gnode run folder: its plan, its record (`events.jsonl`) and its
-   steps' files. `gnode inspect` reads it back, and `gnode view` keeps its run view.
-7. **Surfaces.** The `gnode` command line plans, runs and inspects every workflow by its id.
-   The [viewer](docs/viewer.md) (`web/viewer`, the dashboard `gnode view` starts, installed
-   by `stage_gen.viewer`) reads run folders. The [site](docs/site.md) (`web/site`) is built from the catalog
-   export and the example store. `web/` is one Bun workspace and the only Node boundary;
-   the viewer and the site share only `web/ui` and the versioned data contracts.
+6. **Runs.** A run is one FX run folder under `out/runs/<workflow id>/`: its plan
+   (`plan.json`, `fx-graph-v1`), its record (`events.jsonl`) and its steps' files. Results live
+   in the store (`out/fx-cache`), so deleting a run folder loses nothing.
+   `python -m grida.fx inspect` reads a run back, and `stage_gen.runview` projects it.
+7. **Surfaces.** `python -m grida.fx` plans, runs and inspects every workflow by its id: the
+   root `fx.yaml` finds them (`workflows: [src/stage_gen/workflows]`). The
+   [viewer](docs/viewer.md) (`web/viewer`, which `scripts/view.py` starts through
+   `stage_gen.viewer`) reads run folders. The [site](docs/site.md) (`web/site`) is built
+   from the catalog export and the example store. `web/` is one Bun workspace and the only
+   Node boundary; the viewer and the site share only `web/ui` and the versioned data
+   contracts.
 8. **Consumers.** The Godot example project.
 
 Provider configuration, credentials and concrete services belong to Grida FX: each project's
@@ -74,58 +83,70 @@ serve them. No workflow acquires those responsibilities.
 `tests/contract/test_import_boundaries.py` enforces these, and every scan asserts that it
 matched at least one file:
 
-- FX is imported only as `from grida.fx import X`, with `X` one of its public names.
-- Workflows never import each other. A workflow may import its own package, its own frozen
-  implementation root and `stage_gen.workflows._registry`.
-- Components import no workflow; the registry, catalog, checks and `stage_gen.examples`
-  import no workflow either.
+- FX is imported only as `from grida.fx import X`, with `X` one of its public names, by the
+  product, its tests and scripts, and the games' pipelines and tools.
+- Stage Gen's utilities (`contracts`, `fs`, `provenance`, `canonical`, `media`) import no
+  engine, and no Python source in the product names an image model: routes live in `fx.yaml`.
+- The retired modules (the old engine's packages, `stage_gen.orchestration`, the route-policy
+  modules and the rest the test lists) are gone, and nothing imports them.
+- Workflows never import each other. A workflow may import its own package,
+  `stage_gen.workflows._registry` and `stage_gen.workflows._fx`.
+- Components import no workflow and not the viewer; the registry, catalog, checks, `_fx.py`
+  and `stage_gen.examples` import no workflow either.
 - The product imports no game, and no optional consumer.
 
 ## Identity is frozen where it is persisted
 
 Moving or renaming code must not move a cache key or a persisted identity, and
-`tests/contract/test_workflow_identity.py` pins them in one machine-independent golden:
+`tests/contract/test_workflow_identity.py` pins them in one machine-independent golden
+(`scripts/write_workflow_identity.py` writes it):
 
-- every member of the character-3d implementation;
-- graph-document literals and kinds, cache record kinds, the node-type inventory (a
-  workflow file's steps with the locked versions of the node types they use), provenance
-  names and the run-view schema version;
-- the cache keys of plans and free runs made only from committed or constant bytes, and the
-  call keys of paid calls such a run made through a stand-in.
+- the run-view schema version;
+- the node-type inventory: every leaf step of each workflow file, with the type identity FX
+  resolves its `uses:` to (`fx/mesh.generate@1.1` for a built-in,
+  `nodes/assembly.py#assemble@1` for a versioned type of the workflow's own);
+- the identities FX gives the instances of offline plans and free runs made only from
+  committed or constant bytes, and the keys of the paid calls such a run made through a
+  stand-in.
 
-No digest may glob a workflow folder. A digest names its files, so adding `workflow.py`,
-`cli.py`, `example.py` or prose beside an implementation never changes an identity. The
-persisted strings that keep an older word (the graph-document field `recipe`, the
-`*-execution-*` kinds) are
-listed in the [glossary](docs/glossary.md) so nobody renames them.
+FX derives an unversioned node type's identity from its module, the project modules it
+imports and the resources it declares, and `fx.lock` pins a versioned one's source. Neither
+globs a folder, so adding `workflow.py`, `example.py` or prose beside an implementation never
+changes an identity. The persisted strings that keep an older word (the `recipe` field of
+some game documents, the `*-execution-*` kinds) are listed in the [glossary](docs/glossary.md)
+so nobody renames them.
 
 Character-3d qualification binds a declared closure rather than every installed byte: its
-node types as `gnode.lock` pins their source, the workflow file, the core contract versions,
-its routes and prices, and the Blender build (`workflows/character_3d/support.py`).
+node types as `fx.lock` pins their source, the workflow file, the core contract versions,
+each route with its contract, each paid step's price, the Blender build and the settings the
+cohort ran with (`workflows/character_3d/support.py`).
 
 ## Bounded contracts and flexible composition
 
-Public components include independent sound effects, speech, music, voice profiles, UI
-artwork, screen artwork, effects artwork, terrain, layers, sprites and portrait motion.
-Spatial generation and sprite locomotion retain their precise constraints; host combat and
-physics stay out. Scenario authoring and execution belong to the Godot project,
-independently of asset generation.
+Public components include independent sound effects, speech, repeating images, layers,
+movie sprites, video clips, portrait motion and the 3D character's studios. The kits only the
+games use (UI, screen and effects artwork, terrain, music, voice profiles, world generation)
+live in `demo_game_tools.kits` beside them. Spatial generation and sprite locomotion retain
+their precise constraints; host combat and physics stay out. Scenario authoring and execution
+belong to the Godot project, independently of asset generation.
 
-The looping-parallax workflow, the first written as a gnode workflow file, owns layer images,
+The looping-parallax workflow, the first written as a workflow file, owns layer images,
 repeat axes, offsets and relative scroll factors. It does not own a player, level or camera controller. Portrait motion owns its
 judged chain from one sprite to independent eye and mouth patches; the consuming
 presentation decides when that animation plays. These contracts are not combined into a universal gameplay language.
 
-TOML remains suitable for a workflow's asset requests. Ordinary Python is the composition
-language for arbitrary graphs. GDScript and scenes compose Godot games. Do not require users
-to describe general-purpose computation or gameplay as TOML.
+A workflow file states a graph over proven node types, and a workflow's inputs are a YAML
+file or flags. Ordinary Python, an FX builder, composes a graph a file cannot state. TOML
+remains suitable for a game's asset requests. GDScript and scenes compose Godot games. Do not
+require users to describe general-purpose computation or gameplay as YAML or TOML.
 
 ## Consumers and optional tools
 
-The viewer reads public graph, trace, manifest and view records, and derives a missing view
-into a user cache, never into a run folder. It never starts a run or implements a game's
-logic. Basic previews are generic; specialist inspectors are optional adapters over bounded
-metadata. Unknown preview contracts retain readable metadata rather than disappearing.
+The viewer reads public graph, trace, manifest and view records; `scripts/view.py` derives a
+missing view into a user cache, never into a run folder. The viewer never starts a run or
+implements a game's logic. Basic previews are generic; specialist inspectors are optional
+adapters over bounded metadata. Unknown preview contracts retain readable metadata rather than
+disappearing.
 
 `godot/packages/` contains independently bounded reusable runtime packages. `godot/games/`
 contains playable consumers. `godot/templates/` contains starting projects whose preparation
@@ -166,14 +187,16 @@ through Grida FX.
 
 ## Enforcing the boundary
 
-Import tests enforce GNode rings and the absence of product-to-game dependencies. Package
-tests verify installed use outside the checkout. Product verification runs without optional
-consumers; the aggregate gate additionally verifies game readers, Godot and the web
-workspace. Each workflow's graph contract lives in its `contract.md`, and each game's
-in that game's docs. There is no repository-wide canonical game graph.
+Import tests enforce FX's public surface, the absence of the retired engine and the absence
+of product-to-game dependencies. Package tests verify installed use outside the checkout.
+Product verification runs without optional consumers; the aggregate gate additionally
+verifies game readers, Godot and the web workspace. Each workflow's graph contract lives in
+its `contract.md`, and each game's in that game's docs. There is no repository-wide canonical
+game graph.
 
 Cache identity, route preflight, retry ownership, atomic persistence, provenance, path
 confinement and media review rules hold through every move. See
-[verification](VERIFICATION.md), decision
+[verification](VERIFICATION.md), decisions
 [0071](docs/decisions/0071-workflows-are-the-product-unit-and-the-web-splits-into-site-and-viewer.md)
-and the [directory preview](docs/repository-layout.md).
+and [0074](docs/decisions/0074-stage-gen-runs-on-grida-fx.md), and the
+[directory preview](docs/repository-layout.md).

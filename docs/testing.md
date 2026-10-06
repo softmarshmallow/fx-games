@@ -1,13 +1,17 @@
 # Testing stage-gen
 
-All routine verification is credential-free. Provider-backed tests carry the
-`live` marker and are never selected by the locked offline gate.
+All verification is credential-free, and no test calls a provider. A test that runs a
+workflow or a game build runs it whole on Grida FX with a stand-in
+(`grida.fx.run(..., stand_in=...)`): a function that answers each paid call offline, for
+nothing, through the same answer checks a provider's answer gets. The helpers in
+`tests/unit/_fx.py` write the scratch projects such runs use, so their runs and store stay
+in the test's own folder.
 
 ## Focused matrix
 
 | Surface | Command |
 |---|---|
-| Reusable components/providers | `uv run pytest tests/unit/components -q` |
+| Reusable components | `uv run pytest tests/unit/components -q` |
 | Verified single-axis image repeats | `uv run pytest tests/unit/components/image_repeat -q` |
 | Deterministic media | `uv run pytest tests/unit/media -q` |
 | Workflows | `uv run pytest tests/unit/workflows -q` |
@@ -15,6 +19,8 @@ All routine verification is credential-free. Provider-backed tests carry the
 | CLI boundary | `uv run pytest tests/integration -q` |
 | Wheel-packaged resources | `uv run pytest tests/contract/test_packaged_resources.py -q` |
 | Import architecture | `uv run pytest tests/contract/test_import_boundaries.py -q` |
+| Persisted identities | `uv run pytest tests/contract/test_workflow_identity.py -q` |
+| Run views and the viewer launcher | `uv run pytest tests/unit/test_runview.py tests/unit/test_run_views.py tests/unit/test_viewer.py -q` |
 | Godot owners | `uv run --group games python godot/tools/check.py` |
 | Scenario compiler/runtime/embedding | `uv run --group games python godot/tools/check.py --owner scenario_runtime` |
 | Formatting and lint | `uv run ruff format --check . && uv run ruff check .` |
@@ -28,7 +34,12 @@ prepared-media and rendered suites have explicit scopes and prerequisites. An
 offline state check does not prove a picture or listening quality. See [Godot host](../godot/games/ember_hollow/docs/runtime.md) and
 [decision 0068](decisions/0068-the-suite-reads-a-world-the-repository-can-write.md).
 
-The product gate is `uv run python scripts/check.py`. It needs no Bun or Godot.
+Tests that plan or run need FX's engine: build it once with
+`uv run python third_party/fx/tools/build_engine.py` (cargo), and again after a pull that
+moves the submodule's pin, or point `GRIDA_FX_BIN` at a built one.
+
+The product gate is `uv run python scripts/check.py`. It builds the engine first and needs no
+Bun or Godot.
 Use the owning optional scope or `--scope all` for the complete repository gate,
 after `uv sync --all-groups --frozen`. See [VERIFICATION.md](../VERIFICATION.md).
 The retained game tests require the optional `games` workspace group; use it when
@@ -38,28 +49,13 @@ The pre-push hook checks each pushed commit in a temporary worktree, preserving 
 working checkout. It installs all groups, then runs the format and lint checks, the web tests
 and the contract tests, after building FX's engine for the pinned FX commit (needs cargo).
 
-## Live provider tests
+## Live runs
 
-Live tests are opt-in and must use only documented allowlisted names from
-`.env.example`. Never print values or run them as part of CI/offline checks.
-Safe collection skips every live test and exits successfully:
-
-```sh
-STAGE_GEN_RUN_LIVE=0 uv run pytest -m live -q
-```
-
-An intentional provider run requires the explicit test gate:
-
-```sh
-STAGE_GEN_RUN_LIVE=1 uv run pytest -m live --basetemp out/live-smoke -q
-```
-
-A live test must preserve sanitized request/response facts, exact model and
-endpoint identity, attempt count, validation, and artifact provenance. Visual
-output accepted as evidence still requires semantic review by a non-producer;
-audio quality review is separate from deterministic media validation. The live
-gate requires explicit task intent; setting the flag does not broaden the
-authorized scope.
+There are no live tests. A provider is reached only by a live run, `--live` with a ceiling
+(`--max-usd`), made with explicit task intent and the owner's go, never as part of CI or an
+offline check. Its FX run record keeps the route, cost, digests and attempts without
+credentials. Visual output accepted as evidence still requires semantic review by a
+non-producer; audio quality review is separate from deterministic media validation.
 
 ## Optional web adapter
 

@@ -62,18 +62,18 @@ The package is authored data. Playing it needs each leaf built and the case publ
 the delivered folders. From `godot/games/the_grain`:
 
 ```bash
-gnode run pipeline/workflow.py:scene --arg package=inputs --live --max-usd 150 \
+uv run python -m grida.fx run pipeline/workflow.py:scene --arg package=inputs --live --max-usd 150 \
   --deliver package=../../../out/<scene-tag>/{key}
-gnode run pipeline/workflow.py:room --arg package=inputs/rooms/motor_court --live --max-usd 25 \
+uv run python -m grida.fx run pipeline/workflow.py:room --arg package=inputs/rooms/motor_court --live --max-usd 25 \
   --deliver package=../../../out/<court-tag>/{key}
-gnode run pipeline/workflow.py:room --arg package=inputs/rooms/window --live --max-usd 25 \
+uv run python -m grida.fx run pipeline/workflow.py:room --arg package=inputs/rooms/window --live --max-usd 25 \
   --deliver package=../../../out/<window-tag>/{key}
 uv run python pipeline/prepare.py --bundle --case episode_one \
   --beat-run b_office=<scene-tag> --beat-run b_motor_court=<court-tag> ... \
   --output ../../../out/<episode-tag>
 ```
 
-Then `godot --path godot/games/the_grain -- --run out/<episode-tag>`. `PILOT.md` records the exact tags that ship.
+Then, from the repository root, `godot --path godot/games/the_grain -- --run "$PWD/out/<episode-tag>"`. `PILOT.md` records the exact tags that ship.
 
 ## What is not true of it
 

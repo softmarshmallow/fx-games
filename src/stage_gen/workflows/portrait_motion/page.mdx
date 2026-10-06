@@ -19,7 +19,7 @@ blink, wink and talk independently, in any order and at any pace.
 <Try>
 <Agent>
 
-Use Stage Gen's portrait motion workflow (`gnode plan portrait-motion`) to add a blink and mouth shapes to <Ref input="sprite">this sprite</Ref>. Plan it first and tell me what it may cost, then run it live with a ceiling of five dollars, show me the animation, and tell me which features were accepted.
+Use Stage Gen's portrait motion workflow (`uv run python -m grida.fx plan portrait-motion`) to add a blink and mouth shapes to <Ref input="sprite">this sprite</Ref>. Plan it first and tell me what it may cost, then run it live with a ceiling of five dollars, show me the animation, and tell me which features were accepted.
 
 </Agent>
 <Shell>
@@ -37,7 +37,7 @@ uv run python -m grida.fx inspect portrait-motion
 ```
 
 `face.yaml` names your sprite and the committed face spec; Run it yourself, at the end of this page,
-shows one. A live run needs OpenRouter and OpenAI keys.
+shows one. A live run needs a ceiling and OpenRouter and OpenAI keys.
 
 </Shell>
 </Try>
@@ -144,10 +144,11 @@ the face box, the feature decision, one sheet edit, the outlines and the still r
 dollar in all. Each answer is held by a judge, and a malformed one is drawn again, six takes at most,
 which is why the plan's ceiling is far above a usual run. The structured calls go to
 `openai/gpt-6-astra` through OpenRouter, with high reasoning and high image detail, through OpenAI
-only; the sheet goes to OpenAI's Sunburst edit route. A project's `gnode.yaml` or `--routes` may
-choose another route that serves the step; one that cannot is refused while planning.
+only; the sheet goes to OpenAI's Sunburst edit route. The `routes:` of the `fx.yaml` you run from
+may choose another route: one the route tables do not have for that capability is refused while
+planning, and a request the route cannot take is refused before anything is sent, for nothing.
 
-Every paid answer is kept in gnode's call cache by the request that made it, so running the same
+Every paid answer is kept in FX's call cache by the request that made it, so running the same
 inputs again pays for nothing, and a run that stopped continues where it stopped.
 
 ### Read the result

@@ -52,12 +52,15 @@ namespace rules in the view and style taxonomy: bare labels remain banned *as
 authorities*; a namespace segment is a navigation name whose authority is its
 binding.
 
-## Where the taxonomy lives — identifiers, not directories
+## Where the taxonomy lives — names, not directories
 
-The full path is the **type identifier namespace**: the node ABI persists
-taxonomy paths as every node's `type_id`
-(`2d/sideview/platformer/motion_atlas.generate` — path names the module, the
-`.step` suffix names the step within it). Directory trees do NOT mirror the
+The full path is a **navigation namespace**. An earlier node ABI persisted it
+as every node's `type_id` (`2d/sideview/platformer/motion_atlas.generate` —
+path names the module, the `.step` suffix names the step within it). Under
+Grida FX a node type's id is where it is declared instead
+(`./pipeline/nodes/content.py#admit_cutout`, or a built-in such as
+`fx/image.generate@1`), so no persisted id carries the taxonomy path; it
+names modules and their homes. Directory trees do NOT mirror the
 taxonomy — an eight-level source tree buys depth, not clarity. Module paths
 carry the **flattened honest name** instead: the narrowest segments that make
 the assumption visible (`platformer_map`, not `two_d/sideview/platformer/map`).
@@ -127,8 +130,8 @@ so existing runs were dropped once, not once per rename:
 | cache namespaces `prepared-world-v1` / `prepared-content-v3` | `sideview-platformer-{world,content}-v1` |
 | provenance component `@stage-gen/scrolling-preview` | `@stage-gen/sideview-platformer` |
 
-The next levers are per-type: each `NodeType.contract_version` invalidates one
-kind of work; a cache namespace invalidates one recipe's whole tree.
+The levers now are per type: bumping a node type's `version`, which `fx.lock`
+pins to its source, changes the identity of that type's work alone.
 
 ## Validation cases
 

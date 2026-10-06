@@ -10,12 +10,16 @@ This note has two deliberately separate status classes:
   side-view platformer actor-facing review.
 - **Future proposal**: a reusable semantic-review capability and broader semantic criteria.
 
-Status (2026-09-04): the "current implementation" below describes the layout of
-August 2026. Structured generation has since moved to Grida FX's built-in
-`structured.generate` step and its OpenRouter adapter, and the recipe modules named
-here were folded into `src/stage_gen/media/` and the recipe's `motion_contract.py`.
-There is still no semantic_review package and no review.py provider module; those
-names appear only in the future section.
+Status (2026-10-07): the "current implementation" below describes the layout of
+August 2026, and its executor, services and identifiers are named as they were then.
+Structured generation has since moved to Grida FX's built-in `structured.generate`
+step and its OpenRouter adapter, and the recipe modules named here were folded into
+`src/stage_gen/media/` and the game's `motion_contract.py`. Bellweather's build now
+reviews each actor from a board of what was made, with a `structured.generate` step
+whose verdict is recorded as evidence and never gates the build
+([its builder](../../godot/games/bellweather/pipeline/workflow.py)). There is still no
+semantic_review package and no review provider; those names appear only in the
+future section.
 
 This document does not define a migration path or parallel contract versions. Current
 identifiers below describe the one implementation accepted now. A future contract must replace
@@ -75,11 +79,8 @@ consumer adapters own runtime assumptions.
 src/stage_gen/media/images.py
   apply_chroma_transparency            soft matte and despill
 
-src/gnode/modalities/structured/
-  StructuredGenerationService          provider-neutral strict structured output
-
-src/gnode/providers/openrouter/structured.py
-  OpenRouterStructuredBackend          current structured-output transport
+fx/structured.generate@1              Grida FX's strict structured output
+  (FX's OpenRouter adapter)            its transport, schema check and retries
 
 godot/games/bellweather/pipeline/src/bellweather_pipeline/
   raster_contracts.py                  deterministic alpha and grid contracts
@@ -89,8 +90,9 @@ godot/games/bellweather/pipeline/src/bellweather_pipeline/
 godot/games/bellweather/scenes/                    consumer-owned runtime geometry and placement
 ```
 
-The current actor-facing review deliberately reuses `StructuredGenerationService`; the generic
-component knows only the strict schema, prompt, references, persistence, and provider operation.
+The actor-facing review deliberately reused strict structured generation (then a
+`StructuredGenerationService`, now FX's `structured.generate`); the generic call knows only
+the strict schema, prompt, references, persistence, and provider operation.
 `review_criteria.py` owns the side-view platformer meanings of `right`, `front`, and which stages
 carry a facing requirement.
 
@@ -104,15 +106,15 @@ proposed ownership is:
 
 ```
 src/stage_gen/components/semantic_review/       proposed; absent
-src/gnode/providers/openrouter/review.py     proposed; absent
+a Grida FX adapter for vision.review            proposed; absent (FX declares the capability, ships no adapter)
 ```
 
 Two rules constrain that proposal:
 
 - A reusable semantic-review component must not know what a turnaround is. Recipe vocabulary
   stays in `review_criteria.py` or the owning recipe.
-- Runtime camera, scene, engine, and placement policy stays in `web/`; a future component may
-  inspect media but must not absorb gameplay assumptions.
+- Runtime camera, scene, engine, and placement policy stays with the consuming game under
+  `godot/games/`; a future component may inspect media but must not absorb gameplay assumptions.
 
 ## Boundary
 
@@ -145,7 +147,7 @@ The recoverable/hard-fail split is already the healing system. It needs no visio
 The `native` branch validates provider alpha directly, the `chroma` branch applies
 `apply_chroma_transparency`, and the `ai` branch composes the source with background-removal
 alpha. Grid and per-cell normalization then validate and canonicalize the result before the
-artifact is accepted. This is active code, not an unexercised later wave.
+artifact is accepted. This was active code then, not an unexercised later wave.
 
 ### Anchor policy
 
@@ -234,7 +236,9 @@ parses. Missing, unreadable, stale, or invalid evidence triggers a fresh review.
 `AGENTS.md` fixes the shape: one retry owner per provider operation, at most six attempts, no
 nested loops, and semantic regeneration is explicitly *not* a provider retry.
 
-The current implementation follows that split:
+The August implementation followed that split, and it still holds: today FX's engine is the
+one retry owner of every provider call, and a judge that refuses an answer draws again under
+`on_reject: regenerate`, a new take and never a retry. In August:
 
 - `StructuredGenerationService.generate` owns transport, decoding, and strict-schema validation
   retries for one facing-review provider operation, then persists the accepted result.
@@ -285,9 +289,13 @@ one exact lower_snake_case request, result, evidence, and failure shape; bind bo
 criteria digests; reject unknown fields; and update producer and consumers together. It must not
 add a fallback reader for a superseded artifact shape.
 
-## Current failure ownership
+## Failure ownership, August 2026
 
-| class | current owner | budget or behaviour |
+Today FX's engine owns the two provider-operation rows below (image, and facing-review
+transport and schema) as the one retry owner of each call, and no route serves background
+removal.
+
+| class | owner in August | budget or behaviour |
 |---|---|---|
 | image transport, decoding, and provider-asset validation | `ImageGenerationService` | one provider operation and its retry policy |
 | AI background-removal transport and alpha validation | background-removal component | separate provider operation and retry policy |
@@ -324,7 +332,7 @@ broader semantic-review work should proceed in this order:
 
 1. Define the one exact current request, result, evidence, and failure contract, including
    artifact and criteria digest binding.
-2. Decide whether existing `StructuredGenerationService` is sufficient or whether a distinct
+2. Decide whether FX's `structured.generate` is sufficient or whether a distinct
    provider-neutral semantic-review component has a real cross-recipe responsibility.
 3. Implement recipe criteria without moving turnaround, camera, or gameplay vocabulary into a
    generic component.

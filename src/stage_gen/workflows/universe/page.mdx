@@ -9,9 +9,11 @@ direction and the `inputs.yaml` that names them. Plan it offline, before any spe
 uv run python -m grida.fx plan universe --inputs src/stage_gen/workflows/universe/inputs/lantern_ferry/inputs.yaml
 ```
 
-The plan prices the world phase exactly and the gallery at its ceiling, since how many entities
-there are is a result of the world. A live run needs `--live`, an OpenRouter key and a ceiling: with
-`--max-usd 1` it stops before the gallery, and running it again with a higher ceiling draws the
-gallery from the admitted world without proposing it again. The run's own view shows the gallery,
-one card per entity, with a red dot on an image its review rejected. The [contract](contract.md)
-holds the source roles, both phases, the judges and the graph.
+The plan prices the world phase exactly and the gallery at its worst case, since how many entities
+there are is a result of the world. A live run needs `--live`, an OpenRouter key and a ceiling
+(`--max-usd`): with `--yes-up-to 1` as well it stops before the gallery once the gallery's price is
+known, and running it again without that draws the gallery from the admitted world, inside the
+ceiling, without proposing it again. The workflow's own view in the viewer
+(`uv run python scripts/view.py`) shows the gallery, one card per entity, with a red dot on an image
+its review rejected. The [contract](contract.md) holds the source roles, both phases, the judges and
+the graph.

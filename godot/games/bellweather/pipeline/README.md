@@ -15,20 +15,20 @@ Install the optional game tools from the repository root:
 uv sync --group games
 ```
 
-The game's folder is a gnode project. `gnode.yaml` names the routes, `gnode.lock` pins the
+The game's folder is an FX project. `fx.yaml` names the routes, `fx.lock` pins the
 node types in `pipeline/nodes/`, and `pipeline/workflow.py:build` reads a package with the
 game's own reader and writes one group of steps per asset. From the game's folder:
 
 ```sh
 cd godot/games/bellweather
-gnode plan pipeline/workflow.py:build --arg package=inputs/default
-gnode run pipeline/workflow.py:build --arg package=inputs/default --live --max-usd 175 \
+uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs/default
+uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs/default --live --max-usd 175 \
   --deliver package=../../../out/bellweather/{key}
 ```
 
 Planning is offline and spends nothing; `--live` is the explicit provider opt-in, and
 launching the Godot project never generates assets. Runs land in `out/runs/bellweather/`
-and the call cache in `out/gnode-cache/`, so a second run pays only for what changed.
+and the store in `out/fx-cache/`, so a second run pays only for what changed.
 `--arg part=world`, `content` or `soundtrack` builds one part and outputs its files;
 `--arg reviews=no` leaves the reviews out. `--deliver` copies the runtime package (every
 published file and `manifest.json`) out of a successful whole build. Another package works

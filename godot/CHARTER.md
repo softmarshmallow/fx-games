@@ -15,7 +15,7 @@ one implementation of the boundary; it is not the permanent shape of this projec
 
 | Product | Purpose and responsibility |
 | --- | --- |
-| Stage Gen | The primary product: author, execute and inspect user-owned asset pipelines through the SDK, components, recipes and supporting tools. Its GNode and application layers remain defined by the [root architecture](../ARCHITECTURE.md). |
+| Stage Gen | The primary product: author, execute and inspect user-owned asset pipelines through the SDK, components, workflows and supporting tools. Its Grida FX engine and application layers remain defined by the [root architecture](../ARCHITECTURE.md). |
 | Godot example project | The consumer product: turn selected assets into playable demonstrations, reusable Godot runtime packages and copyable starting projects. Own its gameplay, presentation, integration, tooling and development direction. |
 
 In relation to Stage Gen, `godot/` is an examples directory with an engine-specific
@@ -53,7 +53,7 @@ story, combat, audio playback and a complete player experience.
 
 Dependencies point from Godot consumers to Stage Gen. The asset product must
 install, run and be useful without Godot or its game packages. Godot's internal
-game formats must not become required inputs to public components or recipes.
+game formats must not become required inputs to public components or workflows.
 The example project can also consume supplied assets and other asset sources.
 
 Bounded asset contracts, such as sprite locomotion assets and looping parallax,

@@ -10,11 +10,11 @@
 >
 > This is the canonical human overview of Bellweather's asset build, the side-view platformer
 > (`2d/sideview/platformer` in the [asset taxonomy](../../../../docs/spec/asset-taxonomy.md)).
-> The [runner](../../iron_petal_unit/docs/runner.md) builds the same way, from its own game
-> folder. The [dialogue-scene](../../the_grain/docs/dialogue-scene-assets.md),
+> The [runner](../../iron_petal_unit/docs/runner.md), the
+> [dialogue scene](../../the_grain/docs/dialogue-scene-assets.md), the
 > [point-and-click room](../../the_grain/docs/pointclick-room.md) and
-> [oblique-survival](../../ember_hollow/docs/generation-v1.md) recipes still declare their own
-> graph documents. [Universe](../../../../src/stage_gen/workflows/universe/contract.md) is not a
+> [oblique survival](../../ember_hollow/docs/generation-v1.md) build the same way, each from
+> its own game folder. [Universe](../../../../src/stage_gen/workflows/universe/contract.md) is not a
 > game at all: it builds a storyworld package to read rather than one to play.
 
 The game's folder is an FX project. `fx.yaml` names the routes, the node folder and the
@@ -42,7 +42,7 @@ refuses, and delivers the runtime folder the Godot host plays:
 
 ```bash
 uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs/default --live --max-usd 175 --deliver package=../../../out/bellweather/{key}
-godot --path godot/games/bellweather -- --run out/bellweather
+cd ../../.. && godot --path godot/games/bellweather -- --run "$PWD/out/bellweather"
 ```
 
 `--arg part=world` (or `content` or `soundtrack`) builds that part alone and outputs its files
@@ -67,8 +67,8 @@ its verdict. `inputs/waves` is the second package; it plans the same steps over 
 | `bindings`, `package` | every gameplay and scenario reference resolved; the runtime folder and `manifest.json` | — |
 
 Every painting and every track is drawn at most six times: its judge refuses, the next take is
-drawn. A refusal is a new provider operation, counted as a take, never a transport retry; the
-provider adapter stays the one retry owner inside each take.
+drawn. A refusal is a new provider operation, counted as a take, never a transport retry;
+FX's engine stays the one retry owner inside each take.
 
 ## Machine-checked plan contract
 

@@ -7,8 +7,8 @@ OpenAI released GPT Image 2.5 on 2026-09-08 as two distinct models:
 `gpt-image-2.5` model ID. External provider research and historical live probes
 are date-scoped below; repository integration status is current through
 2026-09-10. This record keeps provider documentation, live artifact evidence,
-and repository integration status separate. The checked-in route catalog,
-workload policy, and sealed execution-graph snapshot remain runtime authority.
+and repository integration status separate. Grida FX's route table and each
+project's `fx.yaml` remain the runtime authority.
 
 ## Provider history through 2026-09-09
 
@@ -21,13 +21,13 @@ workload policy, and sealed execution-graph snapshot remain runtime authority.
 | OpenRouter | `openai/gpt-image-2.5-sunburst` | Generation plus up to 16 references; repository route has no native-alpha claim | `auto` or `opaque` only | `max` square and reference-conditioned wide generations passed live; transparent request returned HTTP 400 |
 | OpenRouter | `openai/gpt-image-2.5-flare` | Listed, not selected | `auto` or `opaque` only | Catalog only; no repository canary |
 
-## Current refactor validation
+## Live adapter verdict, 2026-09-10
 
-As of 2026-09-10, provider-free route, capability, adapter, and orchestration
-checks pass for the new OpenAI Images and fal implementations. The bounded live
-invocation `sunburst-routing-20260910` then dispatched the same ordered primary
-cases to each provider, stopping that provider after its first deterministic
-admission failure:
+On 2026-09-10, after provider-free checks passed for the then-new OpenAI Images
+and fal adapters (the predecessors of FX's), the bounded live invocation
+`sunburst-routing-20260910` dispatched the same ordered primary cases to each
+provider, stopping that provider after its first deterministic admission
+failure:
 
 | Case | OpenAI Images | fal |
 | --- | --- | --- |
@@ -82,7 +82,7 @@ propagation were both plausible, while `/v1/models` still omitted or returned
 The successful check did not record background mode, canvas, or edit behavior,
 so by itself it proves only that the Images generation route was reachable. The
 2026-09-10 refactor canary above subsequently supplied direct native-alpha and
-basic edit evidence for the current OpenAI adapter, subject to its recorded
+basic edit evidence for the OpenAI adapter of the time, subject to its recorded
 semantic and deterministic failures.
 
 OpenAI's current pricing table lists the same token rates for both variants:
@@ -167,7 +167,7 @@ levels through `max`, `background`, `n`, `input_references`, and
 `output_compression`, with provider-specific `moderation` passthrough. Its
 `background` enum is `auto | opaque`; it does not advertise transparent output
 or masked editing. A paid `background="transparent"` request returned HTTP 400
-before generation, so the repository refuses that request locally rather than
+before generation, so FX's adapter refuses that request before sending rather than
 silently accepting an opaque artifact.
 
 Two paid Sunburst canaries passed at `quality="max"` on 2026-09-09: a
@@ -194,72 +194,54 @@ Primary sources:
 
 ## Repository boundary
 
-The quality-first repository product is Sunburst only and every route resolves
-`quality_goal="maximum_verified"` to `quality="max"`. Flare, bare
-`gpt-image-2.5`, dated aliases, and arbitrary model overrides are not registered.
-OpenAI uses only the Images API; the Responses image tool is intentionally not a
-repository route because it rewrites prompts and has a different response and
-usage identity. It is not a fallback now that the Images route is reachable.
+Stage Gen's image routes are Sunburst only, at `quality: max`. Flare, bare
+`gpt-image-2.5`, dated aliases, and arbitrary model overrides are not routes.
+OpenAI is used only through the Images API; the Responses image tool is
+intentionally not a route because it rewrites prompts and has a different
+response and usage identity. It is not a fallback now that the Images route is
+reachable.
 
-The checked-in route catalog contains exactly these material routes:
+The routes are Grida FX's built-in ones
+([FX providers §10](https://github.com/gridaco/fx/blob/main/spec/providers.md)),
+each serving both `image.generate` and `image.edit`:
 
-| Route ID | Provider model and surface | Operation | Admitted image capability |
-| --- | --- | --- | --- |
-| `image.sunburst.openai.images.generation` | `gpt-image-2.5-sunburst` at `/v1/images/generations` | generation | native auto, opaque, or transparent output |
-| `image.sunburst.openai.images.edit` | `gpt-image-2.5-sunburst` at `/v1/images/edits` | reference or masked edit | native auto, opaque, or transparent output; up to 16 references |
-| `image.sunburst.fal.text-to-image` | `openai/gpt-image-2.5/sunburst` at fal `/text-to-image` | generation | native auto, opaque, or transparent output |
-| `image.sunburst.fal.edit` | `openai/gpt-image-2.5/sunburst` at fal `/edit` | reference or masked edit | native auto, opaque, or transparent output; up to 16 references |
-| `image.sunburst.openrouter.images.generation` | `openai/gpt-image-2.5-sunburst` at OpenRouter `/images` | generation | `auto` or opaque output; no native-alpha claim |
-| `image.sunburst.openrouter.images.reference` | `openai/gpt-image-2.5-sunburst` at OpenRouter `/images` | reference edit | `auto` or opaque output; up to 16 references, no mask, and no native-alpha claim |
+| Route | Provider endpoints | Background | Exact size | Input pictures |
+| --- | --- | --- | --- | --- |
+| `gpt-image-2.5-sunburst@openai` | `/v1/images/generations` and `/v1/images/edits` | `auto`, `opaque`, or `transparent` | any size in the envelope below | `image.edit`: up to 16, and a mask |
+| `openai/gpt-image-2.5/sunburst@fal` | fal `/text-to-image` and `/edit` | `auto`, `opaque`, or `transparent` | any size in the envelope below | `image.edit`: up to 16, and a mask |
+| `openai/gpt-image-2.5-sunburst@openrouter` | OpenRouter `/images` | `auto` or `opaque`; no native-alpha claim | the seven verified sizes below | `image.edit`: up to 16; no mask |
 
-Node instances declare their actual operation, background, format, size,
-references, and mask instead of inheriting all features of a node type. The
-default capability policies select OpenAI Images for transparent output,
-masked edits, automatic backgrounds, and opaque exact sizes outside the
-OpenRouter allowlist. They select OpenRouter only for opaque generation or
-reference work at a size its route has actually verified. Setting the one
-optional scalar `STAGE_GEN_IMAGE_PROVIDER` to `openai`, `fal`, or `openrouter`
-replans every image workload onto that provider's corresponding registered
-generation or reference/edit route. This is an explicit
-switch, not discovery: an OpenRouter selection still refuses transparent
-output, masks, and unsupported exact sizes during planning.
+A step names what it actually needs in `requires:` (`alpha`, `mask`,
+`image_input`, `custom_exact_size`, and so on) instead of inheriting every
+feature of a node type, and a route that lacks one is refused while planning.
+Each project's `fx.yaml` names one route per capability: the games, the seam
+repaint and portrait motion use OpenAI for native alpha, masks or custom exact
+sizes; universe and character-3d use OpenRouter for opaque work at sizes its
+route has verified; no project uses fal today. There is no provider switch and
+no discovery. Changing a route is an edit to an `fx.yaml`, and neither a missing
+key nor a failed call moves a call to another route. [Provider
+operations](providers.md) lists each project's routes.
 
-OpenAI Images and fal share the registered custom-exact-size boundary: each edge
-must be a multiple of 16, total area must be 655,360 through 8,294,400 pixels,
-the longest edge must not exceed 3,840 pixels, and the aspect ratio must not
-exceed 3:1. A fal request with a non-auto aspect ratio must also carry the exact
-size that realizes it. OpenRouter does not declare `custom_exact_size`; its
-exact-size route is limited to live-verified `1024x1024`, `1152x2496`,
-`1712x2560`, `2064x1008`, `2496x1152`, `2560x1440`, and `2560x1712` canvases.
-All three provider families also admit provider-selected flexible size.
+OpenAI Images and fal share one exact-size envelope: each edge must be a
+multiple of 16, total area must be 655,360 through 8,294,400 pixels, the longest
+edge must not exceed 3,840 pixels, and the aspect ratio must not exceed 3:1.
+OpenRouter does not declare `custom_exact_size`; its exact sizes are limited to
+the live-verified `1024x1024`, `1152x2496`, `1712x2560`, `2064x1008`,
+`2496x1152`, `2560x1440`, and `2560x1712` canvases. All three also admit a
+provider-selected flexible size. A size a route does not serve is refused
+before anything is sent.
 
-Planning seals each admitted route as a `ResolvedRouteSnapshotV1` in the graph
-and gives every image node its exact `binding_ref`. The snapshot contains policy
-and product identity, material provider/model/surface/endpoint/adapter identity,
-behavior and output fingerprints, supported and required features/limits,
-`supported_exact_size_constraints`, `required_exact_size`, and effective output
-options. It deliberately excludes credentials, price, pacing, and mutable
-verification evidence. Runtime rehydrates that snapshot, validates it against
-the configured catalog, applies the exact options, and constructs only its one
-selected backend. Missing credentials name only the provider already sealed in
-the graph; credentials never choose a provider and failure never cascades to a
-second route.
+A route's contract (the adapter that serves it and that adapter's behaviour) is
+part of its fingerprint, and so of every cache key the route serves; price,
+pacing, and credentials are not. Changing which route a project names therefore
+changes its image calls' keys, but leaves each workflow's step fan-out and
+scheduling with the workflow. A future topology change must update the
+[canonical generation pipeline](../../godot/games/bellweather/docs/generation-pipeline.md)
+and its executable graph contract in the same implementation change.
 
-The route snapshot is a graph-format change. New recipe plans use their current
-route-bearing graph identity (version 2, or dialogue scene version 6), while the
-reader keeps the immediately preceding route-free identity for historical runs.
-Legacy identities refuse route fields and current image nodes refuse a missing
-binding, so the version boundary cannot be bypassed with optional fields.
+What an image call costs is the provider's reported cost, else the whole amount
+held for it. OpenAI reports token usage but no cost, so FX charges each OpenAI
+image attempt its whole hold; OpenRouter reports a cost.
 
-Bound image provenance preserves raw returned usage when present and writes
-`cost_complete=true` only when that usage contains a finite, non-negative numeric
-`cost`. Token-only or absent usage is not presented as a complete actual cost.
-
-The routing refactor changes route, graph, provenance, and cache identity while
-leaving each recipe's node fan-out and scheduling semantics with the recipe. A
-future topology change must update the [canonical generation
-pipeline](../../godot/games/bellweather/docs/generation-pipeline.md) and its executable graph contract
-in the same implementation change.
-
-General credentials, retry ownership, response handling, and artifact rules
-remain in [provider operations](providers.md).
+Keys, the routes each project names, and retries are in
+[provider operations](providers.md).

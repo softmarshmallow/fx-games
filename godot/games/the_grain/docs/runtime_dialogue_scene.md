@@ -38,10 +38,11 @@ opened on whichever came first. The earlier browser route was retired; the web
 application is now an asset viewer.
 
 **Which runs open.** The contract is `dialogue-scene-bundle-v9` at
-`schema_version` 9: `out/the-grain-scene-gnode`, delivered by the gnode scene build.
+`schema_version` 9: `out/the-grain-scene-gnode`, delivered by the scene build before it
+moved to Grida FX, and what the FX scene build delivers now.
 The Grain is the retained game consumer of this host. Older bundles, the v8 runs
 included, are refused with a notice naming the build that makes the current one;
-v9 dropped v8's per-file provenance and attempt ledger, which the gnode run now
+v9 dropped v8's per-file provenance and attempt ledger, which the build's run now
 records.
 
 ## The controls

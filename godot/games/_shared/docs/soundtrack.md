@@ -19,7 +19,7 @@ validates one audio artifact per track.
 | `soundtrack.toml` | Track identity, display name, creative brief, duration/loop intent, and global selection policy |
 | `game.toml` | Exact soundtrack source path |
 | `gameplay.toml` | Which maps, encounters, or bosses use which track IDs |
-| Recipe | Provider/model selection, generation, decoding, validation, provenance, and cache identity |
+| The game's FX build | Route selection (the game's `fx.yaml`), generation, decoding, and validation; FX keeps the run record and cache identity |
 | Consumer | Audio unlock, volume, playback lifecycle, map changes, and deterministic selection within authored policy |
 | Genre audio contract | What the music does at gameplay edges - the runner's `[music]` transitions in `runner/audio.toml`, see [game-sound-effects.md](../../iron_petal_unit/docs/audio.md) |
 
@@ -75,17 +75,19 @@ entry in `game.toml`. Prepared-package resolution validates the catalog, every
 gameplay track reference where that family has one, and the complete closure
 before paid work.
 
-For each track, the scrolling execution graph contains:
+For each track, the game's build writes three steps
+(`demo_game_tools.steps.soundtrack`):
 
 ```text
-soundtrack/<track_id>:generate
-  -> soundtrack/<track_id>:validate
-  -> integration
+soundtrack.<track_id>.generate   draw the track (fx/music.generate@1)
+soundtrack.<track_id>.admit      a playable MP3, or it is drawn again, at most six takes
+soundtrack.<track_id>.record     measure it, refuse one shorter than 15 seconds, record it
 ```
 
-Generation emits `soundtrack/<track_id>.mp3`; validation emits the adjacent
-validation record. Both participate in cache and manifest closure. Provider
-choice is execution configuration and never appears in authored TOML.
+Generation publishes `soundtrack/<track_id>.mp3`, which the `package` step lays out with
+the rest of the runtime package; the runner also publishes the measured record beside it
+as `soundtrack/<track_id>.validation.json`. The route is the game's `fx.yaml`
+(`music.generate`) and never appears in authored TOML.
 
 Provider-free integration projects playback policy and each track’s stable ID,
 display name, duration, artifact path, digest, and byte count into

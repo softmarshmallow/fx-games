@@ -8,15 +8,15 @@ then launch an existing generated run:
 
 ```sh
 godot --headless --editor --path godot/games/ember_hollow --quit
-godot --path godot/games/ember_hollow -- --run "$PWD/out/ember-hollow-gnode"
+godot --path godot/games/ember_hollow -- --run "$PWD/out/ember-hollow"
 ```
 
 WASD moves; Space interacts; X uses the selected item.
 
 The run directory is explicit. Starting the game never generates assets. The
-example path above uses existing local output; a fresh clone has no `out/` media.
-Authored inputs live in `inputs/`; the assets build with gnode
-([the asset build](pipeline/README.md)). Existing TOML is this game's configuration.
+example path above is the folder [the asset build](pipeline/README.md) delivers to; a
+fresh clone has no `out/` media. Authored inputs live in `inputs/`, and the assets build
+with Grida FX. Existing TOML is this game's configuration.
 
 ## Source ownership
 

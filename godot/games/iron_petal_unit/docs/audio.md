@@ -32,8 +32,8 @@ you write is the prompt it hears.
 | --- | --- |
 | `runner/audio.toml` | Event-to-effect bindings, each effect's realization, for a generated clip the prompt, exact duration, prompt influence, and playback mix, and the music transitions on death, restart, and hurt |
 | `game.toml` | Exact audio source path |
-| Runtime (web consumer) | When events fire, Web Audio lifecycle, decoding, applying the authored gain and rate lift, and performing the music transitions on the soundtrack element |
-| Recipe | Provider/model selection, one generate node and one admission node per clip, provenance, and cache identity |
+| Runtime (the Godot host, `scenes/audio/`) | When events fire, audio playback lifecycle, decoding, applying the authored gain and rate lift, and performing the music transitions on the soundtrack element |
+| The game's FX build | Route selection (`fx.yaml`), and per clip one generate step, its judge and one record step; FX keeps the run record and cache identity |
 | Model doc | Which cues the route serves, how to word them, and why some are out of reach |
 
 ## Current source
@@ -194,15 +194,15 @@ it is not offered either.
 ## What is checked, and what is not
 
 The only automated verdicts are the ones a decoder can state about the bytes.
-Each refuses rather than repairs; a refused draw is redrawn inside the provider
-component's single retry owner, at most six attempts.
+Each refuses rather than repairs. The clip's judge (`admit`) refuses a draw and it is
+drawn again, at most six takes; FX's engine stays the one retry owner of each call.
 
 | Gate | Where | Verdict |
 | --- | --- | --- |
-| Byte floor | retry owner | Under 2 KiB is a truncated container |
-| Dead level | retry owner | Peak below −40 dBFS was heard as silence |
-| Clipping | retry owner | Peak at or above −0.1 dBFS was clipped by the model |
-| Exact duration | local admission node | More than 0.15 s from the authored duration |
+| Byte floor | judge, redrawn | Under 2 KiB is a truncated container |
+| Dead level | judge, redrawn | Peak below −40 dBFS was heard as silence |
+| Clipping | judge, redrawn | Peak at or above −0.1 dBFS was clipped by the model |
+| Exact duration | `record` step, which fails | More than 0.15 s from the authored duration |
 
 Level is measured, recorded as `peak_dbfs` in the artifact's provenance and its
 validation record, and never changed. **No normalization, no trimming, no
@@ -215,20 +215,23 @@ record carries `listening_verdict: "not_performed"` until a person makes it.
 
 ## Execution
 
-For each generated effect the runner graph contains:
+For each generated effect the runner's build writes:
 
 ```text
-audio/<effect_id>:generate   (sound_effect_generation, elevenlabs route)
-  -> audio/<effect_id>:validate   (local: ffprobe duration, ffmpeg level)
-  -> manifest-assemble
+sounds.<effect_id>.generate   (fx/sound.generate@1 on the sound.generate route)
+sounds.<effect_id>.admit      (judge: byte floor, level, clipping; a refusal is drawn again)
+sounds.<effect_id>.record     (local: ffprobe duration, ffmpeg level)
+  -> package
 ```
 
-The generate node's card shows the authored prompt exactly. Its cache identity
-is the prompt, duration, prompt influence, and output format; the package is a
-barrier, not lineage, so an unrelated authored edit does not re-bill a clip.
-Oscillator effects add no nodes. The route is declared in the runner's binding
-table as `sound_effect_generation` against `elevenlabs`, and execution refuses
-before any spend when a clip is declared and `ELEVENLABS_API_KEY` is absent.
+The generate step's card shows the authored prompt exactly. Its identity is the
+prompt, duration, loop flag and prompt influence on its route; it reads nothing else
+of the package, so an unrelated authored edit does not re-bill a clip. Oscillator
+effects add no steps. The route is the game's `fx.yaml` binding for `sound.generate`,
+`eleven_text_to_sound_v2@elevenlabs`. A live run without `ELEVENLABS_API_KEY` refuses
+each clip's call before it is sent, for nothing, and that step fails;
+`uv run python -m grida.fx doctor`, from the game's folder, names a missing key before a
+run.
 
 The manifest publishes what the consumer plays - `clip`, `duration_seconds`,
 `gain`, `strength_pitch_multiplier` - and not what bought it. The prompt lives

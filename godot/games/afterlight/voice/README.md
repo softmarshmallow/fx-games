@@ -79,7 +79,7 @@ source, preparing recordings, or making a provider call. Optional `--output`
 writes that report to a chosen local file. Without `--status`, the same script
 exports the resolved generation inventory for a later authorized preparation
 pass. The [manual preparation contract](../tools/AFTERLIGHT_VOICE_PREPARATION.md)
-documents budget reservations, attempt accounting and verified output reuse.
+documents its price, attempt accounting and the verified reuse of installed clips.
 
 ## Host playback and continuity
 

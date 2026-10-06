@@ -23,9 +23,10 @@ Everything after the bare `--` belongs to this one; Godot swallows the rest.
 | `--run` | absolute path | the run directory holding `manifest.json` (required) |
 
 **Which runs open.** The contract is `pointclick-room-runtime-v3` at
-`schema_version` 3: the gnode deliveries `out/the-grain-window-gnode` and
-`out/the-grain-motor-court-gnode`, and the earlier `out/the-grain-window-a4` and
-`out/the-grain-motor-court-a4`, which the gnode build did not change the contract of.
+`schema_version` 3: what the FX room build delivers, the earlier gnode deliveries
+`out/the-grain-window-gnode` and `out/the-grain-motor-court-gnode`, and the earlier still
+`out/the-grain-window-a4` and `out/the-grain-motor-court-a4`; neither move of the build
+changed the contract.
 The Grain is the retained game consumer of this host. Runs at older schemas remain
 unsupported.
 

@@ -90,8 +90,8 @@ checks. A deferred prerequisite is visible and is never counted as a pass.
 Python preparation ownership is split into optional distributions. The
 [dependency inventory](python-dependencies.md) distinguishes supported asset APIs
 from the remaining private imports and their follow-up decisions. The collection
-CLI dispatches lazily to game-owned operations and uses the product implementation
-for generic recipe commands. Shared graph
+CLI dispatches lazily to game-owned operations; it generates nothing, and asset builds
+run on Grida FX from each game's folder. Shared graph
 document formatting still uses explicit repository tooling. The Scenario
 compiler tests live beside its independent distribution; game production metadata
 tests live under shared game Python support. Some other game Python tests and

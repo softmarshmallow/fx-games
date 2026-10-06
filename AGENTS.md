@@ -12,16 +12,16 @@ and [IP](docs/oss-ip.md). This file controls applicability; focused docs control
   example project. [The Godot charter](godot/CHARTER.md) owns the latter's purpose and internal evolution.
   Further runtime, shared game-system or visual-novel refactors belong within Godot; reuse by multiple games
   does not by itself justify moving them into the asset product.
-- Python is the headless implementation. Stage Gen's asset product has two layers: Grida FX (`third_party/fx`) is the
-  engine and `src/stage_gen/` is the application that consumes it. gnode's rings (`docs/spec/gnode-rings.md`):
-  ring 0 the agnostic engine core (topology, scheduling, trace, run view, model bindings, reliability,
-  provenance — media-free), ring 1 per-modality model specs and retry-owning services, ring 2 first-party
-  provider adapters. A ring imports only rings below it; nothing game-, workflow-, or genre-specific belongs
-  in any ring, and the engine ships no brand — provenance identities come from the application. Consumers
-  import only declared surfaces (`from gnode import X`; provider adapters via `gnode.providers.<name>`);
-  gnode imports no application package; a contract test enforces all of it. Providers
-  implement the ring-1 protocols, and orchestration is the composition root. Shared workflow-neutral media
-  inspection and transforms belong in `media`; capability-specific processing stays with its component, and
+- Python is the headless implementation. Grida FX (`third_party/fx`) is the engine; `src/stage_gen/` is the
+  application. FX owns the workflow file, planning and prices, the store, the run record, the spending ceiling,
+  retries, the built-in node types (`fx/<type>@1`) and the provider adapters. Stage Gen owns components,
+  workflows, the catalog, the run view (`stage_gen.runview`) and the viewer, and adds no engine of its own.
+  Stage Gen and the game code import FX only as `from grida.fx import X`, with `X` in `grida.fx.__all__`:
+  never a private module and never `grida.fx.std`. FX knows no Stage Gen package, workflow, game or brand;
+  provenance identities come from the application. Stage Gen's utilities (`contracts`, `fs`, `provenance`,
+  `canonical`, `media`) import no engine, and the retired modules, the old engine's included, stay gone;
+  `tests/contract/test_import_boundaries.py` enforces all of it. Shared workflow-neutral media inspection
+  and transforms belong in `media`; capability-specific processing stays with its component, and
   workflow-specific canonicalization with its workflow.
 - The product owns asset-pipeline authoring, execution, artifacts and inspection. Components own bounded capabilities;
   workflows compose useful asset outcomes. Their inputs never require a complete game, selected demo or gameplay schema.
@@ -44,18 +44,18 @@ and [IP](docs/oss-ip.md). This file controls applicability; focused docs control
 ## Grida FX submodule
 
 - `third_party/fx` is [gridaco/fx](https://github.com/gridaco/fx), a separate public product, pinned as a
-  submodule. Stage Gen uses it only through `grida.fx` imports and the `grida-fx` command (`python -m grida.fx`),
-  as a path dependency on `third_party/fx/python`. Changes to FX follow its own `AGENTS.md` and gates, make sense
-  without Stage Gen, are committed in the submodule, and reach gridaco/fx before Stage Gen's pointer moves
-  (`push.recurseSubmodules=check` refuses a push that would pin an unpushed FX commit). Stage Gen's own linters
-  skip `third_party/`.
+  submodule. Stage Gen uses it only through `grida.fx` imports and `uv run python -m grida.fx`, as a path
+  dependency on `third_party/fx/python`; its Rust engine is built from the pin with
+  `uv run python third_party/fx/tools/build_engine.py` (cargo). Changes to FX follow its own `AGENTS.md` and
+  gates, make sense without Stage Gen, are committed in the submodule, and reach gridaco/fx before Stage Gen's
+  pointer moves (`push.recurseSubmodules=check` refuses a push that would pin an unpushed FX commit). Stage
+  Gen's own linters skip `third_party/`.
 
 ## Skills
 
 - `skills/<name>/` holds skills users install (`npx skills add`). Each stands alone in any folder: no path into this
   repository and no Stage Gen command. A skill that calls a provider itself does so through the public Grida FX
-  command. `.agents/skills/`
-  (`.claude/skills` links to it) holds only the skills for working on this repository.
+  command. `.agents/skills/` (`.claude/skills` links to it) holds only the skills for working on this repository.
 
 ## Schema naming
 
@@ -65,17 +65,29 @@ and [IP](docs/oss-ip.md). This file controls applicability; focused docs control
 
 ## Provider and artifact safety
 
-- Provider routes are declared in a `gnode` binding table as `model@provider` with the features each route supports;
-  a missing feature is refused while planning, offline, before any spend. Do not name a model inside a node's logic.
-- Each AI/provider operation has one retry owner and at most six attempts: one initial plus five retries with capped
-  backoff. Keep transport, decoding, schema/media checks, and caller validation inside it; disable nested retry loops.
-- Mark artifacts successful only after validation and rollback-safe atomic artifact-plus-sidecar persistence. Cache
-  reuse must validate content and lineage, not merely path existence.
-- Use the existing allowlisted provider-key loader. Treat `.env` as optional and local; never assume it is populated,
-  overwrite, print, or commit it, or copy provider secrets into `web/` (the viewer, the site or their shared `ui`).
-  `.env.example` owns non-secret defaults.
-- Offline operation is the default. Live/provider calls require explicit task intent and documented opt-in. Re-check current provider contracts before changing adapters or model identifiers.
-- Pipeline run artifacts require canonical portable provenance, because the manifest, cache, and consumers read it.
+- A route is `model@provider`, an entry of FX's built-in route table with its price and the features it supports.
+  A project's `fx.yaml` picks one per capability (`routes:`) and may add route tables of its own (`route_tables:`).
+  A step's `requires:` names what it needs (`alpha`, `image_input`, `mask`), and a route without it is refused
+  while planning, offline, before any spend. Do not name a model inside a node's logic.
+- FX's engine is the one retry owner of every paid call, with at most six attempts, each reserved against the
+  ceiling, recorded and settled. Transport, decoding and the answer's checks (file kind, size, alpha, schema)
+  belong to that call. Never retry a call in a node body, an adapter or a loop around it.
+- Mark artifacts successful only after validation and atomic persistence. FX places a step's files and records it
+  before the step finishes, and reuses a stored result only under its exact identity with every file present;
+  Stage Gen's own writers (`stage_gen.fs`) write an artifact and any sidecar rollback-safe. Cache reuse must
+  validate content and lineage, not merely path existence.
+- Provider keys are read only by FX's allowlisted loader (`OPENAI_API_KEY`, `OPENROUTER_API_KEY`, `FAL_KEY`,
+  `TRIPO_API_KEY`, `ELEVENLABS_API_KEY` and the base URLs `.env.example` names), from the environment or the
+  planning project's `.env`. Stage Gen reads no key's value; its launchers strip the keys from a child's
+  environment. Treat `.env` as optional and local; never assume it is populated, overwrite, print, or commit it,
+  or copy provider secrets into `web/` (the viewer, the site or their shared `ui`). `.env.example` owns
+  non-secret defaults.
+- Offline operation is the default. Planning never spends; a provider call needs `--live`, a ceiling
+  (`--max-usd`), explicit task intent and documented opt-in. Tests answer paid calls with FX stand-ins
+  (`grida.fx.run(..., stand_in=...)`), never a provider. Re-check current provider contracts before changing a
+  route or a model identifier.
+- Pipeline run artifacts require canonical portable provenance, because the manifest, cache, and consumers read it;
+  an FX run's record holds a run's inputs, routes, costs, digests and attempts.
   A figure or capture authored for the docs is not a pipeline artifact and gets none. Never persist credentials,
   authorization headers, signed URLs, embedded references, private absolute or temporary paths. Confine writes and
   reject traversal or symlink escapes.
@@ -95,5 +107,7 @@ and [IP](docs/oss-ip.md). This file controls applicability; focused docs control
 
 ## Verification
 
-- Run focused checks for each changed boundary. For Python handoff run credential-free `uv run python scripts/check.py`;
-  follow `VERIFICATION.md` for docs and web gates. Offline gates remain provider-free; live and semantic gates stay scoped.
+- Run focused checks for each changed boundary. For Python handoff run credential-free `uv run python scripts/check.py`,
+  which builds FX's engine from the pinned submodule first (cargo) and runs FX without keys, `.env` or network;
+  follow `VERIFICATION.md` for docs and web gates. Offline gates remain provider-free; live and semantic gates stay
+  scoped. A change inside `third_party/fx` also passes FX's own gates.

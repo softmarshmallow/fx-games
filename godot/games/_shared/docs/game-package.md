@@ -19,12 +19,12 @@ this reader's genre, staging, camera or host taxonomy.
 > is still authored-input truth only; it does not prove that a live run completed,
 > passed semantic review, is playable, or is approved for publication.
 
-Each game selects its own package root through `pipeline/prepare.py`, its gnode
+Each game selects its own package root through `pipeline/prepare.py`, its FX
 builder's `--arg package=`, or an explicit collection CLI `--input` argument. No
 repository-level `main.toml` selects a game. The current prepared input owners are
 `godot/games/bellweather/inputs/default`, its sibling `inputs/waves` variant, and
-`godot/games/iron_petal_unit/inputs`. Bellweather and Iron Petal Unit build through gnode
-(`pipeline/workflow.py:build`).
+`godot/games/iron_petal_unit/inputs`. Bellweather and Iron Petal Unit build through
+Grida FX (`pipeline/workflow.py:build`).
 Existing package members and relative references remain intact:
 
 ```text
@@ -78,12 +78,15 @@ particular, package ingest does not reconstruct a prompt request, `WorldSpec`,
 
 ## Directory and ZIP input
 
-A prepared-package command accepts a directory or ZIP whose root contains `game.toml`. There is no bare-prompt fallback. For the retained collection CLI's
-generation commands, `--dry-run` uses deterministic fake operations. A live package
-run without `--dry-run` fails before provider work when its input closure is invalid.
-These are the `demo-games` package-command rules; the game-local `prepare.py`
-scripts separately default to planning and require `--live` for provider work, as
-`gnode run` does for a game built with gnode.
+A prepared-package command accepts a directory or ZIP whose root contains `game.toml`. There is no bare-prompt fallback. The collection CLI's `demo-games package`
+commands validate and digest a package and generate nothing; its former generation
+commands, and their `--dry-run` with deterministic fake operations, are gone. What a run
+without `--dry-run` promised still holds: a game's build fails before provider work when
+its input closure is invalid, because its builder reads the package with the same
+resolver while planning. Builders are scripts FX runs from the game's folder, and those
+scripts separately default to planning and require `--live` for provider work:
+`uv run python -m grida.fx plan` spends nothing, and without `--live` a run does every
+free step and refuses each paid call at $0.
 
 A package may be supplied directly as a directory:
 
@@ -137,15 +140,15 @@ Resolution is local and provider-free. Before it returns a package it verifies:
 - portable paths with no traversal, symlink, ambiguous archive root, duplicate
   ZIP entry, encryption, or unsafe size/compression behavior.
 
-The resolver imports no provider or composed runtime module, and the one recipe
-module it composes per genre (`recipes/<recipe>/validation.py`) is held to the
-same rule by a contract test. A malformed package therefore cannot perform a
+The resolver imports no provider or composed runtime module, and the one
+validation module it composes per game (`<game>_pipeline/validation.py`) is held to
+the same rule by a contract test. A malformed package therefore cannot perform a
 paid operation.
 
 `resolve_prepared_package` is the genre-neutral capture boundary and accepts a
 runner-only root or a platformer-containing root. `resolve_game_package` is the
-explicitly platformer-required narrowing used by that recipe. The runner recipe
-resolves its own member from the common captured package; it does not require or
+explicitly platformer-required narrowing used by the platformer's builder. The runner's
+builder resolves its own member from the common captured package; it does not require or
 manufacture a dummy platformer member.
 
 ## Actor motion and playback ownership

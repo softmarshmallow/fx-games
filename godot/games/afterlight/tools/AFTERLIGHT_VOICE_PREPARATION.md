@@ -20,11 +20,11 @@ replies retain their actual speakers. Intentional `none` skips generation even
 if a clip exists. The protagonist is unvoiced for this pass. Choice-button labels
 are excluded by the host exporter.
 
-The helper preserves the host's revision and adds a digest of immutable source
-and generation fields. Status, path, and missing-asset diagnostics do not enter
-that digest. A different display, speech script, language, speaker, provider,
-model, selected voice, setting, or source revision gets a different preparation
-identity. Existing recordings remain unchanged. Host status distinguishes current
+Its plan-time step, `voiced_lines`, preserves the host's revision and adds a
+digest of immutable source and generation fields. Status, path, and missing-asset
+diagnostics do not enter that digest. A different display, speech script, language,
+speaker, provider, model, selected voice, setting, or source revision gets a different
+preparation identity. Existing recordings remain unchanged. Host status distinguishes current
 authored freshness; a saved export only describes the source at its export time.
 
 ## Commands
@@ -35,100 +35,97 @@ Run from the repository root. Export the current authored source:
 Godot --headless --path godot/games/afterlight --script res://voice/export_inventory.gd -- --output /tmp/afterlight-voice-inventory.json
 ```
 
-Inspect preparation and cost without credentials, network access, or writes:
+The game's folder is an FX project: `fx.yaml` finds `afterlight-voice` in `tools/`, binds
+`speech.generate` to `eleven_v3@elevenlabs`, and prices it from
+[voice-routes.yaml](voice-routes.yaml); `fx.lock` pins the node types. Inspect preparation
+and cost offline, without credentials or network access:
 
 ```sh
 (cd godot/games/afterlight && uv run python -m grida.fx plan afterlight-voice --inventory /tmp/afterlight-voice-inventory.json --prepared voice/manifest.json --installed 'voice/clips/*/*.mp3')
 ```
 
-Paid dispatch is a separate explicit action. It needs the ElevenLabs key and
-requires `--live` with a ceiling:
+Paid dispatch is a separate explicit action. It needs `ELEVENLABS_API_KEY`, read by
+FX's key loader, and requires `--live` with a ceiling:
 
 ```sh
 (cd godot/games/afterlight && uv run python -m grida.fx run afterlight-voice --inventory /tmp/afterlight-voice-inventory.json --prepared voice/manifest.json --installed 'voice/clips/*/*.mp3' --live --max-usd 10 --deliver 'files={key}')
 ```
 
-The default pass directory is `art/voiceovers-p95/`; generated MP3s and their
-original `.meta.json` provenance stay under `clips/<language>/`. The candidate
-manifest is `art/voiceovers-p95/manifest.json`. Its `res://` paths can be used
-locally without copying audio. `--manifest` selects an explicit project-local
-manifest destination. Every output path rejects traversal and symlink escapes.
-An exclusive pass lock prevents overlapping invocations from spending twice.
+The run's record lands in `out/runs/afterlight-voice/` and its answers in the store,
+`out/fx-cache/`. `--deliver 'files={key}'` copies each new clip to its game path,
+`voice/clips/<language>/<line_id>-<revision>.mp3`, and writes the candidate manifest to
+`art/voiceovers-p95/manifest.json`; nothing is written when the run fails. The candidate
+manifest's `res://` paths name the delivered clips, so it can be tried locally before it
+replaces `voice/manifest.json`.
 
-## Budget and technical retries
+## Budget and attempts
 
-The quote requires `schema_version: 1`, `budget_usd` at most 10,
-`usd_per_character`, `max_character_cost_multiplier` at least 1, and a documented
-`pricing_basis`. The P95 quote uses the verified published rate of $0.0001 per
-character and a 2× reservation bound. At 7,112 spoken characters, the initial
-plan is $0.7112 for one take each; the conservative reservation is $1.4224 for
-one attempt each, or $8.5344 for the maximum six technical attempts. These are
-rate conversions, not an assertion of a separate invoice charge when the
-account consumes included subscription credits.
+[voice-routes.yaml](voice-routes.yaml) restates FX's built-in ElevenLabs v3 speech
+route with its price per character sent: $0.10 per 1,000 characters, the published
+rate, reserved at $0.20, at most 5,000 characters a call. The plan prices the worst
+case, every take of every line, and the workflow's budget, like the documented
+ceiling, is $10. These are rate conversions, not an assertion of a separate invoice
+charge when the account consumes included subscription credits.
 
-The entire remaining batch's six-attempt bound must fit before dispatch. The
-existing `SpeechGenerationService` is the sole retry owner, with its original
-maximum of six attempts and capped backoff. A small wrapper around the existing
-`ElevenLabsSpeechBackend` atomically journals a reservation **before** each
-request. It records every returned `character-cost` and request ID before audio
-admission, so rejected charged audio is counted. That provider header reports
-subscription credit units; the USD estimate separately uses submitted text
-characters at the published API rate. Credits are never substituted for text
-character count in that estimate. Every attempt retains the full 2× reservation
-in `accounted_usd`, including returned requests; `estimated_text_usd`,
-`submitted_characters` and `reported_credits` are separate measures. No artistic retakes, auditions, voice creation,
-post-processing, or outer retry loop is part of this command.
+FX's engine is the only retry owner. It sends a call at most six times, with capped
+backoff, and reserves, records and settles each attempt against the ceiling. A request
+that provably never reached the provider is sent again under the same attempt. Any other failure, including a timeout or reset after the
+request left, is settled as billed and becomes a new attempt, so a line whose outcome
+was uncertain is sent again rather than blocking the pass. ElevenLabs reports no
+cost FX reads, so every answered attempt is settled at its full reservation, and the
+`character-cost` credits header is not recorded. Independently of attempts, the
+`admit` judge refuses a read that is not a playable, unclipped MP3 and asks for
+another, at most three takes, then the line fails and nothing is laid out. No
+artistic retakes, auditions, voice creation or post-processing are part of this
+workflow.
 
-A transport failure, cancellation, or provider failure with uncertain outcome
-retains its conservative charge and stops the service. A later invocation will
-not resend that line automatically. An interrupted reservation, partial bundle,
-failed admission with no completed bundle, or exhausted line likewise blocks
-the pass for reconciliation. Inspect the durable ledger and provider history,
-recover an already completed response if possible, and preserve the attempt and
-charge evidence. Do not delete the ledger or start a new pass merely to bypass
-this guard. There is deliberately no automatic reconciliation or force-retake
-command.
+An interrupted run is resumed by running the same command again: finished steps come
+from the store, and calls already answered are replayed from it without another
+provider call.
 
 ## Artifact admission and reuse
 
-The existing speech route emits `mp3_44100_192`, with verbatim text, the selected
-voice, language, and v3 stability. Its objective validator decodes the audio and
-checks level; the existing service writes the MP3 and canonical provenance as
-an atomic bundle. The helper admits reuse only when the source fields, artifact
-hash and length, provider/model/voice/settings, and provenance agree, and a fresh
-decode succeeds. A valid bundle recovered after interruption is reused without
-another provider call. A corrupt bundle is reported for reconciliation.
+The speech route is sent the verbatim text, the selected voice, language and v3
+stability, and answers in `mp3_44100_192`, the one output format the inventory may
+name. The judge decodes each read and
+checks its level; `layout` decodes it again for its duration and hash. There are no
+`.meta.json` sidecars: the run's record is the provenance of every clip (its request,
+route, attempts and settled cost), and `uv run python -m grida.fx inspect` summarises a
+run from its folder.
 
-On FX, `--prepared` is checked against `--installed` (the installed clips): a
-ready record at the line's revisions is kept only when its clip sits at the
-record's path, hashes to its `audio_sha256` and decodes again as a playable,
-unclipped read. A missing clip (a fresh clone, where the manifest is tracked and
-the clips are not) is spoken again. A clip that is present but disagrees fails
-the plan, naming the line for reconciliation; it is never spoken again
-automatically. `--prepared` without `--installed` is refused.
+`--prepared` is checked against `--installed` (the installed clips): a ready record at
+the line's revisions is kept only when its clip sits at the record's path, hashes to
+its `audio_sha256` and decodes again as a playable, unclipped read. A missing clip (a
+fresh clone, where the manifest is tracked and the clips are not) is spoken again. A
+clip that is present but disagrees fails the plan, naming the line for
+reconciliation; it is never spoken again automatically. `--prepared` without
+`--installed` is refused.
 
 Ready manifest records contain the host source revision, preparation revision,
-audio/provenance hashes, original provenance path, decoded duration, actual
-speaker, and provider profile. They record `listening_verdict: not_reviewed`:
-decoding and level checks do not establish acting quality, pronunciation,
-character fit, user approval, or publication rights. The original provenance
-keeps generated media rights unreviewed.
+audio hash, game path, decoded duration, actual speaker, and provider profile. They
+record `listening_verdict: not_reviewed`: decoding and level checks do not establish
+acting quality, pronunciation, character fit, user approval, or publication rights.
+Generated media rights stay unreviewed.
 
-P95 produced 80 recordings in 81 returned attempts, including one technical
-retry: 7,174 submitted characters, a $0.7174 published-rate estimate, and 3,946
-reported subscription credits. The final conservative budget accounting is
+## The P95 pass
+
+P95 was made with this workflow's predecessor, a Python command with its own quote,
+journal and ledger. It produced 80 recordings in 81 returned attempts, including one
+technical retry: 7,174 submitted characters, a $0.7174 published-rate estimate, and
+3,946 reported subscription credits. The final conservative budget accounting is
 $1.4348, also not an invoice. Account subscription counters independently confirm
 3,946 credits consumed within existing quota. The initial ledger that incorrectly
 treated credit units as text units is preserved as `ledger.initial-accounting.json`;
-the corrected ledger retains its original receipt values and initial estimate
-for audit. These are distinct measures. There were 36
-intentional localized skips and no final generation failures. A listening
-verdict was not performed.
+the corrected ledger retains its original receipt values and initial estimate for
+audit. These are distinct measures. There were 36 intentional localized skips and no
+final generation failures. A listening verdict was not performed. Its records stay
+under the ignored `art/voiceovers-p95/`; see the [generation report](../voice/GENERATION_REPORT.md).
 
-The focused provider-free check is:
+The focused provider-free check runs the workflow with an FX stand-in in place of the
+provider:
 
 ```sh
-.venv/bin/python -m pytest -q godot/games/afterlight/tests/python/test_afterlight_voice_preparation.py
+uv run pytest -q godot/games/afterlight/tests/python/test_afterlight_voice_preparation.py
 ```
 
 The local ignore rules explicitly allow this focused Python test source to be

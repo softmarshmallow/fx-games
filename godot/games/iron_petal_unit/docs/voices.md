@@ -37,14 +37,14 @@ The seam it will use is at the end of this page.
 | Owner | Owns |
 | --- | --- |
 | `voices.toml` | Each `voice_id`, its display name, language, casting note for a person, rights status and basis, and the provider voice it resolves to with the date that was last checked |
-| Genre audio contract (`runner/audio.toml`) | Which event a line answers, the verbatim text with its delivery annotations, the `voice_id` that reads it, stability, the length ceiling, the playback mix, the `take` ordinal, and the pinned take's digests and rights when one is committed |
+| Genre audio contract (`runner/audio.toml`) | Which event a line answers, the verbatim text with its delivery annotations, the `voice_id` that reads it, stability, the length ceiling, the playback mix, the `take` ordinal (always 1; a pick lives in the takes file), and the pinned take's digests and rights when one is committed |
 | `game.toml` | Exact `voices.toml` source path, bound per genre member the way `fx.toml` is |
-| Recipe | Provider/model selection, one speak node and one admission node per line, the cache identity, provenance, and publishing the measured length |
-| Runtime (web consumer) | When the event fires, Web Audio lifecycle, decoding, applying the authored gain and rate lift, and holding the one announcement that fires before audio can start |
+| The game's FX build | Route selection (`fx.yaml`), and per line one speak step, its judge and one record step, publishing the measured length; FX keeps the run record and cache identity |
+| Runtime (the Godot host, `scenes/audio/`) | When the event fires, audio playback lifecycle, decoding, applying the authored gain and rate lift, and holding the one announcement that fires before audio can start |
 | Model doc | What the route serves, how annotations behave, and what is out of reach |
 
 Provider and model identifiers never appear in an authored contract. The line
-names a voice; the catalog names a provider reference; the binding table names
+names a voice; the catalog names a provider reference; the game's `fx.yaml` names
 the route. A recast is a catalog edit.
 
 ## Current source
@@ -167,9 +167,9 @@ or `death` is the same mechanism and a different authoring choice.
 
 ## Identity
 
-A line's cache identity is the text, the resolved provider and voice
-reference, the stability, the language, and the output format, under the
-`runner-speech-line-v1` contract. It deliberately excludes:
+A line's identity is its generate step's settings - the text, the resolved
+provider voice reference, the language, and the stability - and its route. It
+deliberately excludes:
 
 - **gain, pitch response, and `max_seconds`** - they change how a line is
   played or judged, not which line was read, so a rebalance after listening is
@@ -183,12 +183,12 @@ The same `voice_id` recast to another provider voice is a different asset.
 
 | Gate | Where | Verdict |
 | --- | --- | --- |
-| Byte floor | retry owner | Under 2 KiB is a truncated container |
-| Dead level | retry owner | Peak below −40 dBFS was heard as silence |
-| Clipping | retry owner | Peak at or above −0.1 dBFS was clipped by the model |
-| Length ceiling | retry owner | Longer than `max_seconds` (+50 ms of frame quantization) is refused and redrawn |
+| Byte floor | judge, redrawn | Under 2 KiB is a truncated container |
+| Dead level | judge, redrawn | Peak below −40 dBFS was heard as silence |
+| Clipping | judge, redrawn | Peak at or above −0.1 dBFS was clipped by the model |
+| Length ceiling | judge, redrawn | Longer than `max_seconds` (+50 ms of frame quantization) is refused and redrawn |
 | Cast | package resolver, offline | A `voice_id` the catalog lacks, or a line with no catalog bound, is refused before any plan |
-| Route | graph builder, offline | A voice cast on a provider the binding table does not route is refused before any spend |
+| Route | the builder, while planning | A voice cast on a provider other than that of the game's `speech.generate` route is refused before any spend |
 
 Level and length are measured from one decode pass over the bytes and
 recorded; nothing is changed. **No normalization, no trimming, no
@@ -201,14 +201,17 @@ it.
 For each spoken line the build contains:
 
 ```text
-lines.<effect_id>.generate   (gnode/speech.generate@1 on the speech route, the cast voice)
+lines.<effect_id>.generate   (fx/speech.generate@1 on the speech.generate route, the cast voice)
   -> lines.<effect_id>.admit    (judge: level and length)
   -> lines.<effect_id>.record   (local: ffprobe, level and length facts)
   -> package
 ```
 
-The generate step shows the authored text exactly. A live run refuses before any
-spend when a line is declared and `ELEVENLABS_API_KEY` is absent.
+The generate step shows the authored text exactly. The judge refuses a draw and it is
+read again, at most six takes; FX's engine stays the one retry owner of each call. A
+live run without `ELEVENLABS_API_KEY` refuses each line's call before it is sent, for
+nothing, and that step fails; `uv run python -m grida.fx doctor`, from the game's
+folder, names a missing key before a run.
 
 The manifest publishes what the consumer plays - `clip`, `duration_seconds`,
 `gain`, `strength_pitch_multiplier` - under the same shape as a generated

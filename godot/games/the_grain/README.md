@@ -4,20 +4,20 @@ A maintained investigation game with case, room and dialogue scenes that consume
 This project owns its gameplay, content interpretation and Godot composition.
 
 From the repository root, import the project once after cloning or moving scripts,
-then launch an existing generated run:
+then launch a case published over its delivered builds:
 
 ```sh
 godot --headless --editor --path godot/games/the_grain --quit
-godot --path godot/games/the_grain -- --run "$PWD/out/the-grain-episode-one-gnode"
+godot --path godot/games/the_grain -- --run "$PWD/out/<episode-tag>"
 ```
 
 Use the mouse for room interactions and case controls; Space advances dialogue.
 
-The run directory is explicit. Starting the game never generates assets. The
-example path above uses existing local output; a fresh clone has no `out/` media.
-Authored inputs live in `inputs/`; the rooms and the scene build with gnode and
-`pipeline/prepare.py` publishes the case over them ([the asset build](pipeline/README.md)).
-Existing TOML is this game's configuration.
+The run directory is explicit. Starting the game never generates assets, and a fresh
+clone has no `out/` media. Authored inputs live in `inputs/`. The rooms and the scene build
+with Grida FX, `pipeline/prepare.py` publishes the case over them
+([the asset build](pipeline/README.md)), and [the episode's inputs](inputs/README.md) list
+the commands that make `out/<episode-tag>`. Existing TOML is this game's configuration.
 
 ## Source ownership
 
@@ -54,13 +54,13 @@ Open the complete “The way in” scene directly, using the same content and pl
 selected by the case after the motor court:
 
 ```sh
-godot --path godot/games/the_grain res://scenes/dialogue_scene/main.tscn -- --run "$PWD/out/the-grain-scene-gnode" --scenario e1_way_in
+godot --path godot/games/the_grain res://scenes/dialogue_scene/main.tscn -- --run "$PWD/out/the-grain-scene" --scenario e1_way_in
 ```
 
 The scene demonstrates location dissolves, cast entrances and repositioning,
 a Winter Room camera settle, and closer framing when Lydia speaks. Its 47 lines,
 two established case facts and `first_bell` outcome are preserved. All artwork
-comes from the existing prepared run.
+comes from the delivered scene build.
 
 Click or press Space to finish the current transition and reveal its text; press
 again to advance. Natural playback reveals text over time. In the case, Backlog
@@ -89,11 +89,15 @@ python3 godot/tools/run_native_suite.py --project the_grain
 uv run --group games python godot/tools/check.py --owner the_grain --include-media --grain-scene-run "$PWD/out/the-grain-scene-gnode"
 ```
 
-The case owns its leaf scenes. To inspect an existing room or dialogue run independently:
+`--grain-scene-run` names the dialogue run the rich sequence checks play. The run above is a
+local one, and `tools/dialogue_shots_check.py` measures its rectangles on it.
+
+The case owns its leaf scenes. To open a room or dialogue run on its own, from the folders
+[the asset build](pipeline/README.md) delivers:
 
 ```sh
-godot --path godot/games/the_grain res://scenes/pointclick_room/main.tscn -- --run "$PWD/out/the-grain-window-gnode"
-godot --path godot/games/the_grain res://scenes/dialogue_scene/main.tscn -- --run "$PWD/out/the-grain-scene-gnode" --scenario e1_office
+godot --path godot/games/the_grain res://scenes/pointclick_room/main.tscn -- --run "$PWD/out/the-grain-window"
+godot --path godot/games/the_grain res://scenes/dialogue_scene/main.tscn -- --run "$PWD/out/the-grain-scene" --scenario e1_office
 ```
 
 For a movable source project with real addon files, use:

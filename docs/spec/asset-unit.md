@@ -59,10 +59,10 @@ defect, caught by proportion review rather than by scale admission.
 
 - `demo_game_tools.input_formats.game_contract` owns the `[scale]` vocabulary, the step
   ladder, the floor, and validation that every declared class resolves.
-- `stage_gen.components.game_content` owns the per-entity declaration fields
-  and their bounds.
-- `stage_gen.media.comparison_plate` owns deterministic plate composition and
-  the structured judging call. It is provider-neutral and is shared with
+- `demo_game_tools.input_formats.sideview_content` owns the per-entity
+  declaration fields and their bounds.
+- `stage_gen.media.comparison_plate` owns deterministic plate composition. It
+  is provider-neutral, makes no call itself, and is shared with
   [Motion rebase](motion-rebase.md).
 - `bellweather_pipeline.asset_unit` owns resolution, subject
   measurement, the plate's step ladder, admission, and the published

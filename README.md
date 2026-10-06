@@ -2,10 +2,11 @@
 
 Stage Gen is a general asset generation toolkit. Each workflow turns a small input into a
 named deliverable, such as a transparent idle loop, a rigged 3D character or a set of
-repeating parallax layers, and every workflow is a GNode graph you can run and inspect. All
-but 3D character plan offline before any spend, and most reuse a node cache across runs.
-Inspect runs in the viewer, the local read-only client that `uv run python scripts/view.py` opens. Your
-application decides how the assets become a game, an animation or a tool.
+repeating parallax layers, and every workflow is a [Grida FX](https://github.com/gridaco/fx)
+workflow you can plan, run and inspect. Every workflow plans offline, with its price, before
+any spend, and most reuse a node cache across runs. Inspect runs in the viewer, the local
+read-only client that `uv run python scripts/view.py` opens. Your application decides how the
+assets become a game, an animation or a tool.
 
 ![Iron Petal Unit key art: a young mechanic-pilot riding a rescue robot through an orbital greenhouse](godot/games/iron_petal_unit/inputs/references/cover.png)
 
@@ -36,15 +37,16 @@ The [3D character](src/stage_gen/workflows/character_3d/page.mdx) and
 
 ## Install and try it
 
-Python 3.12 or newer and [uv](https://docs.astral.sh/uv/) are required. gnode's successor,
-[Grida FX](https://github.com/gridaco/fx), is a submodule at `third_party/fx`, which `uv sync`
-installs from: clone with `--recurse-submodules`, or run `git submodule update --init` once. Its
-engine is Rust: `python3 third_party/fx/tools/build_engine.py` builds it (cargo from
-[rustup.rs](https://rustup.rs)) once anything here uses FX. From this checkout:
+Python 3.12 or newer and [uv](https://docs.astral.sh/uv/) are required. Grida FX, the engine,
+is a submodule at `third_party/fx`, which `uv sync` installs from: clone with
+`--recurse-submodules`, or run `git submodule update --init` once. Its engine is Rust and needs
+cargo (from [rustup.rs](https://rustup.rs)); build it again after a pull that moves the pin.
+From this checkout:
 
 ```sh
 git submodule update --init
 uv sync --frozen
+uv run python third_party/fx/tools/build_engine.py
 uv run python -m grida.fx schema looping-parallax
 uv run python src/stage_gen/workflows/looping_parallax/inputs/supplied_layers/make_inputs.py out/looping-parallax-input
 uv run python -m grida.fx plan looping-parallax --inputs out/looping-parallax-input/inputs.yaml
@@ -54,9 +56,10 @@ uv run python scripts/view.py
 ```
 
 That run is offline: committed scripts draw the input layers, and no provider is called.
-Every workflow is a gnode workflow file, so `gnode` plans, runs and inspects each by its id;
-`gnode schema <id>` prints the inputs it takes, and its run folders are under `out/runs/`.
-Planning never spends; a provider call needs `--live` and your own keys (see
+Every workflow is an FX workflow file, and the root `fx.yaml` finds each by its id, so
+`python -m grida.fx` plans, runs and inspects it; `schema <id>` prints the inputs it takes.
+Run folders are under `out/runs/` and results in the store, `out/fx-cache`. Planning never
+spends; a provider call needs `--live`, a ceiling (`--max-usd`) and your own keys (see
 [provider setup](docs/models/providers.md)). Your own workflow is a workflow file or a Python
 builder, which `python -m grida.fx plan` and `run` take the same way; the
 [FX guide](https://github.com/gridaco/fx/tree/main/docs/guide) shows how to write one.
@@ -65,7 +68,8 @@ builder, which `python -m grida.fx plan` and `run` take the same way; the
 
 - [Getting started](docs/getting-started.md), the
   [FX guide](https://github.com/gridaco/fx/tree/main/docs/guide) and the [glossary](docs/glossary.md).
-- [Viewer](docs/viewer.md): `gnode view`, the local read-only client over run folders.
+- [Viewer](docs/viewer.md): `uv run python scripts/view.py`, the local read-only client over
+  run folders.
 - [Site](docs/site.md): the static landing and documentation site built from the catalog
   and the example store.
 - [Architecture](ARCHITECTURE.md), the [documentation index](docs/README.md), the

@@ -6,9 +6,12 @@
 > **Checked by:** `tests/contract/test_current_game_docs.py`.
 
 > **Contract maturity: exact-current authored contract.** Executable authority:
-> `godot/games/iron_petal_unit/pipeline/src/iron_petal_unit_pipeline/fx/` (contract, plate gates, placement admission, and the
-> game-owned node set), `godot/games/iron_petal_unit/gameplay/support/screen_fx/` (the pure choreography and the generic
-> moment system) and `godot/games/iron_petal_unit/scenes/common/cut_in_view.gd` (the view that draws it).
+> `godot/games/iron_petal_unit/pipeline/src/iron_petal_unit_pipeline/fx/` (the contract and its manifest block),
+> `demo_game_tools.kits.effects_art` (plate gates and placement admission) and
+> `demo_game_tools.steps.effects` (the shared step family the runner hosts in `pipeline/nodes/effects.py`),
+> `godot/games/iron_petal_unit/gameplay/support/screen_fx/` (the pure choreography),
+> `godot/games/iron_petal_unit/gameplay/systems/fx.gd` (the moment system) and
+> `godot/games/iron_petal_unit/scenes/common/cut_in_view.gd` (the view that draws it).
 > The runner is the first host (`godot/games/iron_petal_unit/docs/runner.md`);
 > every other genre adopts the family through the two host contracts at the end of this page.
 
@@ -146,8 +149,8 @@ Both plates are `1536 × 1024`, generated with native alpha.
 | `frame` | `cut_in_frame_1536x1024_v1` | `transparent_exterior_opaque_body_v1` | coverage 0.15–0.75 of the canvas; binary alpha (soft share ≤ 8 %); exterior glow share ≤ 2 %; at most 8 pieces above the dust floor (0.5 % of the silhouette) and at most 12 specks below it; at most 12 holes; spans ≥ 60 % of the width; fill ≥ 55 % near-white; ink 3–45 % of the painted area |
 | `portrait` | `cut_in_portrait_1536x1024_v1` | `transparent_exterior_v1` | coverage 0.30–0.95; exterior glow or wash share ≤ 3 %; one subject (largest shape ≥ 98 %) |
 
-Each gate runs inside the single provider retry owner, so a failing plate re-rolls within
-the six-attempt budget rather than failing the run. Where the portrait's head bleeds off the
+Each gate is the plate's judge, so a failing plate is drawn again, at most six takes,
+rather than failing the run. Where the portrait's head bleeds off the
 canvas is recorded as evidence, not refused, until repeats calibrate it. Canonicalization
 clears the already-transparent exterior to alpha 0, and on a frame also erases the dust the
 gate measured around, so the published plate is the authored shape and nothing else
@@ -158,7 +161,7 @@ The frame gate is deliberately topology-light, because **the rip's shape is auth
 that doubles back: those are shapes, not defects. What the gate still refuses is confetti —
 too many drawn pieces to read as one graphic element — and a silhouette too narrow to carry
 the screen. A speck below the dust floor is neither refused nor kept: every real generation
-leaves one or two, and killing a whole retry budget over three stray pixels would make the
+leaves one or two, and spending every take over three stray pixels would make the
 shape slot unauthorable in practice, so dust is measured around here and erased in
 canonicalization. A *spray* of dust is still a defect. Whether the silhouette is the shape its author asked for is a judgement, and it
 belongs to the reviewer, which is told the authored shape.
@@ -206,8 +209,8 @@ generations also left one to three stray pixels behind, which is what the dust f
 ## Placement: the agent decides, the pipeline renders
 
 Where the portrait sits inside the frame's opening — its scale and its centre — is taste,
-not truth. No formula owns it. The family hands the job to a **tool-loop agent**, the
-engine's bounded micro agent (`docs/spec/gnode-rings.md`): a vision model given the portrait
+not truth. No formula owns it. The family hands the job to a **tool-loop agent**, FX's
+bounded agent episode (`ctx.agent`, on the game's `agent.turn` route): a vision model given the portrait
 plate, the frame plate, a starting composition, the opening's measured geometry, one tool
 (`render_with_placement`, which draws the hold frame exactly as the game will), and a
 budget of six looks. It renders, looks, adjusts, and ends by calling `submit`. What it
@@ -220,8 +223,8 @@ placement = { scale, x, y }   # scale: portrait display height ÷ frame canvas h
 ```
 
 Admission (`admit_cut_in_placement`) is pixel-blind on purpose — finite numbers inside the
-declared ranges, a rationale, and the sha256 of both plates the agent looked at — so a cache
-mirror re-admits a stored placement structurally and refuses one judged over other plates.
+declared ranges, a rationale, and the sha256 of both plates the agent looked at, which must
+be the plates the step read — so a placement judged over other plates is refused.
 A budget spent without an admitted submit is a refused node, not a guess. The agent's
 instructions carry the taste (eyes in the band's upper-middle, mouth inside, hair and
 shoulders may bleed); the two former runtime constants are gone, and so is the reviewer's
@@ -234,7 +237,7 @@ coherence with the references and a torn-edge reading for the frame; identity ma
 references, the authored expression, and cropping for the portrait; text-freedom for both.
 The reviewer sees the plate over a checkerboard beside the composed hold frame drawn through
 the plate's own silhouette with the portrait at its admitted placement, which is exactly what
-the game shows — the same eraser the Phaser view uses, so evidence and game cannot drift. A producer never accepts its own work: the placement agent and the reviewer are
+the game shows — the same clip the Godot view makes, so evidence and game cannot drift. A producer never accepts its own work: the placement agent and the reviewer are
 two calls with two jobs.
 
 ## Manifest projection
@@ -273,31 +276,32 @@ gone.
 
 ## Host contracts
 
-**Generation.** `add_cut_in_nodes(builder, root=…, fx=…, style_prompt=…, direction_digests=…,
-attempts_port=…)` adds the frame's producer (generate or draw), its validate and, for a
-generated frame, its review, then one generate → place → validate → review chain per
-portrait. The place node is the tool-loop episode; the portrait's validate depends on the
-frame's and on the placement, so its reviewer judges the real composition. The
-host supplies a barrier root id, the document, a prompt wrapper for its art direction, its
-direction digests, an attempts-port factory where it keeps ledgers, and a `file(source)`
-accessor — the same shape the UI atlas asks for — and the runner hosts it in one call. The
-request builders and the validation derivation are exported so a host with a strict cache
-mirror re-runs exactly what the handlers ran.
+**Generation.** `demo_game_tools.steps.effects.add_cut_in_steps(frame_group, portrait_group,
+nodes=…, fx=…, style_prompt=…, reference_path=…, subject_image=…)` writes the frame's
+producer (a painting and its judge, or the procedural draw), the step that clears its
+exterior and, for a generated frame, its review; then, per portrait, a painting and its
+judge, the placement episode (`place`), the step that composes it in the frame, and its
+review. The compose step reads the frame and the placement, so the portrait's reviewer
+judges the real composition. The host supplies the groups to write into, the node module
+that hosts the family's node types, the document, a prompt wrapper for its art direction,
+and two accessors: an authored reference to a project path, and a drawn subject to its
+picture. The runner hosts it in one call.
 
-**Runtime.** A world carries one slice, `fx: FxState | null`, and an event queue it can emit
-into. `createFxSystem(view)` stamps the moment's start from the step clock on the first held
-tick, evaluates the choreography, drives the view, and emits `fx-released` once and
-`fx-finished` at the end; it reads nothing else about the world. The genre's own loop decides
-what *held* means: the runner holds an `intro` phase and leaves it on `fx-released`; the
-platformer will hold its map-rebuild boundary. `buildCutInView(scene, …)` is the Phaser
-adapter: screen-space objects positioned from the frame's numbers each tick; the interior —
-backdrop, stripes, the portrait at its published `placement` with the choreography's slide
-and push-in riding on top — composed into one dynamic texture and clipped by erasing the
-frame plate's inverse alpha from it, because Phaser 4's WebGL renderer has no geometry mask;
-the plate drawn once more in multiply for the ink; and the lettering from the two strings the
-host passes. A dynamic texture buffers its draw calls, so the composite is rendered explicitly
-each tick — an unrendered buffer draws nothing and grows without bound. The portrait's
-arithmetic is the same in PIL and in Phaser: centre at `(x·W, y·H)`, height `scale·H`.
+**Runtime.** A world carries one slice, `fx`, empty or the moment in play, and an event
+queue it can emit into. The runner's `gameplay/systems/fx.gd` stamps the moment's start
+from the step clock on the first held tick, evaluates the choreography
+(`FamilyCutIn.frame`), drives the view, and emits `fx-released` once and `fx-finished` at
+the end; it reads nothing else about the world. The genre's own loop decides what *held*
+means: the runner holds an `intro` phase and leaves it on `fx-released`; the platformer
+will hold its map-rebuild boundary. `HostCutInView`
+(`godot/games/iron_petal_unit/scenes/common/cut_in_view.gd`) is the Godot view:
+screen-space nodes positioned from the frame's numbers each tick; the interior —
+backdrop, stripes, the portrait at its published `placement` with the choreography's
+slide and push-in riding on top — composed inside the plate's own silhouette, because
+Godot clips children to their parent's drawn alpha; the plate drawn once more in multiply
+through `ink.gdshader` for the ink; and the lettering from the two strings the host
+passes. The portrait's arithmetic is the same in PIL and in the view: centre at
+`(x·W, y·H)`, height `scale·H`.
 
 ## Known limits of an authored shape
 
@@ -311,7 +315,7 @@ and each is cheap to fix when a game actually wants it.
 | the placement agent's instructions say *band* | prose slightly off for a shard cluster; the geometry it reads is already raster-true | reword the instructions — taste lives there, not in code |
 | `procedural_v1` always draws a band | the free mode ignores an authored shape and refuses one offline | parameterize the draw, or leave it as the shape-free fallback it is |
 | `mask_polygon` approximates within IoU 0.90 | a hole covering under ~10 % of the silhouette is smoothed over in the outline, and a sliver thinner than the 22 px erosion disappears from it entirely (the outline then describes the main piece, which is what it is checked against) | publish a multi-ring outline, or drop the outline for consumers that can clip with alpha |
-| the frame gate runs inside the six-attempt retry owner | a shape that fails a *material* check re-rolls up to six times before the run fails | split material checks (retry-worthy) from shape checks (author-worthy) if this ever costs real money |
+| the frame gate is the frame's judge | a shape that fails a *material* check is drawn again, up to six takes, before the run fails | split material checks (redraw-worthy) from shape checks (author-worthy) if this ever costs real money |
 
 ## World-space sprites
 

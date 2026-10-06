@@ -273,6 +273,6 @@ uv run --group games demo-games package digest --input godot/games/bellweather/i
 The executable authority is
 `godot/games/_shared/python/src/demo_game_tools/input_formats/game_contract/package.py` together with
 `godot/tools/python/src/demo_game_collection/game_package.py`, which composes each genre's
-member resolution from its recipe's `validation.py`. The canonical Bellweather source
+member resolution from its game's `<game>_pipeline/validation.py`. The canonical Bellweather source
 is the integration fixture; documentation examples do not replace executable
 validation.

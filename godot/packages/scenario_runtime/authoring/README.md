@@ -4,7 +4,7 @@
 for the Godot-owned Scenario runtime. Its import namespace is
 `scenario_authoring`. Python 3.12 and Pydantic are its runtime dependencies.
 Compilation, admission, inspection and packaging import neither Stage Gen nor
-GNode, Godot, a game, or a provider.
+Grida FX, Godot, a game, or a provider.
 
 The game owns a Scenario invocation. Authored content describes its dialogue,
 permitted presentation and progression; it does not create or own the game.

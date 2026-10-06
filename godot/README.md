@@ -87,17 +87,17 @@ media. The game READMEs describe their refusal behavior when content is missing.
 Each game owns its preparation entry point and its input selection. No root selector
 chooses a game for the repository.
 
-Every game's assets build with gnode from the game's own folder, and planning is offline.
-Bellweather's `default` and `waves` inputs are variants of the same game; Ember Hollow
-plans one rung of its scope ladder at a time:
+Every game's assets build with Grida FX from the game's own folder, which is an FX project
+(`fx.yaml`, `fx.lock`), and planning is offline. Bellweather's `default` and `waves` inputs
+are variants of the same game; Ember Hollow plans one rung of its scope ladder at a time:
 
 ```sh
 uv sync --frozen --group games
-cd godot/games/iron_petal_unit && uv run gnode plan pipeline/workflow.py:build --arg package=inputs
-cd godot/games/bellweather && uv run gnode plan pipeline/workflow.py:build --arg package=inputs/default
-cd godot/games/the_grain && uv run gnode plan pipeline/workflow.py:room --arg package=inputs/rooms/window
-cd godot/games/the_grain && uv run gnode plan pipeline/workflow.py:scene --arg package=inputs
-cd godot/games/ember_hollow && uv run gnode plan pipeline/workflow.py:build --arg package=inputs --arg scope=full
+(cd godot/games/iron_petal_unit && uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs)
+(cd godot/games/bellweather && uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs/default)
+(cd godot/games/the_grain && uv run python -m grida.fx plan pipeline/workflow.py:room --arg package=inputs/rooms/window)
+(cd godot/games/the_grain && uv run python -m grida.fx plan pipeline/workflow.py:scene --arg package=inputs)
+(cd godot/games/ember_hollow && uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs --arg scope=full)
 ```
 
 The Grain's `pipeline/prepare.py` proves its case and publishes it over the rooms' and the

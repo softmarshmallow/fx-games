@@ -10,20 +10,20 @@ Install the optional game tools from the repository root:
 uv sync --group games
 ```
 
-The game's folder is a gnode project. `gnode.yaml` names the routes, `gnode.lock` pins the
+The game's folder is an FX project. `fx.yaml` names the routes, `fx.lock` pins the
 node types in `pipeline/nodes/`, and `pipeline/workflow.py:build` reads the package with the
 game's own reader and writes one group of steps per asset. From the game's folder:
 
 ```sh
 cd godot/games/iron_petal_unit
-gnode plan pipeline/workflow.py:build --arg package=inputs
-gnode run pipeline/workflow.py:build --arg package=inputs --live --max-usd 80 \
+uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs
+uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs --live --max-usd 80 \
   --deliver package=../../../out/iron-petal/{key}
 ```
 
 Planning is offline and spends nothing; `--live` is the explicit provider opt-in, and
 launching the Godot project never generates assets. Runs land in `out/runs/iron-petal-unit/`
-and the call cache in `out/gnode-cache/`, so a second run pays only for what changed.
+and the store in `out/fx-cache/`, so a second run pays only for what changed.
 `--deliver` copies the runtime package (every published file and `manifest.json`) out of
 a successful run. Another package works the same way as long as it sits inside this
 folder: its references are project files, read by content.

@@ -28,11 +28,11 @@ Plan it first. Then build the world part live, and show me every layer tiled acr
 
 ```sh
 cd godot/games/bellweather
-uv run gnode plan pipeline/workflow.py:build --arg package=inputs/my-game --arg part=world
+uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs/my-game --arg part=world
 ```
 
 ```sh
-uv run gnode run pipeline/workflow.py:build --arg package=inputs/my-game --arg part=world \
+uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs/my-game --arg part=world \
   --live --max-usd 30
 ```
 

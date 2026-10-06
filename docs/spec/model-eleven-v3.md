@@ -105,9 +105,10 @@ requires `eleven_v3`.
 The model decides how long a line takes. Bare lines came back at 0.88 to
 2.48 s; the same text is read at different lengths on different draws (spread
 160 to 240 ms unseeded). A cue with a frame budget therefore states the longest
-read it tolerates, and a longer draw is **refused and redrawn** inside the
-retry owner. It is never trimmed: post-processing is forbidden repository-wide,
-and the sound spike measured why.
+read it tolerates, and a longer draw is **refused and redrawn**: the line's
+admission judge refuses it and the step draws again (`on_reject: regenerate`),
+a new billed take rather than a provider retry. It is never trimmed:
+post-processing is forbidden repository-wide, and the sound spike measured why.
 
 Corollary: the run-up trick - giving the voice a sentence or two to accelerate
 through before the line - is out. Two run-up clips came back at 7.68 s and

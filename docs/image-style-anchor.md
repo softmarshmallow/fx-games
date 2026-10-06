@@ -38,25 +38,35 @@ keyword, four observable traits, per-asset treatments for the eight
 `stage_gen/resources/skills/anchor-image-style/SKILL.md`.
 
 Adding a mode is additive for validation — a persisted anchor naming an older
-mode still validates — but it rewrites `vocabulary_sha256`, so every cached
-node whose lineage includes a style anchor misses and regenerates. Modes are
-therefore added when art direction demands one, not for convenience.
+mode still validates — but it rewrites `vocabulary_sha256` and the vocabulary
+the selection is asked with, so the next build asks (and pays) for its
+selection again, and every image whose clause text changes is drawn again.
+Modes are therefore added when art direction demands one, not for convenience.
 
-## Opt in
+## Where it is used
 
-The side-view platformer recipe keeps its historical prompt path by default. Request the
-selector with a JSON or TOML input:
+The Grain's room and scene builds
+([`pipeline/workflow.py`](../godot/games/the_grain/pipeline/workflow.py)) pick
+one style for the whole room or scene, in three steps:
 
-```json
-{
-  "prompt": "original rain-dark stone ruins with pale moss",
-  "style_anchor": { "schema_version": 1, "kind": "automatic_style_anchor_v1" }
-}
-```
+1. a `structured.generate` step asks the selection question
+   (`stage_gen.image_prompting.image_style_question`): the skill and the
+   vocabulary as the system prompt, the asset kinds and the creative brief as
+   the prompt;
+2. a judge refuses a selection that names no approved mode or lacks a
+   treatment for an asset kind the build draws, and the selection is asked
+   again;
+3. a step materializes the accepted mode into the canonical anchor
+   (`style-anchor.json`) and the clause each asset kind's prompts end with.
+
+No other workflow or game uses the anchor today.
 
 ## Binding
 
-`append_style_anchor_once` applies the clause exactly once at the image
-boundary. The anchor digest and the vocabulary digest are recorded in artifact
-provenance and in the compiler cache key, so two images can be proven to share
-a style contract, and editing the vocabulary correctly invalidates cached work.
+The Grain's build appends each kind's clause once, after the authored prompt.
+`append_style_anchor_once` is the library form of that rule: it appends the
+clause idempotently and refuses a prompt that already carries a different
+anchor. The clause is part of every image request, so it is part of every image
+call's key. The anchor carries `vocabulary_sha256`, and the dialogue-scene
+bundle records `style_anchor_sha256`, so two images can be proven to share a
+style contract, and editing the vocabulary correctly invalidates cached work.

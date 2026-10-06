@@ -19,12 +19,11 @@ uv run python scripts/site.py serve --port 8790
 gitignored folders, then runs `bun run --cwd web/site build`, which writes `web/site/out/`:
 
 - the catalog into `web/site/.catalog/catalog.json`, exported as `scripts/catalog.py` exports
-  it from `out/examples` (`--examples DIR` names another store), and beside it `cli.json`, the
-  command tree the export reads from `gnode`'s parser;
+  it from `out/examples` (`--examples DIR` names another store);
 - the prose from the checkout into `web/site/.catalog/pages/`: each workflow's `page.mdx`,
   `contract.md` and `examples/<id>.mdx`, each game example's `page.mdx` from the store, and the
   Markdown the site shows under `/docs/` (`SITE_DOCS` in the script: getting started, the
-  glossary, the viewer, the SDK guide, this guide and decision 0071);
+  glossary, the viewer, this guide and decision 0071), with `docs/index.json` listing them;
 - the example media into `web/site/public/examples/<owner>/<id>/media/`, from the store, or for a
   library example from the tracked files its figures ledger names.
 
@@ -40,14 +39,16 @@ library file server.
 
 | Route | Page |
 |---|---|
-| `/` | The landing: what Stage Gen is, the install lines and links into the docs, then one ordered list of cards, one per example with an `order` |
+| `/` | The landing: what Stage Gen is, the install lines and links into the docs and the FX guide, then one ordered list of cards, one per example with an `order` |
 | `/workflows/<id>/` | The workflow's `page.mdx`, bound to its cover example |
 | `/workflows/<id>/<example>/` | An example with its own `examples/<example>.mdx` |
 | `/workflows/<id>/contract/` | The workflow's `contract.md` |
 | `/games/<game>/<example>/` | An example a game made, with the `page.mdx` it exported |
-| `/docs/<slug>/` | The guides `SITE_DOCS` names: getting started, glossary, viewer, SDK guide, site, decision 0071 |
-| `/docs/cli/` | The CLI reference, written from `cli.json`: every command, its usage and arguments |
+| `/docs/<slug>/` | The guides `SITE_DOCS` names: getting started, glossary, viewer, site, decision 0071 |
 | `/docs/workflows/<id>/` | The reference for every workflow, written from the catalog |
+
+How to write, plan and run a workflow is not staged: the landing links the
+[FX guide](https://github.com/gridaco/fx/blob/main/docs/guide/README.md) in gridaco/fx.
 
 A page body is MDX compiled with `@mdx-js/mdx` and `remark-gfm`. Its components are the blocks in
 [`web/site/blocks`](../web/site/blocks) (`Hero`, `Stats`, `Filmstrip`, `Painter`, `NodeGraph`
@@ -84,5 +85,5 @@ site's players drive an example's authored markup, so neither replaces the other
 
 `uv run python scripts/check.py --scope web` type-checks and tests the workspace and builds the
 site with `--allow-missing-examples`. The site's own tests (`web/site/tests`) cover Python-faithful
-number formatting, the markup normaliser, the page binding's refusals, the CLI reference's
-parser and the docs' link resolution.
+number formatting, the markup normaliser, the page binding's refusals and the docs' link
+resolution.

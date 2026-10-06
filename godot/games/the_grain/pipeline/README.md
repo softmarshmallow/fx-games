@@ -15,24 +15,25 @@ Install the optional game tools from the repository root:
 uv sync --group games
 ```
 
-The game's folder is a gnode project. `gnode.yaml` names the routes, `gnode.lock` pins the
+The game's folder is an FX project. `fx.yaml` names the routes, `fx.lock` pins the
 node types in `pipeline/nodes/`, and `pipeline/workflow.py` holds two builders: `room` reads
 one room package and `scene` reads the dialogue scene, each with the game's own reader.
 From the game's folder:
 
 ```sh
 cd godot/games/the_grain
-gnode plan pipeline/workflow.py:room --arg package=inputs/rooms/window
-gnode plan pipeline/workflow.py:scene --arg package=inputs
-gnode run pipeline/workflow.py:room --arg package=inputs/rooms/window --live --max-usd 25 \
+uv run python -m grida.fx plan pipeline/workflow.py:room --arg package=inputs/rooms/window
+uv run python -m grida.fx plan pipeline/workflow.py:scene --arg package=inputs
+uv run python -m grida.fx run pipeline/workflow.py:room --arg package=inputs/rooms/window --live --max-usd 25 \
   --deliver package=../../../out/the-grain-window/{key}
-gnode run pipeline/workflow.py:scene --arg package=inputs --live --max-usd 150 \
+uv run python -m grida.fx run pipeline/workflow.py:scene --arg package=inputs --live --max-usd 150 \
   --deliver package=../../../out/the-grain-scene/{key}
 ```
 
 Planning is offline and spends nothing; `--live` is the explicit provider opt-in, and
-launching the Godot project never generates assets. Runs land in `out/runs/` and the call
-cache in `out/gnode-cache/`, so a second run pays only for what changed. `--deliver` copies
+launching the Godot project never generates assets. Runs land in `out/runs/the-grain-room/`
+and `out/runs/the-grain-scene/`, and the store in `out/fx-cache/`, so a second run pays only
+for what changed. `--deliver` copies
 the folder the host plays (every published file and the room's `manifest.json` or the
 scene's `bundle.json`) out of a successful build. A package must sit inside this folder:
 its references are project files, read by content.

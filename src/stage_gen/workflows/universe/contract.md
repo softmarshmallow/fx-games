@@ -18,11 +18,11 @@ reader who has not seen the synopsis explain how the world works, who disagrees,
 Its taxonomy home is `universe` ([asset taxonomy](../../../../docs/spec/asset-taxonomy.md)): the
 prefix carries no camera and no genre, because half the workflow is modality-free.
 
-The workflow is a gnode workflow file, [`workflow.yaml`](workflow.yaml), over its own node types in
+The workflow is an FX workflow file, [`workflow.yaml`](workflow.yaml), over its own node types in
 [`nodes/`](nodes/), its prompt templates in [`prompts/`](prompts/), the JSON Schemas its structured
 steps answer to in [`schemas/`](schemas/) (generated from [`models.py`](models.py), and held to it
-by a test), and gnode's standard `image.resize`, `structured.generate`, `image.generate` and
-`package` types. `gnode plan|run universe` plans and runs it.
+by a test), and FX's built-in `image.resize`, `structured.generate`, `image.generate` and
+`package` types (`fx/<type>@1`). `uv run python -m grida.fx plan|run universe` plans and runs it.
 
 ## Sources
 
@@ -46,7 +46,7 @@ world. Nothing a run makes authorizes publication: the gallery's manifest record
 ## Two phases, inferred
 
 How many entities exist — and therefore how many image branches the gallery has — is a *result*
-of the world phase, so gnode infers two phases from the repeat over the admitted plan:
+of the world phase, so FX infers two phases from the repeat over the admitted plan:
 
 ```
 world:     source, poster_small → propose ◁ proposal_ok → projection → plan ◁ plan_ok
@@ -56,9 +56,10 @@ entity[e]: context → direct ◁ direct_ok → brief → draw → sealed → re
 close:     package
 ```
 
-`◁` marks a deterministic judge. The four groups are the steps a reader sees. Phase 1 is priced exactly by the plan; phase 2 is priced when its
-list exists, at most `census.max_entities` entries, and a run stops at the phase gate unless its
-ceiling covers it.
+`◁` marks a deterministic judge. The four groups are the steps a reader sees. Phase 1 is priced
+exactly by the plan; phase 2 is priced when its list exists, at most `census.max_entities`
+entries. A run goes on into it inside its ceiling, unless `--yes-up-to` stops it: the gallery then
+does not start when its worst case would take the run past that amount.
 
 Rules that hold across both:
 
@@ -98,7 +99,7 @@ timber frame, four times.
 
 Each step's identity is its node type's locked version ([`fx.lock`](fx.lock); the node
 modules, the universe models and the medium contracts count as their source) and what it reads.
-Each paid call is kept in gnode's call cache by the request it sends, the rendered prompt
+Each paid call is kept in FX's call cache by the request it sends, the rendered prompt
 included, so editing one prompt template re-bills only the steps that render it and what reads
 their answers:
 
@@ -119,17 +120,17 @@ A take is drawn once; running again restores it from the cache. To draw a reject
 uv run python -m grida.fx reroll out/runs/universe/<run> "entity['low_marsh'].draw"
 ```
 
-draws the next take of that one entity, records the pick in the takes file
-(`universe.takes.yaml`), and takes every other branch from the cache. `gnode pick` chooses which
-take a later run keeps.
+records the next take of that one entity in the takes file (`universe.takes.yaml`, at the root
+of the project you run from) and spends nothing. The next live run draws that take and takes every
+other branch from the cache. `python -m grida.fx pick` chooses which take a later run keeps.
 
 ## Image route
 
 Concept images are opaque text-to-image at their exact canvas, on the route the workflow's
 [`fx.yaml`](fx.yaml) names by default: OpenRouter's Sunburst generation route, verified live
-on 2026-09-09 at 2560 by 1440, 2560 by 1712 and 1712 by 2560. A project's `fx.yaml` or `--routes`
-may choose the OpenAI or fal Sunburst route instead; an unsupported size is refused before any
-spend, and a run never falls back to another provider.
+on 2026-09-09 at 2560 by 1440, 2560 by 1712 and 1712 by 2560. The `routes:` of the `fx.yaml` you
+run from may choose the OpenAI or fal Sunburst route instead; an unsupported size is refused before
+any spend, and a run never falls back to another provider.
 
 For the default route, budget **USD 0.22–0.30 per maximum-quality OpenRouter image** across the
 current dimensions; the exact canaries ranged from $0.227414 to $0.294423. Image output for a
@@ -145,17 +146,18 @@ uv run python -m grida.fx plan universe --inputs src/stage_gen/workflows/univers
 uv run python -m pytest -q tests/unit/workflows/universe
 ```
 
-Live, with a ceiling: the world phase costs about USD 0.5, and the gallery is where the money is,
-so the run stops before it unless the ceiling covers it:
+Live, with a ceiling: the world phase usually costs about USD 0.5, and the gallery is where the
+money is, so the first command stops before it once its price is known:
 
 ```bash
-uv run python -m grida.fx run universe --inputs <dir>/inputs.yaml --live --max-usd 1
+uv run python -m grida.fx run universe --inputs <dir>/inputs.yaml --live --max-usd 15 --yes-up-to 1
 uv run python -m grida.fx run universe --inputs <dir>/inputs.yaml --live --max-usd 15
 ```
 
-The second command continues from the first's cache: the world is not proposed again. `gnode
-inspect universe` reads the newest run back with no provider call, and the run's own view shows
-the gallery.
+The second command continues from the first's cache: the world is not proposed again, and the
+gallery is drawn inside the ceiling. `uv run python -m grida.fx inspect universe` reads the newest
+run back with no provider call, and the workflow's own view shows the gallery in the viewer
+(`uv run python scripts/view.py`).
 
 ## Outputs
 

@@ -203,4 +203,4 @@ replacing the host changes nothing on the generating side of it.
 
 The host is also not an authority on how a run was made. It reads a manifest; it
 never writes one. The build's package step writes it, in Python, and how each file in it
-was made is the gnode run's record, outside this host entirely.
+was made is the FX run's record, outside this host entirely.

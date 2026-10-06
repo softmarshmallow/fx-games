@@ -7,10 +7,11 @@ at game scale: reference pictures, textured geometry, a skeleton with skin weigh
 diagnostic clips, each stage judged by a reviewer that did not make it. The workflow does not
 bind a character into a game or publish generated art.
 
-The workflow is a gnode workflow file, [`workflow.yaml`](workflow.yaml), over its own node
+The workflow is an FX workflow file, [`workflow.yaml`](workflow.yaml), over its own node
 types in [`nodes/`](nodes/), its prompts in [`prompts/`](prompts/), its profiles in
-[`profiles/`](profiles/), and gnode's standard `mesh.generate` and `mesh.rig`. `gnode
-plan|run character-3d` plans and runs it. Its inputs:
+[`profiles/`](profiles/), and FX's built-in `fx/mesh.generate@1` and `fx/mesh.rig@1`.
+`uv run python -m grida.fx plan|run character-3d` plans and runs it, and `schema character-3d`
+prints its inputs as JSON Schema. Its inputs:
 
 - `brief`: the character in your words, as Markdown; or `parts`, a map of the profile's part
   roles to FBX or GLB files. Exactly one of them.
@@ -29,11 +30,11 @@ plan|run character-3d` plans and runs it. Its inputs:
 
 | Responsibility | Owner |
 | --- | --- |
-| Steps, takes, rebuilds, routes, the call cache, ceilings and resume | gnode |
+| Steps, takes, rebuilds, routes, the call cache, ceilings, retries and resume | Grida FX |
 | Reference design, part layout, assembly choices and semantic reviews | Agents on the `agent.turn` route ([`fx.yaml`](fx.yaml)) |
 | Textured geometry | `mesh.generate` on Tripo |
 | Skeleton and skin weights on the provider lane | `mesh.rig` on Tripo |
-| Measurements, fitting, preservation checks, renders and exports | The contained local Blender worker, a declared tool (`gnode doctor`) |
+| Measurements, fitting, preservation checks, renders and exports | The contained local Blender worker, a declared tool (`python -m grida.fx doctor character-3d`; `GRIDA_FX_TOOL_BLENDER` picks the binary) |
 | Anatomy, partitions, criteria, quality bars and their rules | [`components/character_3d`](../../components/character_3d/__init__.py) |
 | Admission of the delivered character | The `result` step |
 
@@ -129,9 +130,9 @@ float32 round-off. This never repaints textures or changes UVs.
 
 A run claims support only through a host support record, a reviewed deployment decision kept
 outside any run folder; no model writes it, and no single run can qualify its own pipeline.
-The record binds a closure, not every installed byte: the node types as `gnode.lock` pins their
-source, the workflow file, the core contract versions, each route with its contract and price,
-the Blender build, and the settings the cohort ran with. The brief, reference and supplied parts
+The record binds a closure, not every installed byte: the node types as `fx.lock` pins their
+source, the workflow file, the core contract versions, each route with its contract, each paid
+step's price, the Blender build, and the settings the cohort ran with. The brief, reference and supplied parts
 may vary. [`support.py`](support.py) computes the target of a plan, admits a record against it,
 and runs exactly the admitted plan:
 

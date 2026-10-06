@@ -1,10 +1,10 @@
 # Components
 
-A component is an independently testable package under `src/stage_gen/components/`: node
-types, graph fragments (`add_*_nodes`), contracts and services. It never runs alone and never
-imports a workflow. Workflows compose components in their node types; gnode plans, runs,
-caches and inspects those compositions. A component can expose several GNode nodes,
-and it does not need a game package or a particular runtime.
+A component is an independently testable package under `src/stage_gen/components/`: the
+contracts, processing, admission and review a capability needs, callable without an engine. It
+never runs alone and never imports a workflow. Workflows call components from their node types;
+Grida FX plans, runs, caches and inspects those compositions. A component can serve several
+node types, and it does not need a game package or a particular runtime.
 
 ## Components
 
@@ -24,17 +24,17 @@ generation, map design, character profiles) live in
 [`demo_game_tools.kits`](../../../godot/games/_shared/python/src/demo_game_tools/kits/README.md),
 beside the games that own them; the asset product never imports them.
 
-Existing fixed geometry remains useful as named presets. The local eye/mouth portrait pipeline does not claim to represent every Live2D workflow. Authors can compose different components or add their own nodes through the same SDK.
+Existing fixed geometry remains useful as named presets. The local eye/mouth portrait pipeline does not claim to represent every Live2D workflow. Authors can compose different components or write their own node types on Grida FX.
 
-Runnable inputs live beside workflows. Start with [`../workflows/looping_parallax/inputs/supplied_layers/`](../workflows/looping_parallax/inputs/supplied_layers/): its small Python input generator produces original geometric layers without a provider, and its `pipeline.py` runs through the SDK. Inspecting or scrolling the result requires no game definition.
+Runnable inputs live beside workflows. Start with [`../workflows/looping_parallax/inputs/supplied_layers/`](../workflows/looping_parallax/inputs/supplied_layers/): its small Python input generator draws original geometric layers without a provider and writes an `inputs.yaml` for `uv run python -m grida.fx run looping-parallax --inputs <dir>/inputs.yaml`. Inspecting or scrolling the result requires no game definition.
 
 ## Contract
 
 A Stage Gen component is an independently testable application package under
-`src/stage_gen/components/`, such as sprite-sheet processing, soundtrack assembly,
-or an authored game contract. Components call no provider themselves: image generation,
-background removal, structured generation and music generation are calls a node type makes
-through Grida FX, which owns their specifications, retries and provider adapters.
+`src/stage_gen/components/`, such as repeat validation, portrait motion or the character-3d
+studios. Components call no provider themselves: image, structured, video, mesh, music, sound
+and speech generation are calls a node type makes through Grida FX, which owns their
+specifications, retries and provider adapters.
 
 Shared, workflow-neutral media inspection and transforms live under
 `src/stage_gen/media/`; component-specific processing stays with its component,
@@ -46,20 +46,22 @@ components into a graph; a runtime or preview consumes its artifacts.
 Artifact-producing components must:
 
 1. accept typed or schema-validated input;
-2. write only below the caller-provided output directory;
-3. return an artifact manifest rather than relying on implicit filenames;
+2. write only below the caller-provided output directory, or return the bytes for the
+   node to store;
+3. return what they made explicitly (bytes, a manifest or facts) rather than relying on
+   implicit filenames;
 4. validate media before reporting success;
-5. use one retry owner per provider operation, with at most six attempts
-   (one initial attempt plus five retries) and capped backoff;
-6. include silent contract failures such as empty media or malformed JSON
-   within that same retry boundary;
-7. persist provenance and a content hash beside the artifact;
+5. call no provider and add no retry loop: a node calls a capability through Grida FX,
+   whose engine is the one retry owner, with at most six sends of a request;
+6. refuse with a reason, rather than repair, an answer that fails a deterministic check,
+   so a judge can report it and its step draws again (`on_reject: regenerate`), a new
+   take and never a provider retry;
+7. return the measurements and digests a reviewer or consumer needs; FX's run record says
+   which call made each file;
 8. make deterministic post-processing explicit and independently testable;
-9. support cancellation/timeouts without leaving a success marker; and
+9. leave nothing that looks finished when stopped part-way: FX keeps a step's outputs
+   only when the step ends; and
 10. expose enough information for a headless benchmark.
-
-When a component uses a gnode modality service, that service owns provider retries;
-the component and provider adapter must not add nested retry loops.
 
 ### Structure
 
@@ -70,25 +72,22 @@ holding:
 
 - `models.py` — the authored contract: the pydantic models and the vocabulary they
   close over, with their persisted `kind` and version literals;
-- `loader.py` and `library.py` where the component reads authored files or resolves a
-  library binding;
-- one or more node-family modules, `nodes.py` or `<family>_nodes.py`, each holding a
-  family's `NodeType` declarations (with `<family>_node_types(identity_prefix=…)` when
-  a graph shipped the family under its own type ids), an `add_<family>_nodes` graph
-  helper that declares the nodes and their ports over a builder, and a
-  `<Family>Handlers` kit over a `<Family>Host` that a workflow or game graph binds into its own node
-  handler - the soundtrack, motion-rebase, layer, UI atlas and inventory-panel
-  families are the shape;
-- private helpers as `_<name>.py`, shared across components through
-  `components/_node_kit.py` and its siblings rather than copied.
+- the pure work, each callable without an engine: `processing.py`, `admission.py`,
+  `review.py` (prompts, response schemas and their validators), and the like;
+- private helpers as `_<name>.py`; the package-level `components/_secure_fs.py` and
+  `components/_game_input.py` hold what several packages share, rather than copies.
 
-A component imports the engine, `stage_gen.media`, `stage_gen.canonical` and other
-components; never a workflow, a game, the orchestration layer or a provider. Workflows and
-game graphs host node families; they do not own node semantics. No graph-helper departure
-stands today: `GRAPH_HELPER_DEPARTURES` in `tests/contract/test_component_structure.py` is
-empty, and any new one must be named there. A game built with gnode instead hosts a family
-as gnode step types (`demo_game_tools.steps`), over the pure parts of its kit: the effects
-kit is only those (`effects_art/directions.py`, `cut_in.py`, `sprite.py`).
+A component declares no node types. A workflow's node modules
+(`src/stage_gen/workflows/<id>/nodes/*.py`) declare its FX node types with `@node` from
+`grida.fx` and call components from their bodies. The games' shared step families live in
+`demo_game_tools.steps`: each module holds a family's node types and an `add_*_steps` helper
+that writes the family's steps into a game's builder, over the pure parts of a kit.
+
+A component imports `stage_gen.media`, `stage_gen.canonical`, other components and, where
+it hands an agent a tool (character-3d's studios), `grida.fx`'s public names; never a
+workflow, a game, the viewer or a provider. `tests/contract/test_import_boundaries.py`
+refuses a component that imports a workflow or the viewer, and
+`tests/contract/test_component_structure.py` one without an exported surface.
 
 ### Independence rule
 

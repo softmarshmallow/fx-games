@@ -10,8 +10,10 @@ already has an end-to-end generation example.
 ```text
 stage-gen/
 ├── src/
-│   ├── gnode/                         # Execution SDK: no Stage Gen or game imports
-│   └── stage_gen/                     # SDK, components, workflows, CLI
+│   └── stage_gen/                     # Components, workflows, run view, viewer
+├── third_party/
+│   └── fx/                            # Grida FX, the engine (gridaco/fx), a pinned submodule
+├── fx.yaml                            # Root FX project: workflows by id, runs and store in out/
 ├── library/                           # Committed, approved character-3d examples
 ├── web/                               # One Bun workspace: ui/, viewer/ and site/
 ├── godot/
@@ -23,7 +25,7 @@ stage-gen/
 ├── skills/                            # Skills users install (`npx skills add`); standalone
 ├── scripts/                           # Product/repository maintenance and verification
 ├── tests/                             # Tests selected by product or consumer ownership
-├── docs/                              # Cross-cutting guides, SDK, policy, specs and history
+├── docs/                              # Cross-cutting guides, policy, specs and history
 ├── .agents/skills/                    # Skills for working on this repository
 ├── .github/workflows/                # Separate product and consumer gates
 ├── pyproject.toml                     # Core distribution and local workspace metadata
@@ -47,46 +49,34 @@ alone: it names no path in this repository and no command of it. `.agents/skills
 ## Product implementation
 
 ```text
-src/
-├── gnode/
-│   ├── workflow/                      # The workflow file: expander, planner, node host,
-│   │                                  # call cache, run record and view, the gnode command
-│   ├── contracts/                     # Public execution and persistence contracts
-│   ├── reliability/                   # Retry and failure mechanics
-│   ├── modalities/                    # Ring 1: typed capability specs and services
-│   │   ├── image/
-│   │   ├── video/
-│   │   ├── structured/
-│   │   ├── tool_loop/
-│   │   ├── background_removal/
-│   │   ├── music/
-│   │   ├── sound_effect/
-│   │   └── speech/
-│   └── providers/                     # Ring 2: first-party provider adapters
-│       ├── openai/
-│       ├── openrouter/
-│       ├── fal/
-│       ├── elevenlabs/
-│       └── tripo/
-└── stage_gen/
-    ├── components/                    # Reusable components and bounded formats
-    ├── workflows/                     # One folder per product deliverable
-    ├── examples.py                    # The public example contract
-    ├── viewer.py                      # The viewer, the gnode plugin gnode view starts
-    ├── media/                         # Shared inspection and transforms
-    ├── orchestration/                 # Composition root: services, routing, the gnode plugin
-    ├── application/                   # The one shared usage error
-    └── resources/                     # Explicitly packaged support resources
+src/stage_gen/
+├── components/                        # Reusable components and bounded formats
+├── workflows/                         # One folder per product deliverable
+├── runview/                           # FX run folders projected to run views; the view cache
+├── viewer.py                          # The viewer command behind scripts/view.py
+├── examples.py                        # The public example contract
+├── media/                             # Shared inspection and transforms
+├── contracts.py, fs.py, provenance.py, canonical.py   # Engine-free utilities
+├── image_prompting.py, image_style.py # The closed image-style vocabulary and its anchors
+├── provider_env.py                    # The key names a launcher strips from a child
+├── application/                       # The one shared usage error
+└── resources/                         # Explicitly packaged support resources
+
+third_party/fx/                        # Grida FX: its own AGENTS.md, gates and guide
+├── crates/                            # The Rust engine: planner, store, runner, adapters
+├── python/                            # The `grida` package, imported as grida.fx
+└── tools/build_engine.py              # Builds the engine where grida.fx finds it
 ```
 
-Stage Gen adds no graph engine: every workflow, game build and user project is a gnode
-workflow file or Python builder, planned and run by gnode.
-Provider construction stays at the application boundary; workflows can receive
-services without taking ownership of credentials or provider selection.
+Stage Gen adds no graph engine: every workflow, game build and user project is an FX
+workflow file or Python builder, planned and run by Grida FX. Routes, provider adapters,
+retries and provider keys belong to FX; a project's `fx.yaml` picks its routes, and no
+workflow takes ownership of credentials or provider selection.
 
-The wheel contains `gnode` and `stage_gen`. Optional demo packages have
-their own project metadata. The core source distribution removes workspace-only
-metadata, so installing it does not require absent demo directories.
+The wheel contains `stage_gen` and depends on `grida`, which `uv sync` installs from the
+submodule. Optional demo packages have their own project metadata. The core source
+distribution removes workspace-only metadata, so installing it does not require absent
+demo directories.
 
 ## Components: where reusable work belongs
 
@@ -137,16 +127,17 @@ portrait animation and movie sprite assets retain their own bounded roles.
 ```text
 src/stage_gen/workflows/
 ├── _registry.py, _catalog.py, _checks.py   # Discovery, catalog export, drift checks
-├── _fx.py                             # How a workflow file declares itself to the registry, and the scratch-project writer
-├── looping_parallax/                  # A gnode workflow file, run with `gnode`
-│   ├── workflow.yaml, gnode.yaml      # The workflow; its home (sources, default routes)
-│   ├── gnode.lock                     # The source behind each versioned node type
+├── _fx.py                             # How a workflow file declares itself to the registry,
+│                                      # and the scratch-project writer
+├── looping_parallax/                  # An FX workflow file, run by `python -m grida.fx`
+│   ├── workflow.yaml, fx.yaml         # The workflow; its home (sources, routes, out/ folders)
+│   ├── fx.lock                        # The source behind each versioned node type
 │   ├── nodes/, prompts/, views/       # Its node types, the repaint brief, the compose view
 │   ├── workflow.py, workflow.toml     # Registry hook; what the workflow file cannot say
 │   ├── page.mdx, contract.md          # The reader's page; the exact contract
 │   └── inputs/supplied_layers/        # Original layers and the inputs.yaml that places them
 ├── movie_sprite/                      # A workflow file: plate, brief, take, finish
-│   ├── workflow.yaml, gnode.yaml, gnode.lock
+│   ├── workflow.yaml, fx.yaml, fx.lock
 │   ├── nodes/, prompts/, views/       # Plate, brief and finish; the idle template; the loop view
 │   ├── workflow.py, example.py        # Registry hook; the example importer
 │   └── inputs/supplied_clip/          # Original geometric actor: a still and a lossless clip
@@ -187,11 +178,13 @@ owner's manifest pins them by digest.
 ## Documentation
 
 `docs/` holds only what crosses workflows: [getting started](getting-started.md), the
-[FX guide](https://github.com/gridaco/fx/blob/main/docs/guide/README.md) and its example projects, the [glossary](glossary.md), the
-[viewer](viewer.md) and [site](site.md) guides, provider notes under `models/`, policy
-(storage, publication, IP), cross-cutting specifications under `spec/`, and the history
-under `decisions/`, `plans/` and `research/`. A workflow's guide and contract live in its
-own `page.mdx` and `contract.md`; a game's documents live under its folder.
+[glossary](glossary.md), the [viewer](viewer.md) and [site](site.md) guides, provider notes
+under `models/`, policy (storage, publication, IP), cross-cutting specifications under
+`spec/`, and the history under `decisions/`, `plans/` and `research/`. A workflow's guide and
+contract live in its own `page.mdx` and `contract.md`; a game's documents live under its
+folder. How to write, plan and run a workflow is the
+[FX guide](https://github.com/gridaco/fx/blob/main/docs/guide/README.md), with its example
+projects, in gridaco/fx.
 
 ## Preview and runtime consumers
 
@@ -200,7 +193,7 @@ web/                                   # One Bun workspace and the only Node bou
 ├── ui/
 │   ├── contracts/                     # Catalog, example and run-view parsers and fixtures
 │   └── players/                       # Framework-free page players: mount(el, config)
-├── viewer/                            # gnode view: read-only client over run folders
+├── viewer/                            # scripts/view.py starts it: read-only client over runs
 │   ├── app/                           # Run, workflow and artifact pages
 │   └── lib/shell/                     # Confined read-only access to persisted runs
 └── site/                              # Static landing and documentation (Next export)
@@ -210,22 +203,24 @@ godot/
 │   ├── afterlight/                    # Authored Scenario episode and game bindings
 │   ├── command_link/                  # Authored Scenario mission and independent Lab
 │   ├── bellweather/                   # Own project, gameplay and prepared-run binding
+│   │   ├── fx.yaml, fx.lock          # An FX project: its routes, runs and store
 │   │   ├── inputs/
 │   │   │   ├── default/               # Complete original input closure
 │   │   │   └── waves/                 # Complete variant closure
 │   │   ├── gameplay/                 # Platformer simulation and exclusive support
 │   │   ├── scenes/                   # Camera, controls, rendering and HUD
 │   │   ├── pipeline/
-│   │   │   ├── prepare.py            # Explicit input/variant selection
+│   │   │   ├── workflow.py           # The FX builder: one package in, one step per asset
+│   │   │   ├── nodes/                # The builder's node types
 │   │   │   └── src/bellweather_pipeline/
 │   │   ├── tools/                    # Map and terrain authoring, captures and parity
 │   │   ├── tests/                    # Native game regression checks
 │   │   └── docs/                     # Map formats and asset build graph
-│   ├── iron_petal_unit/              # Also a gnode project: gnode.yaml, gnode.lock
+│   ├── iron_petal_unit/              # Also an FX project: fx.yaml, fx.lock
 │   │   ├── inputs/                   # Runner authored closure
 │   │   ├── gameplay/                 # Runner rules and exclusive support
 │   │   ├── scenes/                   # Runner presentation
-│   │   ├── pipeline/workflow.py      # The gnode builder over pipeline/nodes/
+│   │   ├── pipeline/workflow.py      # The FX builder over pipeline/nodes/
 │   │   ├── pipeline/src/iron_petal_unit_pipeline/
 │   │   ├── tools/
 │   │   ├── tests/
@@ -281,9 +276,11 @@ godot/
 ```
 
 Each of the four run-consuming games has `project.godot`, its own `main.tscn` and a
-separately packaged Python builder. Iron Petal Unit builds through gnode from its own
-folder (`gnode plan pipeline/workflow.py:build --arg package=inputs`); the others keep a
-`pipeline/prepare.py` entry point, expanded once for Bellweather above.
+separately packaged Python builder. Each is an FX project that builds from its own folder
+with `pipeline/workflow.py` (`python -m grida.fx plan pipeline/workflow.py:build --arg
+package=inputs` for Iron Petal Unit), expanded once for Bellweather above. The Grain also
+keeps `pipeline/prepare.py`, which proves its case and publishes it over the runs of its
+rooms and scene.
 Afterlight and Command Link keep their working project organization and game-local
 Labs; this is not a mandatory directory schema for a new game.
 
@@ -301,9 +298,9 @@ maintenance. The optional `games` installation group keeps all of this outside t
 public product's default environment and distributions.
 
 The viewer accepts the public pipeline envelope with arbitrary pipeline identity.
-It retains persisted readers, displays unknown metadata and shows the step views a
-gnode run keeps, sandboxed. Generic MIME handling permits unfamiliar assets without
-adding a workflow enum.
+It retains persisted readers, displays unknown metadata and shows the step views
+`scripts/view.py` keeps for an FX run, sandboxed. Generic MIME handling permits unfamiliar
+assets without adding a workflow enum.
 
 The asset-consumer template copies a selected asset and its verified provenance;
 its GDScript loads that local content. A game can extend preparation to create
@@ -321,13 +318,14 @@ remains in `docs/spec/`; its former Scenario page points to the Godot owner. His
 
 | Change | Owner |
 |---|---|
-| Scheduling, graph state, generic provenance | GNode ring 0 |
-| A modality protocol or retry-owning service | GNode ring 1 |
-| Provider request/response adaptation | GNode ring 2 |
+| Scheduling, graph state, the store, run records, prices, retries | Grida FX (`third_party/fx`, under its own rules) |
+| A capability, route or provider request/response adaptation | Grida FX |
+| A project's choice of routes | That project's `fx.yaml` |
+| Reading FX runs for the viewer and examples | `stage_gen.runview` |
 | Asset-specific processing and admission | Component |
 | Several asset stages with a bounded output | Workflow |
-| User-specific graph composition | External Python definition or SDK example |
-| Workflow asset parameters | Workflow-owned TOML or Python inputs |
+| User-specific graph composition | The user's own FX workflow file or Python builder |
+| Workflow asset parameters | The workflow's typed `inputs:`, given by an inputs file or flags |
 | A specialized preview | Viewer inspector or bounded runtime package |
 | VN-oriented narrative authoring and invocation | Godot Scenario package |
 | Episode direction and installed game capabilities | Consuming game |

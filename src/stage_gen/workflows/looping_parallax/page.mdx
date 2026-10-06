@@ -18,6 +18,6 @@ order, offsets, repeat axes and scroll factor, and one preview frame; `--deliver
 you want them. A consumer places each layer at `offset - scroll * parallax` and repeats it along
 its declared axes.
 A layer that asks for `loop_construction: seam_repaint` plans one image edit on the configured
-route, a second when the first is rejected, and needs `--live` and your provider keys only to run
-it. The [contract](contract.md) holds the inputs, the outputs, the graph and every loop
+route, a second when the first is rejected, and needs `--live`, a ceiling (`--max-usd`) and your
+provider keys only to run it. The [contract](contract.md) holds the inputs, the outputs, the graph and every loop
 construction.

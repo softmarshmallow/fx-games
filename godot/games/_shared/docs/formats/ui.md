@@ -136,8 +136,8 @@ silhouette; corners and the outer edge keep their chamfer and antialiasing.
 
 The model keeps a sheet's body count and reading order but not exact placement, so admission
 detects bodies from alpha and registers them to the declared cells in order rather than trusting
-template coordinates. Every fact below is measured; a failure is a retry inside the single
-provider retry owner, exactly like the inventory panel.
+template coordinates. Every fact below is measured by the sheet's judge; a failure is a redraw,
+at most six takes, exactly like the inventory panel.
 
 | Check | Gate |
 | --- | --- |
@@ -323,23 +323,24 @@ inventory-panel review (structured)  ui-{role} review (structured)
 manifest ui.inventory_panel          manifest ui.panel_frame, ui.button_rect, ui.preview_icons, ui.cursor_set?
 ```
 
-The sheet triplet is one generic typed node set fanned out over the role parameter; adding a role
-is a fan-out change, not a new node type. The icon grid is the proof: a second sheet family joined
-without a new type, because a role names its family and the family supplies the template, the
+The sheet steps are one generic step family fanned out over the role parameter
+(`demo_game_tools.steps.ui_atlas.add_ui_sheet_steps`: per role the template, the painting, its
+judge, the publish step and the review); adding a role is a fan-out change, not a new node type.
+The icon grid is the proof: a second sheet family joined without a new type, because a role names its family and the family supplies the template, the
 gate, the evidence and the review question, while ids, ports, cache identity and the manifest
 binding are one code path. The cursor set is the third family, and the first optional sheet role:
-every host fans the triplet out over `document_roles(ui)` — the three required roles, then the
+every host fans the sheet steps out over `document_roles(ui)` — the three required roles, then the
 optional ones the document declares — so a declared role is never silently left undrawn and an
 undeclared one is never billed. It belongs to no genre, so it lives beside the contract
-it serves rather than inside a recipe: the types carry the component's own taxonomy path
-(`2d/ui/atlas.generate` / `.validate` / `.review`), and every recipe that wants panels and buttons
-plans the same three nodes. A host supplies only what it alone knows — its authored `ui` document,
-the art direction that wraps the prompt, the digest that re-bills a sheet when the look changes,
-and, where it keeps attempt ledgers, its own provider-call wrapper.
+it serves rather than inside a game: the node types (`ui_template`, `admit_ui_sheet`,
+`publish_ui_sheet`, `ui_review_schema`) are shared, and every game that wants panels and buttons
+hosts the same ones in its own `pipeline/nodes/interface.py`. A host supplies only what it alone
+knows — its authored `ui` document, the art direction that wraps the prompt, and an accessor from
+an authored reference to a project path. A changed look re-bills a sheet because the prompt and
+the pictures it is painted against change.
 
-The prompt is composed at plan time and carried on the node card, so a reader sees the exact
-instruction the provider will be given without running anything, and a recipe that gates on full
-static prompts admits these nodes like any other.
+The prompt is composed while planning and carried on the step's card, so a reader sees the exact
+instruction the provider will be given without running anything.
 
 Four retained games use this UI contract through the Godot hosts. The Grain
 composes the room and dialogue hosts:

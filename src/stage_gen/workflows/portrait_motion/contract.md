@@ -10,12 +10,12 @@ original and cut to an outline. The workflow does not bind a character into a ga
 generated art; the [movie-sprite](../movie_sprite/contract.md) workflow's `canonical.png` is
 one source it is made for.
 
-The workflow is a gnode workflow file, [`workflow.yaml`](workflow.yaml), over its own node
+The workflow is an FX workflow file, [`workflow.yaml`](workflow.yaml), over its own node
 types in [`nodes/`](nodes/), its static prompts in [`prompts/`](prompts/) and the JSON Schemas
 its structured steps answer to in [`schemas/`](schemas/), both generated from the
 [portrait-motion component](../../components/portrait_motion/__init__.py) and held to it by a
-test, and gnode's standard `structured.generate` and `image.edit`. `gnode plan|run
-portrait-motion` plans and runs it. Its inputs:
+test, and FX's built-in `fx/structured.generate@1` and `fx/image.edit@1`. `uv run python -m
+grida.fx plan|run portrait-motion` plans and runs it. Its inputs:
 
 - `portrait`: the finished picture, a PNG with RGB or RGBA pixels, at most 16383 pixels on a
   side.
@@ -99,7 +99,8 @@ not malformed: it is a result, it ends the chain, and `deliver.result` names the
   depend on what was admitted: the sheet edit, the outlines, and the still review with its
   pictures named in order.
 - **atlas** is one `image.edit` of the guide at the exact canvas, opaque; a picture with any
-  transparency is drawn again inside the call's one retry owner.
+  transparency fails FX's check of the answer and is drawn again inside FX, the call's one retry
+  owner.
 - **registration** cuts the sheet into its cells, aligns each to the original and records its
   fit and a difference map; a cell that moved, turned or changed scale beyond the gate refuses
   the run at `registration`.
@@ -124,12 +125,12 @@ structured route's contract carries its request settings (high reasoning, high i
 OpenAI only, no fallback) and shows every picture exactly as it is, so both are part of each
 call's identity. The plan prices each call at its route's ceiling and every judge's redraws as
 possible takes; a usual run costs about one US dollar. A run makes calls only with `--live`
-(`live=True` in Python), an OpenRouter key and an OpenAI key.
+(`live=True` in Python), a ceiling, an OpenRouter key and an OpenAI key.
 
 ```python
-import gnode
+from grida.fx import run
 
-result = gnode.run("portrait-motion", input_files=["face.yaml"], live=True, max_usd=5)
+result = run("portrait-motion", input_files=["face.yaml"], live=True, max_usd=5)
 ```
 
 ## Results
@@ -158,7 +159,7 @@ component's `apply_offset_patch` places a patch exactly. A whole-portrait run de
 
 Each step's identity is its node type's locked version ([`fx.lock`](fx.lock); the node
 modules and the component count as their source) and what it reads; each paid call is kept in
-gnode's call cache by the request it sends. So:
+FX's call cache by the request it sends. So:
 
 | Edit | Re-bills |
 | --- | --- |
@@ -169,8 +170,9 @@ gnode's call cache by the request it sends. So:
 | `playback` only | nothing: composition and render rerun locally |
 
 Every pixel step is deterministic, so a run with unchanged inputs and code delivers the same
-bytes: the earlier pipeline's yuzu-face run, carried into the call cache with its five answers,
-delivers byte-identical states, patches and animation.
+bytes. Under the earlier engine, the yuzu-face run's five answers, carried into its call cache,
+delivered byte-identical states, patches and animation; FX starts from an empty cache, so that
+replay is not repeated on it.
 
 ## Graph
 

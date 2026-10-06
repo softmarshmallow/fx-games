@@ -12,14 +12,14 @@ and governs future changes to shared support, packages and game frameworks.
 | --- | --- | --- |
 | [Afterlight](afterlight/README.md) | Authored ensemble adventure and presentation Lab | Game-owned catalogs, story, bindings and tools |
 | [Command Link](command_link/README.md) | Tactical story, video opening and presentation Lab | Game-owned catalogs, story, bindings and tools |
-| [Bellweather](bellweather/README.md) | Side-view platformer | `inputs/default/`, `inputs/waves/`; gnode `pipeline/workflow.py:build` |
-| [Iron Petal Unit](iron_petal_unit/README.md) | Side-view runner | `inputs/`; gnode `pipeline/workflow.py:build` |
-| [Ember Hollow](ember_hollow/README.md) | Ground-plane survival | `inputs/`; gnode `pipeline/workflow.py:build`, by scope |
-| [The Grain](the_grain/README.md) | Investigation combining rooms and dialogue | `inputs/`; gnode `pipeline/workflow.py:room` and `:scene`; `pipeline/prepare.py` for the case |
+| [Bellweather](bellweather/README.md) | Side-view platformer | `inputs/default/`, `inputs/waves/`; FX builder `pipeline/workflow.py:build` |
+| [Iron Petal Unit](iron_petal_unit/README.md) | Side-view runner | `inputs/`; FX builder `pipeline/workflow.py:build` |
+| [Ember Hollow](ember_hollow/README.md) | Ground-plane survival | `inputs/`; FX builder `pipeline/workflow.py:build`, by scope |
+| [The Grain](the_grain/README.md) | Investigation combining rooms and dialogue | `inputs/`; FX builders `pipeline/workflow.py:room` and `:scene`; `pipeline/prepare.py` for the case |
 
 [Launch commands](../README.md#play-a-game) live in the Godot workspace guide.
 Existing generated runs remain outside these project roots and are selected with
-`--run`. Each game's assets build with gnode, and planning is offline;
+`--run`. Each game's assets build with Grida FX, and planning is offline;
 starting Godot never invokes generation.
 
 `_shared/` holds private code with several game consumers. The public asset product

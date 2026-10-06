@@ -8,12 +8,13 @@ its sheet grid. It is not the global definition of `stage-gen`. Reusable compone
 genre-, camera-, gameplay-, and engine-agnostic; this recipe supplies the
 side-view vocabulary explicitly.
 
-> **Provider note.** Prepared image nodes declare capabilities and exact canvas requirements, then
-> resolve one GPT Image 2.5 Sunburst route before execution. OpenAI is the default for the
-> platformer's native-alpha/masked and custom-exact-size workloads; fal is an explicit equivalent
-> provider override. OpenRouter serves only admitted opaque/reference workloads. Current endpoint capabilities,
-> alpha behavior, exact-size constraints, and deterministic normalization requirements are documented in the
-> [GPT Image 2.5 model record](../models/gpt-image-2.5.md). Revalidate every recipe contract
+> **Provider note.** Prepared image steps declare the features and exact canvas they need, and
+> the game's `fx.yaml` names one GPT Image 2.5 Sunburst route for them:
+> `gpt-image-2.5-sunburst@openai`, which serves native alpha, masks and custom exact sizes. fal's
+> Sunburst route serves the same and is chosen only by editing `fx.yaml`; OpenRouter's serves
+> only opaque work. Current endpoint capabilities, alpha behavior, exact-size constraints, and
+> deterministic normalization requirements are documented in the
+> [GPT Image 2.5 model record](../models/gpt-image-2.5.md). Revalidate every contract here
 > when changing models.
 
 ---
@@ -90,18 +91,19 @@ spec below names which of these inputs it carries.
 
 ## Common parameters
 
-Every generation call passes one typed `ImageGenerationRequest` to
-`ImageGenerationService.generate`. The component service is the sole retry
-owner around one backend attempt and caller validation.
+Every generation call is one `image.generate` or `image.edit` call that Grida FX makes
+([FX capabilities §2–3](https://github.com/gridaco/fx/blob/main/spec/capabilities.md)). FX's
+engine is the sole retry owner around it; the game's own admission of the answer is a judge
+step downstream.
 
 | Concern | Current contract | Notes |
 |---|---|---|
-| Product and route | `gpt-image-2.5-sunburst`, resolved from the node's workload through a checked-in exact route policy | Sunburst is the only selected 2.5 variant; Flare and the Responses image tool are not registered. OpenAI and fal support native alpha/real masks; OpenRouter is opaque/reference only. |
-| Provider choice | Checked-in defaults, or one scalar `STAGE_GEN_IMAGE_PROVIDER` override applied while planning | Provider is secondary to capability. An override replans every image node; unsupported combinations refuse offline and no route falls back automatically. |
-| Request surface | Provider-neutral prompt, ordered references plus their data-URL/hosted delivery shape, quality, background intent, target geometry, and `n=1`; adapters translate only supported route-specific fields | OpenAI/fal may request transparent PNG; OpenAI multipart edits require data URLs, while fal and OpenRouter can admit hosted references. OpenRouter requests opaque output and refuses transparent or masked-edit requests offline. GPT Image 2.5 edits omit `input_fidelity`. |
-| Scrolling-recipe request | `quality="max"`; transparent background for native cutouts, opaque output for concepts/backdrops and compatibility modes; exact canvas when required | The route's edge-multiple, area, longest-edge, aspect, and optional allowlist constraints are checked while planning. Deterministic alpha-safe PNG normalization still owns canonical dimensions and packing. |
-| Retry owner | One initial attempt plus five blind retries in `ImageGenerationService.generate` | Transport, response-envelope, media, and caller-validation failures remain inside this one boundary. Recipes and backends must not stack SDK, outer, or per-stage retry loops. |
-| Accepted response | Exactly one nonempty image with strict base64, media-type, signature, and caller validation | The inspected provider artifact and deterministic normalized artifact retain bound provenance. |
+| Product and route | `gpt-image-2.5-sunburst@openai`, named under `routes:` in the game's `fx.yaml` | Sunburst is the only 2.5 variant with a route; Flare and the Responses image tool are not routes. OpenAI and fal support native alpha and real masks; OpenRouter is opaque only. |
+| Provider choice | The one route `fx.yaml` names; a step's `requires:` (`alpha`, `mask`) is checked against it while planning | Provider is secondary to capability. Changing the route is an edit to `fx.yaml`; an unsupported combination is refused offline and no route falls back automatically. |
+| Request surface | Prompt, background, exact size, and for an edit the input picture, ordered references and an optional mask; FX's adapter translates them for its provider and always asks for one PNG | Pictures are sent inline. OpenRouter refuses a transparent or masked request before sending. GPT Image 2.5 edits omit `input_fidelity`. |
+| Scrolling-recipe request | `quality="max"`; transparent background for native cutouts, opaque output for concepts/backdrops and compatibility modes; exact canvas when required | The build computes each canvas inside the route's edge-multiple, area, longest-edge and aspect limits, and FX's adapter refuses one outside them before anything is sent. Deterministic alpha-safe PNG normalization still owns canonical dimensions and packing. |
+| Retry owner | FX's engine: at most six sends, a deterministic refusal ending the call | Transport, response-envelope and the answer's check (a PNG, the exact size, alpha when transparent) stay inside it. A game's admission that refuses a well-formed answer draws a new take (`on_reject: regenerate`); it is not a retry, and nothing stacks another retry loop. |
+| Accepted response | Exactly one decodable PNG that passed FX's check, then the game's admission | FX's run record says which call made each file; the deterministic normalized artifact is a separate step's output. |
 
 ### Optional authored player profile
 
@@ -155,9 +157,9 @@ draw from; each prepared section declares which one it uses.
 | 256 × 128 | 2:1 (four cells) | 0.03 Mpx | Four-frame character climb strip |
 
 These dimensions describe canonical outputs and, for generation canvases, may also feed exact
-route requirements; locally assembled or repacked outputs are not provider requests. Planning
-checks any requested provider canvas against the selected route's declared constraints, then the
-recipe inspects the returned image and normalizes it deterministically. Each of the five character
+route requirements; locally assembled or repacked outputs are not provider requests. A requested
+provider canvas must lie inside the route's limits, which FX's adapter enforces before sending;
+the build then inspects the returned image and normalizes it deterministically. Each of the five character
 state sources is a 2400 x 800, one-row-by-four-cell strip. The local compositor
 remaps every cell into a 2400 x 688 row with the eight-pixel gutter and bottom
 anchor preserved, then stacks the five rows into the 2400 x 3440 master. The
@@ -171,12 +173,13 @@ Every transparency-producing asset declares one run-level strategy:
 
 - `native` (default): ask the image model to produce alpha directly, validate
   decoded nontrivial alpha, and retain provider output as direct lineage. This
-  avoids quality loss from estimating a second matte after generation. The
-  current catalog admits this only on OpenAI or fal.
+  avoids quality loss from estimating a second matte after generation. Of the
+  routes FX ships, only OpenAI's and fal's declare `alpha`.
 - `ai` (explicit compatibility): generate on neutral grey or a naturally
   isolated background, then require validated background removal. The remover's
   alpha-bearing PNG is canonical; the raw opaque artifact remains lineage. This
-  strategy does not itself choose the image-generation provider.
+  strategy does not itself choose the image-generation provider. FX ships no
+  `background.remove` route and no game declares one, so it is not available today.
 - `chroma` (explicit degraded fallback): generate an exact `#FF00FF` exterior
   and deterministically key it to alpha without calling the remover.
 
@@ -264,10 +267,10 @@ packages do not use numbered waves: package resolution fans out map-local layers
 optional ladder and portal presentation, actors, catalogs, UI, soundtrack, and bindings according
 to explicit dependencies, then a provider-free integration step emits `prepared-game-runtime-v12`.
 
-Provider latency, service concurrency, and account throttling are operational
-observations rather than recipe contracts. The executor may fan out independent
-requests, but this document does not promise wall-clock timing or invent a
-provider concurrency tier.
+Provider latency, concurrency, and account throttling are operational
+observations rather than contracts here. FX fans out independent steps and paces
+each route as its table declares, but this document does not promise wall-clock
+timing or invent a provider concurrency tier.
 
 ---
 

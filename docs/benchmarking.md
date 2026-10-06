@@ -1,7 +1,8 @@
 # Benchmarking and research
 
 Benchmarking belongs to the authoritative Python headless package, not the
-optional web preview. The public entry point is:
+optional web preview. Every workflow and game build runs on Grida FX, whose public entry
+point is:
 
 ```sh
 uv run python -m grida.fx --help
@@ -41,10 +42,13 @@ belong in an evidence bundle.
 
 ## Evaluation layers
 
-1. **Contract tests** use fixtures/mocks to exercise schemas, retries, path
-   isolation, media parsing, and provenance without paid calls.
-2. **Provider smoke tests** make the smallest useful key-backed call and prove
-   the live envelope. They are opt-in and record cost/usage when returned.
+1. **Contract tests and stand-in runs** exercise schemas, path isolation, media
+   parsing, provenance and whole workflows without paid calls: a stand-in
+   (`grida.fx.run(..., stand_in=...)`) answers each paid call. Retries and provider
+   envelopes belong to FX and are tested by FX's own gates.
+2. **Provider smoke runs** are the smallest useful live run (`--live` with a small
+   `--max-usd`) and prove the live envelope. They are opt-in, and the FX run record
+   keeps their cost, usage and attempts.
 3. **Component benchmarks** compare one operation against its declared media
    contract without a game runtime.
 4. **Pipeline benchmarks** validate cross-asset consistency and resumability.
@@ -66,4 +70,4 @@ media inspection with a separately recorded human/agent listening verdict.
   duration, channels, and sample rate come from the returned file rather than
   documentation assumptions.
 - Secret scan and history scan find no credential or removed third-party media.
-- A repeated completed run is a no-op unless force is explicit.
+- A repeated run of the same plan takes every result from the store and bills nothing.

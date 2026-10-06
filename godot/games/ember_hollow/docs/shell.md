@@ -9,9 +9,9 @@
 > Executable authority: [`godot/games/ember_hollow/pipeline/src/ember_hollow_pipeline/shell/`](../pipeline/src/ember_hollow_pipeline/shell)
 > (the document, the licence rule, the prompt refusals, the screen geometry) and
 > [`tests/unit/components/test_game_shell.py`](../../../../tests/unit/components/test_game_shell.py).
-> The plate gates, the node triplet, the manifest projection and the host states are
-> **not built yet**; the sections below marked *(planned)* describe what they will be and
-> are not a claim that they exist.
+> The plate gates and clip gates (`pipeline/nodes/shell.py`), the manifest projection and
+> the host states (`scenes/shell/`) are built since; the sections below marked *(planned)*
+> were written before they were and have not been re-checked against them line by line.
 
 `shell.toml` is the game-global source of truth for the screens a player meets **around**
 the game: the opening cinematic, the title screen, and the loading screen. It is a root
@@ -112,16 +112,18 @@ prompt = "..."          # draw = 2 buys a second draw; there is no seed
 A clip carries no `alpha_policy` — video has no alpha — and no resolution, because a
 package names a layout and never writes a rectangle. It carries no length either: the
 shot's `seconds` is what the route is asked for. **How long a clip a route will make is a
-fact about that route**, declared on its binding as `clip_seconds_max` and refused while
-planning:
+fact about that route**, and FX's adapter for it holds it. The bound route,
+`google/gemini-omni-flash/v1.1/image-to-video@fal`, draws whole seconds from 3 to 10, and a
+shot asking for another length is refused when its call is made, before anything is sent:
 
 ```text
-the opening's the_valley shot asks for 18 but
-google/gemini-omni-flash/v1.1/reference-to-video@fal declares clip_seconds_max 10
+this route draws whole seconds from 3 to 10, not 18
 ```
 
-Offline, before a run directory exists. Nothing in the modality restates that number, so
-binding a route with a different ceiling needs no edit to any document.
+Planning prices such a call at the route's ten-second most and does not refuse it, so check
+a drawn shot's `seconds` against the route before a live run. Nothing in the package
+restates that number, so binding a route with a different range needs no edit to any
+document.
 
 A clip shot is always `move = "hold"`. It brings its own camera, and a host moving over
 one would be fighting it.
@@ -143,24 +145,25 @@ take = { path = "shell/the_cold.take.mp4", sha256 = "4baa0fde…" }
 prompt = "..."          # kept: it is what was asked for, and what a re-draw would use
 ```
 
-**Both are first-class and neither is deprecated.** Without `take` the graph plans
-`clip.generate` and buys the brief, exactly as before. With `take` it plans `clip.adopt`,
-copies the file in, and buys nothing — and the two nodes write the same `.raw.mp4` port,
-so the admission gate, the transcode and the review downstream cannot tell which one
-filled it. Deleting a `take` line puts the shot back on the route, at a dollar. An author
-may mix them inside one opening: audition the shot that matters, let a simpler one draw
-itself.
+**Both are first-class and neither is deprecated.** Without `take` the shot's group plans
+a `generate` step (`fx/video.generate@1`, judged by `admit`) and buys the brief, exactly as
+before. With `take` it plans an `adopt` step instead, which checks the file's digest, holds
+it to the same admission and buys nothing — and both hand the same clip to the record, the
+transcode and the review downstream, which cannot tell which one filled it. Deleting a
+`take` line puts the shot back on the route, at a dollar. An author may mix them inside one
+opening: audition the shot that matters, let a simpler one draw itself.
 
 Adoption is the recommended default, and it is recommended by arithmetic rather than by a
-flag. `gnode plan` on Ember Hollow's full scope reports **134 paid calls** with its three
+flag. Ember Hollow's full-scope plan has **134 paid steps** at first takes with its three
 clips adopted, against **137** with them drawn, each drawn ten-second clip about a dollar.
-There is no warning to silence and no confirmation to pass.
+The plan's provider-call count is higher, since each prop-anchor agent step makes several
+calls. There is no warning to silence and no confirmation to pass.
 
 Three consequences worth stating:
 
-- **An adopted shot is not bound by the route's ceiling.** `clip_seconds_max` and
-  `clip_seconds_step` are refusals about an ask, and an adopted shot asks nothing, so
-  they are skipped for it. A twenty-five second sequence cut together outside the
+- **An adopted shot is not bound by the route's range.** The route's whole seconds from
+  3 to 10 are a refusal about an ask, and an adopted shot asks nothing, so the range does
+  not apply to it. A twenty-five second sequence cut together outside the
   pipeline is a legal shot where the bound route answers ten whole seconds at most. Its
   length is still measured, by the same gate, against the `seconds` the shot declares.
 - **The gate does not soften.** The adopted file is admitted on length, the layout's
@@ -192,9 +195,10 @@ uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs --
 Each take meets the admission gate a kept take meets, is published in the codec the host
 plays, and is laid out on a contact sheet sampled by the **same** constants the
 build's own reviewer uses (`components/video_clip/review.py`), so a verdict formed by looking
-at the sheet and a verdict formed in the run are about the same pictures. `gnode reroll <run>
-"shell.opening_the_cold.generate"` films another take of that shot; `gnode pick` keeps one, and the takes
-file beside the builder records it. To keep the shot through a cold cache, copy the picked
+at the sheet and a verdict formed in the run are about the same pictures.
+`uv run python -m grida.fx reroll <run> "shell.opening_the_cold.generate"` films another take
+of that shot; `uv run python -m grida.fx pick` keeps one, and `pipeline/ember-hollow.takes.yaml`
+records it. To keep the shot through a cold cache, copy the picked
 clip beside the package and declare it as the shot's `take`; adopting it is then the zero-
 operation path above.
 
@@ -223,7 +227,8 @@ needs importing — MP3, Ogg Vorbis, textures — and none for `.ogv`.
 
 The encoder is the awkward part. Homebrew's current ffmpeg does not link libtheora, so
 the transcode runs through a second, keg-only build (`brew install ffmpeg@7`, which links
-libtheora 1.2.0) named by `THEORA_FFMPEG`. It never shadows the ffmpeg on `PATH`.
+libtheora 1.2.0), declared as the `ffmpeg-theora` tool and named by
+`GRIDA_FX_TOOL_FFMPEG_THEORA`. It never shadows the ffmpeg on `PATH`.
 
 ## The authored document
 
@@ -387,8 +392,8 @@ The `match_title` ceiling is set the same way. The same picture through a Theora
 trip measures **0.30**; two genuinely different plates measure **31.5** at their closest;
 this package's own last shot against its title measures 59.6. Twelve sits in the gap.
 
-Every gate runs **twice** — once on the response, inside the retry owner and before
-anything is persisted, and once on the published `.ogv`. That is what makes the transcode
+Every gate runs **twice** — once on the response, as the judge that sends a refused draw
+back before anything is published, and once on the published `.ogv`. That is what makes the transcode
 publication rather than repair: a transform that cannot hide anything from the check
 after it is not repairing anything.
 
@@ -445,9 +450,9 @@ attempts at the same number is not sampling noise.
 
 ## Pipeline and consumer contract *(planned)*
 
-The shell branch is independent after package resolution, and is one generic typed
-triplet fanned out over the plate role — the shape [`ui.md`](../../_shared/docs/formats/ui.md)'s sheet triplet
-already proved, under this component's own taxonomy path `2d/shell/plate.*`:
+The shell branch is independent after package resolution, and is one group of steps fanned
+out over the plate role (`shell.<role>`) — the shape [`ui.md`](../../_shared/docs/formats/ui.md)'s sheet steps
+already proved, with the node types in `pipeline/nodes/shell.py`:
 
 ```text
 shell.toml + references + typeface
@@ -466,8 +471,9 @@ manifest shell.{opening, title, loading}
 ```
 
 A host supplies only what it alone knows: its authored document, the art direction that
-wraps each prompt, the digest that re-bills a plate when the look changes, and its own
-attempts-port factory. Adding a screen is a fan-out change, not a new node type.
+wraps each prompt, and the references each plate is painted against; a changed look re-bills
+a plate because its prompt or pictures change. Adding a screen is a fan-out change, not a new
+node type.
 
 The manifest publishes, per screen, the resolved layout geometry beside the SHA-bound
 artifacts, plus the typeface asset and every authored string — so a consumer composes the

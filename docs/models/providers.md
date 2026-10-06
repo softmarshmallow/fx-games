@@ -1,492 +1,255 @@
 # Provider operations
 
-The GPT Image 2.5 provider surfaces were checked on 2026-09-09, including
-pre-refactor live OpenAI Images generation, fal native-alpha generation
-canaries, and bounded OpenRouter exact-size canaries. Their new
-provider-capability-first repository routes were verified offline on
-2026-09-10, then exercised through the bounded live invocation
-`sunburst-routing-20260910`. Both providers passed native-transparent generation
-and reached their edit routes, but both stopped at the same seam-repaint
-deterministic admission failure; this is adapter-route evidence, not full recipe
-readiness.
+Grida FX makes every provider call Stage Gen's workflows and games make. FX owns the adapters,
+the built-in route table, where keys are read, retries, billing, long jobs and downloads. They
+are specified in FX's [providers spec](https://github.com/gridaco/fx/blob/main/spec/providers.md)
+and [capabilities spec](https://github.com/gridaco/fx/blob/main/spec/capabilities.md); the
+copy this repository runs is the one pinned at `third_party/fx`. This page keeps what Stage Gen
+decides: which route each workflow and game picks and why, what this repository has measured
+about those routes, and what happens to their output afterwards.
 
-The direct GPT Image 2 transparency contract was verified against OpenAI's
-official image-generation guide on 2026-08-25, and its fal and OpenRouter routes
-were rechecked on 2026-09-07. The separate fal background-removal and OpenRouter
-music contracts were last verified on 2026-08-14, and the structured GPT-5.6
-route was exercised on 2026-08-20. Hosted capabilities can drift; repeat the
-scoped smoke tests before widening an adapter contract.
+FX's adapters have not yet made a live call from this repository; one budgeted smoke run per
+provider is still to come. The live evidence below was gathered through the predecessor
+adapters on the same provider surfaces, and each finding is dated. Hosted capabilities drift:
+re-check a provider's current contract before widening a route, and repeat a scoped live check
+after.
 
-Image-route capabilities and their verification histories are maintained in
-the [GPT Image 2.5](gpt-image-2.5.md) and
-[GPT Image 2](gpt-image-2.md) model records. All model records are indexed in
-[Models](index.md). GPT Image 2.5 Sunburst is the current runtime default;
-GPT Image 2 is retained only as historical evidence.
+Image-route capabilities and their verification histories are kept in the
+[GPT Image 2.5](gpt-image-2.5.md) and [GPT Image 2](gpt-image-2.md) model records. All model
+records are indexed in [Models](index.md). GPT Image 2.5 Sunburst is the image model every
+route uses; GPT Image 2 is kept only as historical evidence.
 
-## Configuration
+## Keys and tools
 
 ```dotenv
 OPENAI_API_KEY=
 OPENROUTER_API_KEY=
 FAL_KEY=
 ELEVENLABS_API_KEY=
-STAGE_GEN_IMAGE_PROVIDER=
-STAGE_GEN_OPENAI_IMAGE_MODEL=
-STAGE_GEN_OPENAI_IMAGE_IPM=150
-STAGE_GEN_IMAGE_MODEL=
-STAGE_GEN_OPENROUTER_IMAGE_IPM=150
-STAGE_GEN_MUSIC_MODEL=google/lyria-3-pro-preview
-STAGE_GEN_BACKGROUND_REMOVAL_MODEL=fal-ai/birefnet/v2
+TRIPO_API_KEY=
 ```
 
-Credentials are server-side only. Do not expose them to the optional web
-client, persist them in provenance, print them in errors, or commit a populated
-env file.
+These five keys, and the four base URLs [`.env.example`](../../.env.example) lists, are the only
+names FX reads: from the environment, else from the `.env` file of the project a command runs
+from. The file is optional and local. `GRIDA_FX_DISABLE_DOTENV=1` turns it off, which the
+credential-free gates do. Without `--live` no key is used and nothing is sent; a missing key
+refuses only the calls that need it, before anything is sent and for nothing.
 
-Image base URLs are material route identity and are therefore sealed into
-portable plans and provenance. Production and portable-run routes must use
-public, non-secret endpoints. The OpenAI image route accepts a root or `/v1`
-base, fal a root base, and OpenRouter a root, `/v1`, or `/api/v1` base;
-arbitrary path-prefixed gateways are refused. Configured credential values are
-also refused anywhere in a custom base URL. Credentials may be sent only over
-HTTPS; plain HTTP is accepted solely for an exact loopback host such as
-`localhost`, `127.0.0.1`, or `::1` in local tests.
+Credentials are server-side only. Do not expose them to `web/`, persist them in provenance,
+print them, or commit a populated env file. FX never prints a key's value:
+`uv run python -m grida.fx doctor <workflow>` says which keys are present and where each came
+from, and which routes, tools and node types the workflow needs. A base URL must be HTTPS unless it names a
+loopback host, and one that holds a key's value is refused (FX providers §3).
 
-The two image-model fields are optional exact-identity assertions for the maintained game
-deployments, not free-form selection. Leave them blank to use the application
-product and route catalog; any non-matching value is refused offline. The
-active provider spellings and fal endpoint IDs have one executable authority in
-`stage_gen.image_product`.
+A step that runs a local program declares it as a tool; `GRIDA_FX_TOOL_<NAME>` points at a
+particular binary, else the tool is found on `PATH`. Character-3d declares Blender
+(`GRIDA_FX_TOOL_BLENDER`), and Ember Hollow's opening clips an ffmpeg built with libtheora
+(`GRIDA_FX_TOOL_FFMPEG_THEORA`).
 
-`TRIPO_API_KEY` authenticates the two Tripo routes the character-3d workflow names in its
-gnode.yaml, served by `gnode.providers.tripo`: `mesh.generate` on `P2-20260801@tripo` (a
-multiview task from the part's front and back, and its left and right when given; USD 1.20
-to 2.50 a mesh) and `mesh.rig` on `v1.0-20240301@tripo` (USD 0.25 to 0.50 a rig). Both are
-long jobs: a task is posted once, polled, and after a crash collected instead of posted
-again; an answer the post cannot confirm is never posted twice. The rig route first asks
-Tripo's free riggability check; a doubted model is refused unless the step allows it, and
-the check's answer is recorded either way. Downloads are taken only from Tripo's own hosts.
-Credential import includes the key when present; the other workflows need only the four
-established keys.
+## The routes Stage Gen picks
 
-Without `STAGE_GEN_IMAGE_PROVIDER`, checked-in capability policies select
-OpenAI Images for transparency, masks, automatic backgrounds, and custom exact
-sizes, and select OpenRouter only for `auto` or opaque work at its verified exact
-sizes; OpenRouter never satisfies a native-alpha requirement. Set the scalar
-to `openai`, `fal`, or `openrouter` to replan every image workload onto that
-provider's corresponding registered generation or reference/edit route. The
-switch never relaxes a capability requirement: an OpenRouter override refuses
-transparency, masks, and unverified exact sizes offline. It also does not change the separate
-`native`, `ai`, or `chroma` transparency strategy. Missing credentials or a
-failed route never cause an automatic provider or strategy change.
+Routes and their prices come from FX's built-in table, then the tables a project's `fx.yaml`
+lists under `route_tables`. Each Stage Gen project names, under `routes:` in its `fx.yaml`, the
+one route each capability uses:
 
-After planning, the graph requires credentials only for image providers present
-in its sealed route snapshots: `OPENAI_API_KEY` for OpenAI,
-`FAL_KEY` for fal, and `OPENROUTER_API_KEY` for OpenRouter. Other modalities may
-still require the same keys independently. Credentials admit an already chosen
-route; they do not take part in route selection.
-
-`ELEVENLABS_API_KEY` authenticates the `sound_effect_generation` operation:
-`POST https://api.elevenlabs.io/v1/sound-generation` with the `xi-api-key`
-header, model `eleven_text_to_sound_v2` (`STAGE_GEN_SOUND_EFFECT_MODEL`),
-verified against the published reference on 2026-09-02. The runner binding
-table declares it against `elevenlabs` with the `exact_duration` feature and
-the `elevenlabs-sound-effect` resource; the adapter is
-`gnode.providers.elevenlabs`. The capability `sound_effect_generation` requires
-the key, and a runner package that realizes any effect as a generated clip is
-refused before spend without it; a package with only oscillator effects needs
-nothing from this provider, so `doctor` reports the key without gating overall
-readiness on it. The route bills in characters and reports the charge in a
-`character-cost` header, recorded as `usage.character_cost` in provenance. The
-measured model boundary — what this route can and cannot be asked for — is
-recorded in
-[model-eleven-text-to-sound-v2.md](../spec/model-eleven-text-to-sound-v2.md);
-the authoring contract that consumes it is
-[game-sound-effects.md](../../godot/games/iron_petal_unit/docs/audio.md).
-
-The same key authenticates the `speech_generation` operation:
-`POST https://api.elevenlabs.io/v1/text-to-speech/{voice}` with the `xi-api-key`
-header, model `eleven_v3` (`STAGE_GEN_SPEECH_MODEL`), verified against the
-account's model listing on 2026-09-03 (`requires_alpha_access` false;
-`can_use_style` and `can_use_speaker_boost` false, so `voice_settings` carries
-`stability` alone). The runner binding table declares it against `elevenlabs`
-with the `audio_tags` and `stability` features and the `elevenlabs-speech`
-resource; the adapter is `ElevenLabsSpeechBackend` in the same package. The
-voice is the provider's own reference, resolved from the game's `voices.toml`
-by the recipe and never authored beside gameplay. A seed is never sent:
-measured, it pins the length of a read and not its waveform. The route bills
-in characters and reports the charge in the same `character-cost` header. The
-measured model boundary is [model-eleven-v3.md](../spec/model-eleven-v3.md);
-the authoring contract is [game-voice.md](../../godot/games/iron_petal_unit/docs/voices.md).
-
-Provider code stays behind adapters. Pipelines depend on the repository's
-component contract, not a vendor SDK response type.
-
-Structured text/vision generation also routes through OpenRouter. The exact
-slug is configurable with `STAGE_GEN_TEXT_MODEL`; the current default is
-`openai/gpt-5.6-sol`. OpenRouter currently lists image input and structured
-outputs for that slug, but this repository has not persisted a live contract
-probe for the migration. Hosted capabilities can drift, so keep the provider
-smoke test as a release gate for recipes that require structured generation.
-
-Stage Gen's gnode plugin offers `structured.generate` on that model and on one verified
-vision judge, `openai/gpt-6-astra@openrouter`, which portrait motion's gnode.yaml names.
-The judge's route contract carries its request settings (high reasoning effort, high image
-detail, OpenAI as the only upstream, fallbacks off) and shows every picture exactly as its
-file is (`pictures: unchanged`); the configured text model reduces pictures to a 1600-pixel
-long edge flattened onto the step's matte. Both settings are part of the route fingerprint,
-so a call's cache key changes with them. Its worst case is USD 1.50 a call, the reservation
-the portrait runs held per attempt; their calls cost USD 0.07 to 0.39.
-
-The same model answers `agent.turn`, one turn of a tool-using agent, on
-`openai/gpt-6-astra@openrouter` with the same request settings. A turn sends the
-transcript so far, the step's tools and, when the step asks for a structured answer, a
-required tool choice; pictures a tool returns are sent as one user message after the run of
-tool results. Each turn is call-cached by its transcript, so a resumed agent replays the
-turns it already paid for. Its worst case is USD 1.50 a turn.
-
-## Binding-driven image selection and dispatch
-
-Stage Gen registers GPT Image 2.5 Sunburst as one product with six image
-routes:
-
-| Route ID | Provider | Surface and operation |
+| Project | Routes | Why |
 | --- | --- | --- |
-| `image.sunburst.openai.images.generation` | OpenAI | Images `/images/generations` |
-| `image.sunburst.openai.images.edit` | OpenAI | Images `/images/edits`, including a real mask |
-| `image.sunburst.fal.text-to-image` | fal | `/openai/gpt-image-2.5/sunburst/text-to-image` |
-| `image.sunburst.fal.edit` | fal | `/openai/gpt-image-2.5/sunburst/edit`, including `mask_url` |
-| `image.sunburst.openrouter.images.generation` | OpenRouter | `/images`, text-only `auto` or opaque generation |
-| `image.sunburst.openrouter.images.reference` | OpenRouter | `/images`, reference-conditioned `auto` or opaque generation |
+| [looping-parallax](../../src/stage_gen/workflows/looping_parallax/fx.yaml) | `image.edit`: `gpt-image-2.5-sunburst@openai` | The seam repaint requires `mask` and `alpha`. |
+| [portrait-motion](../../src/stage_gen/workflows/portrait_motion/fx.yaml) | `structured.generate`: `openai/gpt-6-astra@openrouter`; `image.edit`: `gpt-image-2.5-sunburst@openai` | The face locator and the judges need a vision model that sees each picture as it is; the new states are drawn at the portrait's own exact size, which OpenRouter's fixed sizes do not serve. |
+| [universe](../../src/stage_gen/workflows/universe/fx.yaml) | `structured.generate`: `openai/gpt-5.6-sol@openrouter`; `image.generate`: `openai/gpt-image-2.5-sunburst@openrouter` | Concept images are opaque, at canvases verified live on that route. |
+| [movie-sprite](../../src/stage_gen/workflows/movie_sprite/fx.yaml) | `video.generate`: `google/gemini-omni-flash/v1.1/image-to-video@fal` | The take needs `first_last_frame`. |
+| [character-3d](../../src/stage_gen/workflows/character_3d/fx.yaml) | `agent.turn`: `openai/gpt-6-astra@openrouter`; `image.generate` and `image.edit`: `openai/gpt-image-2.5-sunburst@openrouter`; `mesh.generate`: `P2-20260801@tripo`; `mesh.rig`: `v1.0-20240301@tripo` | Agents design, review and lay out parts; reference views are opaque; Tripo builds and rigs the meshes. |
+| [Bellweather](../../godot/games/bellweather/fx.yaml), [The Grain](../../godot/games/the_grain/fx.yaml) | `image.generate` and `image.edit`: `gpt-image-2.5-sunburst@openai`; `structured.generate`: `openai/gpt-5.6-sol@openrouter`; `music.generate`: `google/lyria-3-pro-preview@openrouter` | Cut-out art needs native alpha, and Bellweather's seam repaints need a mask. |
+| [Ember Hollow](../../godot/games/ember_hollow/fx.yaml) | as Bellweather, plus `agent.turn`: `openai/gpt-5.6-sol@openrouter`, `sound.generate`: `eleven_text_to_sound_v2@elevenlabs` and `video.generate`: `google/gemini-omni-flash/v1.1/image-to-video@fal` | The prop-anchor agent, sound effects and the opening clips. |
+| [Iron Petal Unit](../../godot/games/iron_petal_unit/fx.yaml) | as Bellweather, plus `agent.turn`: `openai/gpt-5.6-sol@openrouter`, `sound.generate`: `eleven_text_to_sound_v2@elevenlabs` and `speech.generate`: `eleven_v3@elevenlabs` | The cut-in placement agent, sound effects and spoken lines. |
+| [Afterlight voice preparation](../../godot/games/afterlight/fx.yaml) | `speech.generate`: `eleven_v3@elevenlabs`, priced per thousand characters by its own route table | One spoken line per call. |
 
-Every image-producing node declares its instance requirements with
-`ImageRouteRequirementsV1`: generation or edit, background, format, exact or
-flexible size, optional resolution/compression, reference count, and mask
-presence. A checked-in workload policy names exactly one route. Resolution
-admits that route or refuses it; the catalog is never searched for a substitute.
+The rules that make a route choice safe:
+- **A step names the features it needs** in `requires:` (`alpha`, `mask`, `image_input`,
+  `first_last_frame`, `exact_duration`, and so on), and a route without one is refused while
+  planning, before any spend.
+- **No route is a fallback for another.** A project names one route per capability. Changing it
+  is an edit to its `fx.yaml`, or a `routes:` entry in the `fx.yaml` a command runs from; keys
+  and failures never switch a route. The repository's root `fx.yaml` names no routes, so a
+  workflow planned there by id keeps its home's.
+- **Prices are planning allowances**, FX's built-in table's unless a project's route table
+  restates them. What a call costs is settled from what the provider reports, else the whole
+  amount held for it.
 
-The graph seals the result as `ResolvedRouteSnapshotV1` and each node names its
-snapshot by `binding_ref`. Material provider/model/surface/endpoint/adapter
-identity, exact effective options, required and supported capability facts,
-and their fingerprints travel with the plan. Prices, pacing, credentials, and
-mutable evidence dates do not. Runtime validates the snapshot against the
-host-configured catalog, applies the sealed options, and lazily constructs only
-that backend. There is no credential-driven discovery, fallback, or retry onto
-another provider.
+`uv run python -m grida.fx nodes` lists every built-in node type, `nodes <type>` one type's
+ports, settings and the routes that serve it, and `uv run python -m grida.fx doctor <workflow>`
+names the keys, tools and routes one workflow needs. All are offline and read only local files.
 
-Within one generic routed-image service, base generation and edit routes that
-share one declared resource also share one adapter instance and request-start
-pacer. This keeps each service's ownership explicit instead of implying that a
-shared resource ID alone merges adapter instances.
+The move onto FX carried no cache. Runs made through the predecessor engine stay under `out/`,
+but their paid calls are not reused: a game's next build draws its art again.
 
-Review every node type with its settings and the routes that serve it, without loading
-provider credentials; `uv run python -m grida.fx doctor <workflow>` names the keys, tools and
-routes one workflow needs:
+## GPT Image 2.5 Sunburst
 
-```sh
-uv run python -m grida.fx nodes
-```
+Every image route is the Sunburst variant at `quality: max`. Flare, the bare `gpt-image-2.5`
+name and dated aliases are not routes. OpenAI is used only through its Images endpoints; the
+Responses image tool is not a route, because it rewrites prompts and changes the response.
 
-Both are offline and read only local files. Each game binds its routes in its own `fx.yaml`,
-and a route without a feature a step requires is refused when that game plans.
+| Route | Background | Size | Inputs |
+| --- | --- | --- | --- |
+| `gpt-image-2.5-sunburst@openai` | `auto`, `opaque` or `transparent` (`alpha`) | any exact size in the envelope below, or flexible | up to 16 pictures; a mask (`mask`) |
+| `openai/gpt-image-2.5/sunburst@fal` | `auto`, `opaque` or `transparent` (`alpha`) | as OpenAI | up to 16 pictures; a mask (`mask`) |
+| `openai/gpt-image-2.5-sunburst@openrouter` | `auto` or `opaque` | seven verified exact sizes, or flexible | `image.edit` only: up to 16 pictures, no mask |
 
-All image routes are the Sunburst variant at `quality="max"`. Flare, the bare
-`gpt-image-2.5` name, dated aliases, and arbitrary model overrides are closed.
-OpenAI is registered only on the Images generation/edit endpoints; the
-Responses image tool is not a route and cannot silently replace Images because
-it changes prompt and response identity.
+The OpenAI and fal envelope is FX's: edges multiples of 16, the longer edge at most 3,840 pixels,
+an aspect ratio at most 3:1, and 655,360 to 8,294,400 pixels. A workflow's target geometry is
+its own: it asks for one valid provider size, inspects the answer, then normalizes it with
+premultiplied-alpha, aspect-preserving resampling to its exact sheet or layer dimensions.
 
-### Bounded live adapter verdict, 2026-09-10
+**OpenAI.** Native alpha at maximum quality is the default for every cut-out. Transparency is
+proved from decoded bytes, never from a PNG container or an RGBA mode: FX refuses a transparent
+answer without an alpha channel, and each game's gates check that the exterior is clear.
+Measured transparent output tops out at alpha 254, never 255, so the gates that judge an opaque
+body accept 254. An edit sends no `input_fidelity`: a live run on 2026-09-09 returned HTTP 400
+`invalid_input_fidelity_model` for it on every reference-conditioned request, and the same edit
+succeeded without it. FX paces each OpenAI and OpenRouter image route at 150 requests a minute,
+which matched this repository's OpenAI project; a project whose account allows another rate
+restates the route in a route table.
 
-The frozen invocation `sunburst-routing-20260910` ran sequentially and applied
-the provider-stop policy independently to OpenAI Images and fal:
+**fal.** The same model and envelope as OpenAI, with separate text-to-image and edit endpoints.
+No Stage Gen project picks it today. A paid masked edit on 2026-09-09 landed the editable band
+and kept native alpha, but also changed material pixels outside the mask: a mask is a strong
+hint, not a protected region, so a workflow that needs untouched pixels restores them itself.
 
-| Ordered case | OpenAI Images verdict | fal verdict |
-| --- | --- | --- |
-| Transparent generation, 1536 by 1024 | Deterministic and independent semantic review passed | Deterministic and independent semantic review passed |
-| Wayfarer idle edit | Deterministic validation passed; independent semantic review failed | Deterministic validation and independent semantic review passed |
-| Sunpetal seam repaint edit | HTTP 200; deterministic admission failed and stopped the provider | HTTP 200; deterministic admission failed and stopped the provider |
-| Terrain paint-over, ladder edit, and UI-panel edit | Not dispatched after the stop | Not dispatched after the stop |
+**OpenRouter.** Opaque and `auto` only. A paid transparent request returned HTTP 400, and FX
+refuses one before sending. The seven exact sizes are the canvases verified live in September
+2026: `1024x1024`, `1152x2496`, `1712x2560`, `2064x1008`, `2496x1152`, `2560x1440` and
+`2560x1712`. Reference-conditioned maximum-quality calls cost USD 0.138393 to 0.294423 across
+them. Every request turns OpenRouter's upstream fallbacks off.
 
-No reruns were dispatched. This verifies that either provider can be
-selected for native transparency and that both basic edit routes are live. It
-also exposes a shared seam-repaint admission blocker, so neither provider has a
-complete current-recipe live verdict.
+The route-by-route live verdicts, including the shared seam-repaint admission failure of
+2026-09-10, are in the [GPT Image 2.5 record](gpt-image-2.5.md).
 
-The providers did not report complete actual dollar costs. Every dispatched
-attempt records `cost_complete=false`; do not infer an observed cost of zero.
-The harness reserved $12 for the six calls and recorded $34 total accounted
-exposure, of which $22 was fixed, nondispatchable safety headroom.
+## Structured output and agents through OpenRouter
 
-## OpenAI Images generation and editing
+`openai/gpt-5.6-sol@openrouter` is the default model for structured output and agent turns. It
+was exercised live for structured output on 2026-08-20. OpenRouter lists image input and
+structured outputs for it; keep a live check before relying on a new use.
 
-- Model: `gpt-image-2.5-sunburst`.
-- Text-only endpoint: `POST https://api.openai.com/v1/images/generations`.
-- Reference-edit endpoint: `POST https://api.openai.com/v1/images/edits` with repeated
-  multipart `image[]` fields.
-- Credential: `OPENAI_API_KEY`.
-- Transparency request: `background: "transparent"`.
-- Output: PNG so alpha is preserved.
+`openai/gpt-6-astra@openrouter` is the vision judge portrait motion names, and the agent model
+of character-3d. Its route contract, which FX ships, carries its request settings (high
+reasoning effort, high image detail, OpenAI as the only upstream, fallbacks off) and, for
+structured output, shows every picture exactly as its file is. The default model instead fits
+each picture into 1600 by 1600 pixels, flattened onto the step's matte. Both settings are part
+of the route's fingerprint, so a call's cache key changes with them. Its worst case is USD 1.50 a
+call or a turn; the portrait runs' structured calls cost USD 0.07 to 0.39.
 
-Native alpha at `quality="max"` is the quality-first default for
-transparency-producing assets.
-The provider output must decode with fully transparent exterior pixels and a
-substantially opaque visible interior. A PNG container or RGBA colour mode alone
-is not enough. The observed predecessor output peaked at alpha 254, so the
-provider validator accepts a near-opaque maximum of at least 250 and the local
-canonicalizer deterministically promotes 250–254 to 255. Opaque concepts and
-designated opaque backdrops still request opaque output. Sunburst multipart edits
-send no `input_fidelity`. The field was requested for every native-alpha model
-until a live run on 2026-09-09 returned HTTP 400 `invalid_input_fidelity_model`,
-"The model 'gpt-image-2.5-sunburst' does not support the 'input_fidelity'
-parameter", on every reference-conditioned request. Verified the same day: an
-otherwise identical multipart edit succeeds with the field removed.
-OpenAI multipart edits accept repository-normalized base64 data URLs; a workload
-whose concrete reference or mask is a hosted URL must select a route that
-declares hosted-reference delivery, such as fal, or refuse during planning.
+An agent step runs FX's agent loop: each turn is one `agent.turn` call, with the transcript, the
+step's tools and, for a structured answer, a required tool choice. Tools are sent strict, and
+OpenRouter is told to require every parameter, so an upstream that cannot honour them is not
+used rather than silently degraded. Pictures a tool returns follow the tool results as one user
+message. Each turn is call-cached by its transcript, so a resumed agent replays the turns it
+already paid for. The cut-in placement agent
+([Iron Petal Unit's screen effects](../../godot/games/iron_petal_unit/docs/fx.md)) is bounded
+at six turns a portrait.
 
-An earlier account-gated Sunburst request returned HTTP 403, but the later
-repository-owner check at 2026-09-09 10:58:11 UTC reached
-`/v1/images/generations`, returned HTTP 200 with a real image and 196
-image-output tokens, and completed the then-current pre-refactor `stage-gen
-generate-image` adapter path in one attempt. `/v1/models` still omitted or
-returned 404 for the model, so list-model discovery was not authoritative. The
-check did not report background, size, or edit semantics and is not presented
-as a direct alpha or masked-edit canary.
+## Music through OpenRouter
 
-The OpenAI route's `ExactSizeConstraints2DV1` requires each edge to be a
-multiple of 16, area from 655,360 through 8,294,400 pixels, longest edge at most
-3,840 pixels, and aspect ratio at most 3:1. It also accepts flexible size. Recipe
-target geometry remains a separate local contract:
-request one valid provider size, inspect the result, then normalize it with
-premultiplied-alpha, aspect-preserving cover/crop resampling to the exact sprite
-sheet or layer dimensions. The direct adapter paces request starts to
-`STAGE_GEN_OPENAI_IMAGE_IPM`. This deployment defaults to 150 IPM, matching its
-OpenAI Tier 4 project. Set the value to the active project's documented
-Sunburst limit; it is not a universal model constant. Requests already in flight
-remain concurrent, and orchestration adds no separate remote-operation
-concurrency ceiling.
+- Model slug: `google/lyria-3-pro-preview`.
+- Canonical version observed in metadata: `google/lyria-3-pro-preview-20260330`.
+- Input modalities: text and image.
+- Output modalities: text and audio.
 
-Direct-image recipe profiles currently budget $0.18–0.25 per maximum-quality
-image. This is a route-level planning allowance calibrated against the exact
-runner mix and prior request usage, not a per-call price ceiling or a quote for
-arbitrary reference payloads.
+OpenRouter advertises `max_tokens`, `temperature`, `top_p`, `seed`, and `response_format`. It
+does not advertise a duration parameter or supported voices. Express musical structure and
+requested duration in the prompt. Do not send a speech/TTS voice. FX's adapter sends the prompt
+alone, reads the streamed or buffered answer, and refuses anything but MP3 (FX providers §9.2).
+OpenRouter's generic audio guide is speech-oriented and does not guarantee Lyria's envelope, and
+provider documentation disagrees on a fixed sample rate, so nothing is assumed about the audio
+beyond the bytes: a game's soundtrack steps judge each draw as a playable MP3, then measure it
+and refuse one too short to loop.
 
-Primary sources:
+Provider documentation indicates that Lyria output is expected to carry SynthID. This
+repository has not independently verified that watermark on the preview loop. The expectation
+is provenance metadata only: it does not prove ownership, originality, clearance, or permission
+to redistribute an artifact. Repository publication still requires the independent
+[generated-media approval gate](../generated-media-publication.md).
 
-- [OpenAI image generation guide](https://developers.openai.com/api/docs/guides/image-generation)
-- [GPT Image 2.5 Sunburst model](https://developers.openai.com/api/docs/models/gpt-image-2.5-sunburst)
-
-## fal image generation and editing
-
-- Product model: `openai/gpt-image-2.5/sunburst`.
-- Text-only endpoint: `POST https://fal.run/openai/gpt-image-2.5/sunburst/text-to-image`.
-- Reference/masked-edit endpoint:
-  `POST https://fal.run/openai/gpt-image-2.5/sunburst/edit`.
-- Credential: `FAL_KEY`.
-- Transparency request: `background: "transparent"` with PNG or WebP.
-
-fal is a first-class selectable Sunburst route, not a compatibility fallback.
-Generation and edit are distinct route identities. The edit request sends
-ordered `image_urls` and an optional real `mask_url`, with at most 16 reference
-images. Both routes accept native `auto`, `opaque`, or `transparent` background
-and maximum quality. The adapter downloads the single returned image without
-forwarding the fal credential, inspects decoded bytes, verifies a requested
-format and exact size, and requires an alpha channel for transparent output.
-Hosted downloads must use HTTPS on `fal.media` or one of its subdomains, never
-follow redirects, and stream under a 64 MiB ceiling. Other destinations are
-refused before the host makes a GET request.
-
-The fal route carries the same `ExactSizeConstraints2DV1` as OpenAI Images:
-16-pixel edge alignment, 655,360 through 8,294,400 total pixels, a 3,840-pixel
-longest edge, and a maximum 3:1 aspect ratio. fal expresses this as
-`image_size={width,height}`. Because its repository adapter does not send a
-separate aspect-ratio field, the planner maps a supported named aspect ratio to
-its matching exact size before dispatch. The fal Sunburst routes do not accept
-the repository's moderation option or resolution ladder; unsupported requests
-are refused before dispatch.
-
-Historical live 2026-09-09 Sunburst generation produced a 1024-by-1024
-transparent PNG with nontrivial native alpha. A paid masked edit the same day
-returned an exact 1536-by-1024 transparent PNG at `quality="max"`; the editable
-seam band landed, but significant pixels outside the mask also changed. Treat
-the mask as a provider hint and keep local immutable-region restoration
-authoritative. Those results predate the current adapter refactor. An older
-template-conditioned edit canary completed at 1600 by 900, but that obsolete
-geometry is not evidence for the current terrain contract.
+A draw outside any build is a one-step workflow over `fx/music.generate@1`, beside an `fx.yaml`
+whose `routes:` names `music.generate`, with `takes:` to hear several. A game's own soundtrack
+steps draw, admit and pick takes the same way.
 
 Primary sources:
 
-- [fal Sunburst text-to-image API](https://fal.ai/models/openai/gpt-image-2.5/sunburst/text-to-image/api)
-- [fal Sunburst edit API](https://fal.ai/models/openai/gpt-image-2.5/sunburst/edit/api)
-
-## Opaque image generation through OpenRouter
-
-- Model slug: `openai/gpt-image-2.5-sunburst`.
-- Image endpoint: `POST https://openrouter.ai/api/v1/images`.
-- Discovery: `GET https://openrouter.ai/api/v1/images/models`.
-- Endpoint capabilities:
-  `GET https://openrouter.ai/api/v1/images/models/openai/gpt-image-2.5-sunburst/endpoints`.
-
-The verified endpoint advertises text/image input and image output. Supported
-request fields include `aspect_ratio`, quality through `max`, `background`,
-`n`, `input_references`, `output_compression`, and `stream`, plus OpenAI
-`moderation` passthrough. `background` currently allows `auto` or `opaque`, not
-transparent. A paid transparent-background request returned HTTP 400, and the
-adapter refuses it locally before spend. The endpoint record does not advertise
-arbitrary `size`, `resolution`, `seed`, or `output_format`; do not project a
-generic API field merely because another image model supports it. Bounded live
-canaries returned every exact canvas requested by the Universe route and by the
-since-removed Storefront workflow: 1024 by 1024, 1152 by 2496, 2496 by 1152, 2064 by 1008, 2560
-by 1440, 2560 by 1712, and 1712 by 2560. Reference-conditioned maximum-quality
-costs ranged from $0.138393 to $0.294423 across those sizes. This is
-route-specific evidence, not a generic OpenRouter contract.
-
-Reference images use data URLs or hosted URLs in `input_references`. Buffered
-responses contain base64 media in `data[].b64_json`, with `media_type` when it
-can be identified. Decode, inspect, validate, and normalize the output before
-writing a successful artifact record. Every request sets OpenRouter's
-`provider.allow_fallbacks` to `false`; the sealed adapter behavior never permits
-the gateway to substitute a different upstream provider.
-
-The catalog intentionally does not declare `custom_exact_size` for this route.
-It admits exact size only for the seven live-verified canvases: `1024x1024`,
-`1152x2496`, `1712x2560`, `2064x1008`, `2496x1152`, `2560x1440`, and
-`2560x1712`. A different exact size is refused during planning even when it
-falls inside the upstream Sunburst geometric envelope.
-
-`STAGE_GEN_OPENROUTER_IMAGE_IPM` paces request starts inside the image adapter;
-its default is 150. It is a configurable local ceiling, not a claim about a
-universal OpenRouter account limit. Universe budgets $0.22–0.30 for its verified
-size mix.
-
-The provider adapter must separate provider-supported aspect/quality requests
-from deterministic output normalization. The route serves designated opaque
-generation and reference roles and may also back explicit `ai` and `chroma`
-compatibility modes. It does not provide native alpha or masked editing under
-the repository's verified contract.
-
-For `ai`, the prompt asks for a neutral grey or naturally isolated background;
-the raw opaque result is retained and background removal produces canonical
-alpha. Exact `#FF00FF` is reserved for the explicit degraded `chroma` fallback.
-
-Primary sources:
-
-- [OpenRouter image generation](https://openrouter.ai/docs/guides/overview/multimodal/image-generation)
-- [Image model discovery](https://openrouter.ai/docs/api/api-reference/images/list-image-models)
-- [Model page](https://openrouter.ai/openai/gpt-image-2.5-sunburst)
-- [OpenRouter AI SDK provider](https://openrouter.ai/docs/guides/community/vercel-ai-sdk)
-
-## Background removal through fal
-
-- Endpoint ID: `fal-ai/birefnet/v2`.
-- Direct URL: `POST https://fal.run/fal-ai/birefnet/v2`.
-- Authentication: `Authorization: Key $FAL_KEY`.
-- Recommended initial variant: `General Use (Light)`.
-
-This capability powers the scrolling recipe's explicit `ai` compatibility
-strategy and the standalone removal command. It is not used by `native` or
-`chroma`.
-
-Required input is `image_url`. The initial contract uses PNG output,
-foreground refinement, no separate mask, and `1024x1024` operating resolution.
-The endpoint also supports higher documented operating resolutions, alternate
-variants, optional masks, and `webp`/`gif` output.
+- [OpenRouter model page](https://openrouter.ai/google/lyria-3-pro-preview)
+- [OpenRouter audio output](https://openrouter.ai/docs/guides/overview/multimodal/audio)
+- [Provider-native music guide](https://ai.google.dev/gemini-api/docs/music-generation?hl=en)
 
 ## Video through fal
 
-- Endpoint ID: `google/gemini-omni-flash/v1.1/reference-to-video`.
-- Direct URL: `POST https://fal.run/google/gemini-omni-flash/v1.1/reference-to-video`.
-- Authentication: `Authorization: Key $FAL_KEY`.
-- Verified on 2026-09-07.
+The one video route is `google/gemini-omni-flash/v1.1/image-to-video@fal`, which the
+[movie sprite workflow](../../src/stage_gen/workflows/movie_sprite/page.mdx) and Ember Hollow's
+opening use. Its
+[official API schema](https://fal.ai/models/google/gemini-omni-flash/v1.1/image-to-video/api)
+was checked on 2026-09-15: `prompt` (at most 20,000 characters), `image_url`, optional
+`end_image_url`, integer `duration` from 3 through 10, `resolution` in `360p`, `720p`, `1080p`
+or `4k`, and `aspect_ratio` in `9:16` or `16:9`. Movie sprite passes the same prepared picture as
+the first and the last frame.
 
-The reference form also serves the single-picture case as a list of one.
-Explicit temporal endpoints use the separate movie sprite route below; reference
-list length never determines whether an image means a start or end frame.
+Two lessons came from the reference form of the same model
+(`google/gemini-omni-flash/v1.1/reference-to-video`, which no route serves today):
 
-Input is `prompt` plus `image_urls` (ordered; the route reads the first as the
-art direction the rest are judged against), with `aspect_ratio`, `resolution`
-and `duration`. References are inlined as base64 data URLs. The response is
-`video.url`, downloaded **without** the authorization header, exactly as the
-background route does — a hosted URL is not the artifact.
+| Fact | How it was learned |
+| --- | --- |
+| At most 10 seconds | `duration: 18` answered HTTP 422 naming `le: 10`, free, before rendering. |
+| Whole seconds only | 4.5 seconds was truncated to 4 by the predecessor adapter, the route answered four seconds correctly, and the caller's length gate refused the answer against the 4.5 nobody had asked for: six attempts at full price. |
 
-Two route arithmetic facts, both declared on the binding rather than restated in
-the modality, and both refused while planning:
-
-| Limit | Value | How it was learned |
-| --- | --- | --- |
-| `clip_seconds_max` | 10 | `duration: 18` answers HTTP 422 naming `le: 10`, free, before rendering |
-| `clip_seconds_step` | 1 | expensive: 4.5 was truncated to 4 by the adapter, the route answered four seconds correctly, and the caller's length gate refused the answer against the 4.5 nobody had asked for — six attempts at full price |
-
-The adapter now refuses a duration it cannot express rather than rounding one.
-
-`clip_seconds_step` is about what the API accepts, **not** about billing, and the
-two are worth keeping apart. Billing is per second of output with no minimum
-and no rounding — 360p $0.03, 720p $0.10, 1080p $0.15, 4K $0.30, so fal's own
-example is a 10-second 1080p clip at $1.50. A longer clip therefore costs
-strictly more; there is no block to fill up and no length that comes free.
-
-The response is h264 in mp4. The pinned Godot host plays only Ogg Theora, so a
-clip is transcoded before publication — see [the shell spec](../../godot/games/ember_hollow/docs/shell.md)
-for that leg and the encoder it needs.
-
-### Movie sprite start/end frames
-
-The [movie sprite workflow](../../src/stage_gen/workflows/movie_sprite/page.mdx) calls
-`video.generate` on `google/gemini-omni-flash/v1.1/image-to-video@fal`, which Stage Gen's
-gnode plugin serves through `FalEndpointVideoBackend` on fal's queue.
-Its [official API schema](https://fal.ai/models/google/gemini-omni-flash/v1.1/image-to-video/api)
-was checked on 2026-09-15: `prompt`, `image_url`, optional `end_image_url`, integer
-`duration` from 3 through 10, `resolution` in `360p`/`720p`/`1080p`/`4k`, and
-`aspect_ratio` in `9:16`/`16:9`. The prompt ceiling is 20,000 characters.
-Ordinary references cannot be mixed into this adapter. The recipe passes the
-same prepared PNG in both roles and records each role and input digest.
+FX's adapter refuses a duration that is not a whole number from 3 to 10 before sending, rather
+than rounding one.
 
 The [published rates](https://fal.ai/models/google/gemini-omni-flash/v1.1/image-to-video)
-checked that day are $0.03/$0.10/$0.15/$0.30 per generated second respectively. The
-route is priced per second by resolution, and its worst case carries 25 percent more;
-gnode holds that worst case before the call and charges it whole when fal reports no
-cost. Local playback slowing does not alter generation cost.
+checked on 2026-09-15 are USD 0.03, 0.10, 0.15 and 0.30 per generated second at 360p, 720p,
+1080p and 4k, with no minimum and no rounding: a longer clip always costs more. The route is
+priced per second by resolution, and its worst case carries 25 percent more; FX holds that worst
+case before each attempt and charges it whole when fal reports no cost. Local playback slowing
+does not change what generation costs.
 
-A take is a long job on fal's queue (`https://queue.fal.run`, checked 2026-10-03:
-submit returns `request_id`, `status_url` and `response_url`; a completed status
-carries `error` when the job failed). gnode records the job before submitting and
-once fal takes it, so an interrupted run collects the clip instead of submitting
-again. Only a submission fal answered without taking (HTTP 429 or 5xx) is retried; a
-submission whose answer never arrived stops for a person (`gnode jobs`). Polls, the
-result and the download are reads, retried until the collection deadline. The key is
-sent only to the queue host, never to the hosted download.
+A take is a long job on fal's queue. FX records the job before submitting and once fal takes it,
+so an interrupted run collects the clip instead of submitting again. A submission whose answer
+never arrived stops for a person (`uv run python -m grida.fx jobs`); the key is sent only to
+fal's hosts, never to the hosted download.
 
-A 2026-09-15 live canary through the public CLI returned 360×640, 72 frames at
-24 fps over three seconds in one attempt. Both endpoint digests were retained.
-The response did not report an actual cost; its estimate was $0.09 and retained
-liability $0.1125. It carried audio despite the silent prompt; local sprite
-finishing removes it. This proves endpoint wiring and structural validation,
-not deterministic compliance with every artistic motion instruction.
+A 2026-09-15 live canary returned 360 by 640, 72 frames at 24 fps over three seconds, in one
+attempt. The response reported no actual cost; its estimate was USD 0.09 and the held liability
+USD 0.1125. It carried audio despite the silent prompt, which local sprite finishing removes.
+This proves endpoint wiring and structural validation, not compliance with every artistic
+motion instruction.
 
-Permanent request refusals stop the retry owner immediately. Transient failures
-retain bounded retries; interrupted submissions preserve unresolved budget
-liability and block automatic resubmission of that candidate. The reference
-video adapter and its existing application default remain available.
+The answer is h264 in mp4. The pinned Godot host plays only Ogg Theora, so a clip is transcoded
+before publication; see [the shell spec](../../godot/games/ember_hollow/docs/shell.md) for that
+leg and the encoder it needs. The endpoint documentation does not establish training-data
+license provenance; technical suitability is not a legal assurance.
 
 ### Audition this route before you plan a run on it
 
-Video is the most expensive route this repository binds — a ten-second 720p clip is
-$1.00, about four to six maximum-quality images — and, like every other seedless route here, it
-answers the same brief differently every time. A take kept only in the call cache is drawn
-anew, and differently, whenever that cache goes cold.
+Video is among the most expensive routes this repository uses (a ten-second 720p clip is USD
+1.00, about four to six maximum-quality images) and, like every other seedless route here, it answers
+the same brief differently every time. A take kept only in the call cache is drawn anew, and
+differently, whenever that cache goes cold.
 
-So draw takes, look at the frames, and keep the winner as a file. A one-step workflow is
-enough, beside a `gnode.yaml` that names the video route:
+So draw takes, look at the frames, and keep the winner as a file. A one-step workflow in a
+folder of its own (under the ignored `out/`, say) is enough, beside an `fx.yaml` that names the
+video route:
+
+```yaml
+# fx.yaml
+fx: project/v1
+routes:
+  video.generate: google/gemini-omni-flash/v1.1/image-to-video@fal
+```
 
 ```yaml
 # clip-audition.yaml
-gnode: workflow/v1
+fx: workflow/v1
 id: clip-audition
 title: Clip audition
 steps:
   film:
-    uses: gnode/video.generate@1
+    uses: fx/video.generate@1
     with:
       prompt: the brief, verbatim
       first_frame: ./references/style-plate.png
@@ -499,124 +262,95 @@ outputs:
   clip: ${{ steps.film.outputs.video }}
 ```
 
+From that folder, `uv run python -m grida.fx plan clip-audition.yaml` prices the four takes at
+USD 4.00 to 5.00, and
+
 ```sh
 uv run python -m grida.fx run clip-audition.yaml --live --max-usd 5
-uv run python scripts/view.py
 ```
 
-The dashboard plays the four takes side by side. `gnode pick <run> film 3` makes the third
-the one the workflow outputs, and `gnode run clip-audition.yaml --deliver clip=explore/the_cold.mp4`
-copies it out without drawing anything again. A game that films a shot in its own build gates
-and reviews each take there instead; see [the shell spec](../../godot/games/ember_hollow/docs/shell.md)
-for Ember Hollow's, and for its `take` contract, which names the kept file instead of the
-brief. Adopting costs zero provider operations and is not held to `clip_seconds_max`, because
-nothing is being asked of the route. Drawing in the run stays fully supported for any shot
-that does not declare a take.
+draws them into its `runs/` folder. From the repository root,
+`uv run python scripts/view.py out/<audition>/runs` shows each take. Back in the folder,
+`uv run python -m grida.fx pick runs/<run> film 3` makes the third take the one the workflow
+outputs, and `uv run python -m grida.fx run clip-audition.yaml --deliver clip=the_cold.mp4`
+copies it out from the cache without drawing anything again. A game that films a shot in its own build gates and reviews each take there
+instead; see [the shell spec](../../godot/games/ember_hollow/docs/shell.md) for Ember Hollow's,
+and for its `take` contract, which names the kept file instead of the brief. Adopting a kept
+file costs nothing and is not held to the route's ten-second limit, because nothing is asked
+of the route. Drawing in the run stays fully supported for any shot that does not declare a
+take.
 
-Success requires an `image` object with a URL and media metadata. Download the
-result inside the retry attempt, verify that it is non-empty decodable media,
-and persist both request and returned metadata. A hosted URL alone is not the
-artifact.
+## Sound and speech through ElevenLabs
 
-The endpoint documentation does not establish training-data license
-provenance. Technical suitability is not a legal assurance.
+`eleven_text_to_sound_v2@elevenlabs` makes sound effects, with the `exact_duration` feature,
+which Iron Petal Unit's generated clips require; the request surface was verified against the
+published reference on 2026-09-02. A runner package whose effects are all oscillators needs
+nothing from this provider. The measured model boundary is
+[model-eleven-text-to-sound-v2.md](../spec/model-eleven-text-to-sound-v2.md); the authoring
+contract that consumes it is [Iron Petal Unit's audio](../../godot/games/iron_petal_unit/docs/audio.md).
 
-No workflow removes a background today, so no route serves `gnode/background.remove@1`.
+`eleven_v3@elevenlabs` speaks lines, with the `audio_tags` and `stability` features, verified
+against the account's model listing on 2026-09-03 (`requires_alpha_access` false;
+`can_use_style` and `can_use_speaker_boost` false, so only `stability` is sent). The voice is
+the provider's own voice id, cast in the game's `voices.toml` and never authored beside
+gameplay; Iron Petal Unit's build refuses a voice cast on a provider other than its speech
+route's. A seed is never sent: measured, it pins the length of a read and not its waveform. The
+measured model boundary is [model-eleven-v3.md](../spec/model-eleven-v3.md); the authoring
+contract is [Iron Petal Unit's voices](../../godot/games/iron_petal_unit/docs/voices.md).
 
-Prepared-game planning is separate and provider-free:
+ElevenLabs reports characters, not dollars, so FX charges each call the whole amount held for
+it. Afterlight's route table prices the speech route per thousand characters: the published USD
+0.10, held at twice that.
+
+## 3D through Tripo
+
+Character-3d names two Tripo routes, both long jobs:
+- `mesh.generate` on `P2-20260801@tripo`: a multiview task from a part's front and back, and
+  its left and right when given; USD 1.20 to 2.50 a mesh.
+- `mesh.rig` on `v1.0-20240301@tripo`: USD 0.25 to 0.50 a rig. Tripo's free riggability check
+  runs first; a doubted model is refused unless the step allows it, and the check's answer is
+  recorded either way.
+
+A task is posted once, polled, and after a crash collected instead of posted again; an answer the
+post cannot confirm is never posted twice. Models are downloaded only from Tripo's own hosts.
+Tripo reports credits, which FX converts at USD 0.01 a credit (FX providers §9.4).
+
+## Background removal
+
+FX has a `background.remove` adapter on fal (`fal-ai/birefnet/v2`, General Use (Light), at a
+1024 by 1024 operating resolution), but its built-in table has no route for it until fal's
+price is recorded, and no Stage Gen project declares one. So nothing removes a background
+today: an `ai` transparency strategy, which would generate on a neutral field and remove it, is
+refused while planning, and `chroma` keys an exact `#FF00FF` field locally (see the
+[prompt contract](../spec/agent-prompts.md)). A removal would never silently replace failed
+native generation.
+
+## Game builds
+
+The games build with Grida FX from their own folders, and planning is provider-free:
 
 ```sh
 (cd godot/games/bellweather && uv run python -m grida.fx plan pipeline/workflow.py:build --arg package=inputs/default)
 ```
 
-The runner and the platformer build with gnode from their game folders. Each
-`gnode.yaml` names its routes; a painting that needs alpha declares
-`transparent_background` and a seam repaint declares `mask`, so a route that
-cannot serve one is refused while planning. OpenRouter owns the structured
-reviews, rebase readings and music. Compatibility
-background removal remains an explicit standalone capability and never silently
-replaces failed native generation.
+Each game's `fx.yaml` names its routes. A painting that needs alpha requires `alpha` and a seam
+repaint requires `mask`, so a route that cannot serve one is refused while planning. OpenRouter
+serves the structured reviews, rebase readings and music.
 
-## Accepted-run cache replay, retired
+## Retries and billing
 
-A 2,200-line migration tool once re-seeded an accepted runner run's provider
-bytes after the recipe's validators tightened, because a tightening inside a
-paid node could only be expressed as "redraw everything". It was retired in
-the engineering pass: a paid node's contract version now moves only when its
-request does, acceptance lives in the free validate node downstream and in
-every judge, and `gnode plan` says what a run would bill before it runs. What the tool
-preserved - historical bytes exactly, under a current request identity - is
-what the cache does by construction when the request has not changed.
+FX's engine is the one retry owner for every paid call: at most six sends of one request, a
+request sent again only when it provably was not received or the provider's failure allows a new
+attempt, and a deterministic refusal ending the call. Every attempt is held against the run's
+ceiling and settled from the provider's reported cost, else charged whole (FX protocol §6.1;
+providers §4–6). Stage Gen adds no retry loop around a call. A judge that refuses an answer and
+draws again (`on_reject: regenerate`) makes a new, billed take; that is a semantic regeneration,
+never a provider retry.
 
-## Music through OpenRouter
-
-- Model slug: `google/lyria-3-pro-preview`.
-- Canonical version observed in metadata:
-  `google/lyria-3-pro-preview-20260330`.
-- Input modalities: text and image.
-- Output modalities: text and audio.
-
-OpenRouter currently advertises `max_tokens`, `temperature`, `top_p`, `seed`,
-and `response_format`. It does not advertise a duration parameter or supported
-voices. Express musical structure and requested duration in the prompt. Do not
-send a speech/TTS voice.
-
-The generic OpenRouter audio guide documents streaming base64 audio chunks,
-but it is speech-oriented and does not guarantee the exact Lyria envelope.
-Provider-native documentation and current model cards also disagree on a fixed
-sample rate. Consequently the adapter is experimental until a key-backed smoke
-test proves:
-
-1. accepted request shape;
-2. buffered or streaming response envelope;
-3. MIME type and container;
-4. decoded duration, sample rate, channel count, and non-empty audio; and
-5. provenance sidecar creation.
-
-The adapter must inspect returned media and fail closed if the contract is not
-recognized. It must not fabricate an MP3 extension from an assumed response.
-
-Provider documentation indicates that Lyria output is expected to carry
-SynthID. This repository has not independently verified that watermark on the
-preview loop. The expectation is provenance metadata only: it does not prove
-ownership, originality, clearance, or permission to redistribute an artifact.
-Repository publication still requires the independent
-[generated-media approval gate](../generated-media-publication.md).
-
-A draw outside any build is a one-step workflow over `gnode/music.generate@1`, with
-`takes:` to hear several; a game's own soundtrack steps draw, admit and pick takes the same way.
-
-Primary sources:
-
-- [OpenRouter model page](https://openrouter.ai/google/lyria-3-pro-preview)
-- [OpenRouter audio output](https://openrouter.ai/docs/guides/overview/multimodal/audio)
-- [Provider-native music guide](https://ai.google.dev/gemini-api/docs/music-generation?hl=en)
-
-## Tool loops through OpenRouter
-
-The tool-loop modality (`docs/spec/gnode-rings.md`) drives a vision-capable chat
-model through OpenRouter's chat-completions endpoint with function tools:
-`tools=[{type: function, function: {name, description, parameters, strict}}]`,
-`tool_choice: "required"`, and `provider: {require_parameters: true}`, so a route
-that cannot honour strict tools is refused rather than silently degraded. Tool
-results go back as `role: tool` text; an image a tool rendered follows as one
-`role: user` message carrying it, because tool messages are text-only in that
-wire format. The model is `TEXT_MODEL` (the structured route's model); the
-route is declared as `openrouter-tool-loop` with the `tool_use` and
-`image_input` features. One episode is one provider operation in the attempt
-ledger; the provenance sidecar's `response.trace` lists every tool call with
-its arguments and outcome, and never an image.
-
-The first consumer is the cut-in placement agent (`godot/games/iron_petal_unit/docs/fx.md`),
-bounded at six looks per portrait.
-
-## Retry policy
-
-Each provider operation receives one initial attempt plus five blind retries
-with capped backoff. Retry transport errors, non-success status, timeouts,
-empty output, malformed/schema-invalid JSON, invalid base64, unsupported media,
-and failed content validation. Reference files are read and hashed once before
-the loop; secret values never enter logs or provenance.
-
-Do not stack an undocumented SDK retry loop under the shared policy without
-accounting for the resulting maximum number of billable attempts.
+A migration tool once re-seeded an accepted run's provider bytes after its validators tightened,
+because a tightening inside a paid step could only be expressed as "redraw everything". It was
+retired in the engineering pass: acceptance lives in the free judges downstream of a paid step,
+a paid step's identity moves only when its request does, and `uv run python -m grida.fx plan`
+says what a run would bill before it runs. What the tool preserved, historical bytes under a
+current request identity, is what the call cache does by construction when the request has not
+changed.

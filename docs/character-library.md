@@ -104,8 +104,9 @@ From `godot/games/the_grain`:
 uv run python -m grida.fx plan pipeline/workflow.py:scene --arg package=inputs
 ```
 
-The game owns this build. Planning is offline; add `gnode run ... --live` only for
-explicitly authorized provider execution.
+The game owns this build. Planning is offline; run it with
+`uv run python -m grida.fx run … --live --max-usd N` only for explicitly authorized provider
+execution.
 
 A prepared game binds its cast in `game.toml` rather than in a request document,
 so Bellweather's build reads authored profiles through the package it is given. The
@@ -115,7 +116,7 @@ artifacts carry identity and lineage; they do not authorize publication.
 
 The scene document resolves only package-relative TOML members, rejects symlink
 or digest tampering while planning, before provider work, and the bundle binds each
-canonical profile by digest; the gnode run records how each file was made.
+canonical profile by digest; the FX run records how each file was made.
 This integration does not define pose, expression, shot, provider conditioning,
 generated observation, runtime placement, or publication approval.
 

@@ -44,11 +44,13 @@ authored declaration.*
 
 ## Ownership
 
-- `stage_gen.media.comparison_plate` owns deterministic plate composition and
-  the structured judging call. It is provider-neutral and knows nothing about
-  actors, states, or games.
-- `bellweather_pipeline.motion_rebase` owns the baseline rule,
+- `stage_gen.media.comparison_plate` owns deterministic plate composition. It
+  is provider-neutral and knows nothing about actors, states, or games.
+- `demo_game_tools.kits.sideview_actor.motion_rebase` owns the baseline rule,
   the judging atlas layout, admission, and the published rebase record.
+- `demo_game_tools.steps.rebase` writes the plate, the reading (a
+  `structured.generate` step), its judge and the second pass into a game's
+  build.
 - `godot/games/_shared/runtime/addons/demo_support/io/actor.gd` owns composition of the rebase with the actor's magnitude.
 
 The image model owns appearance only. Deterministic code owns plate assembly,

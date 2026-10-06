@@ -7,7 +7,7 @@ The product is the asset pipeline; complete games are consumers.
 
 This folder holds only what crosses workflows. Each workflow's guide and exact contract
 live beside its code, in `src/stage_gen/workflows/<id>/page.mdx` and `contract.md`, and
-`gnode schema <id>` prints the inputs it takes.
+`uv run python -m grida.fx schema <id>` prints the inputs it takes.
 
 ## Workflows
 
@@ -22,11 +22,12 @@ both phases and their graphs.
 ## Authoring and inspection
 
 - [The FX guide](https://github.com/gridaco/fx/blob/main/docs/guide/README.md): write, plan,
-  run and inspect your own workflows and node types, with example projects.
+  run and inspect your own workflows and node types, with example projects. Grida FX is the
+  engine every workflow runs on, a submodule at `third_party/fx`.
 - [Components](../src/stage_gen/components/README.md): the component table and the component contract.
-- [Viewer](viewer.md): `gnode view`, the local read-only client over run folders.
+- [Viewer](viewer.md): `uv run python scripts/view.py`, the local read-only client over run folders.
 - [Site](site.md): the static landing and documentation site, built by `scripts/site.py` from the catalog and the example store.
-- [Providers](models/providers.md): bindings, credentials and live-operation boundaries.
+- [Providers](models/providers.md): routes, credentials and live-operation boundaries.
 - [Character library](character-library.md): the committed character profiles and approved 3D examples.
 - [Godot consumers](../godot/README.md): packages, games and templates.
 - [Godot project charter](../godot/CHARTER.md): the example product's continuing goals, ownership and independent evolution.
@@ -53,11 +54,12 @@ serve those games; they are not requirements for new pipelines or new games.
 
 Standalone component specifications under [`spec/`](spec/) remain useful within their named
 scope, including sprite processing, terrain and the [asset taxonomy](spec/asset-taxonomy.md)
-of type ids. Scenario's current contract is maintained under the Godot package. Historical
+of module names. Scenario's current contract is maintained under the Godot package. Historical
 [decisions](decisions/README.md), research and plans retain their original context; the
-current architecture controls new work, and
-[decision 0071](decisions/0071-workflows-are-the-product-unit-and-the-web-splits-into-site-and-viewer.md)
-records how workflows became the product unit.
+current architecture controls new work.
+[Decision 0071](decisions/0071-workflows-are-the-product-unit-and-the-web-splits-into-site-and-viewer.md)
+records how workflows became the product unit, and
+[decision 0074](decisions/0074-stage-gen-runs-on-grida-fx.md) how Stage Gen moved onto Grida FX.
 
 ## Repository policy
 
