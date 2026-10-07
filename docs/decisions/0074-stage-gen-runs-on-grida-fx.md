@@ -39,10 +39,10 @@ time. It would also keep two identities and two command lines, which
 record. But the view contract, the viewer and its catalog are Stage Gen's, and FX must make
 sense without Stage Gen; FX reserves `views/` in a run folder and draws no views yet.
 
-**Wait for a published wheel.** It would need no Rust toolchain here. But FX is not published
-until trusted publishing exists, and Stage Gen changed FX in the same milestone. A submodule
-pins exactly the commit the gates ran, and `push.recurseSubmodules=check` keeps an unpushed FX
-commit from being pinned.
+**Wait for a published wheel.** It would need no Rust toolchain here. At decision time, FX
+was not yet published, pending trusted publishing, and Stage Gen changed FX in the same
+milestone. A submodule pins exactly the commit the gates ran, and
+`push.recurseSubmodules=check` keeps an unpushed FX commit from being pinned.
 
 ## Ruling
 

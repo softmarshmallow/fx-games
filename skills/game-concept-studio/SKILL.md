@@ -60,20 +60,8 @@ with `--live` under a dollar ceiling, owns the retries, and keeps a record of ev
 
 **Get FX.** It runs on macOS, and on Linux with glibc 2.28 or later; on Windows, use WSL 2.
 
-- `npm install -g @grida/fx@next` gives the `grida-fx` command.
-- Or `pip install --pre grida`; then `python -m grida.fx` takes the same arguments.
-- Until those previews are published, build FX from a clone (needs git, cargo and Python 3), only
-  with the user's agreement, and outside the concept folder: in a folder the user names, by
-  default `~/.local/share/grida-fx/fx`.
-
-  ```bash
-  git clone https://github.com/gridaco/fx ~/.local/share/grida-fx/fx
-  python3 ~/.local/share/grida-fx/fx/tools/build_engine.py
-  ```
-
-  The engine is then `~/.local/share/grida-fx/fx/python/src/grida/fx/_bin/grida-fx`. Write that
-  full path wherever this skill says `grida-fx`. The workflow below has one paid built-in step and
-  nothing else, so the engine needs no Python of its own.
+- `npm install -g @grida/fx` gives the `grida-fx` command.
+- Or `pip install grida`; then `python -m grida.fx` takes the same arguments.
 
 **Keys.** The user sets `OPENROUTER_API_KEY`, `OPENAI_API_KEY` or `FAL_KEY` themselves, in the
 environment or in the concept folder's `.env`. Never open, print, write or copy a `.env`.
