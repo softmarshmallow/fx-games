@@ -5,7 +5,7 @@ tests/contract/fixtures/workflow-identity.json holds values only - digests, stri
 versions and cache keys - never a module path, so moving code changes this script's
 imports and never the fixture. Each section prices what a change to it would cost:
 
-  identities               the run-view version and the product node-type inventory
+  identities               the product node-type inventory
   cache_keys               instance id -> identity for offline plans and free runs over
                            committed files or the constant bytes in
                            workflow-identity-inputs.json, and the key of each paid call a
@@ -41,9 +41,9 @@ from grida.fx import Answer, RunResult, StandInCall, plan, run
 
 import stage_gen
 from stage_gen.fs import atomic_write_text
-from stage_gen.runview import RUN_VIEW_SCHEMA_VERSION, read_plan
+from stage_gen.runview import read_plan
 from stage_gen.workflows._fx import FxWorkflow, instances, write_project
-from stage_gen.workflows._registry import NodeType, discover
+from stage_gen.workflows._registry import NodeType, discover, node_type_inventory
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = REPOSITORY_ROOT / "tests/contract/fixtures"
@@ -70,14 +70,7 @@ def _node_types() -> Iterable[NodeType]:
 
 def identities(scratch: Path) -> Section:
     del scratch
-    inventory = {
-        (node_type.type_id, node_type.cache_identity, node_type.contract_version)
-        for node_type in _node_types()
-    }
-    return {
-        "view_schema_version": RUN_VIEW_SCHEMA_VERSION,
-        "node_types": [list(entry) for entry in sorted(inventory)],
-    }
+    return {"node_types": node_type_inventory(_node_types())}
 
 
 def materialize_inputs(name: str, scratch: Path) -> Path:

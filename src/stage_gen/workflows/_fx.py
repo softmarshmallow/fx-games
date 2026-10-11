@@ -34,54 +34,23 @@ from typing import Any, Final
 import yaml
 from grida.fx import Plan, Workflow, plan, spec_of
 
-from stage_gen.runview import ViewArchetype, is_fx_run, read_plan
+from stage_gen.runview.folder import (
+    FX_GRAPH_KIND,
+    PROJECT_FILE,
+    is_fx_run,
+    project_file,
+    read_plan,
+    suffix_of_kind,
+)
 
 from ._registry import Identity, NodeType, Step, WorkflowCode, node_type_inventory
 
-#: The graph an FX run starts from (``plan.json``), as the catalog names graph kinds.
-GRAPH_KIND: Final = "fx-graph-v1"
 WORKFLOW_FILE: Final = "workflow.yaml"
 #: The folder every first-party workflow home sits in.
 WORKFLOWS_ROOT: Final[Path] = Path(__file__).resolve().parent
 
-PROJECT_FILE = "fx.yaml"
 PROJECT_HEADER = "project/v1"
 WORKFLOW_HEADER = "workflow/v1"
-#: Where a project keeps its store when ``fx.yaml`` names no ``cache``.
-DEFAULT_CACHE = ".fx/cache"
-
-_ARCHETYPES = {
-    "image": ViewArchetype.IMAGE,
-    "structured": ViewArchetype.STRUCTURED,
-    "vision": ViewArchetype.JUDGE,
-    "video": ViewArchetype.VIDEO,
-    "music": ViewArchetype.MUSIC,
-    "sound": ViewArchetype.SOUND,
-}
-#: The first suffix each file kind takes in a run folder (FX ``spec/identity.md`` section 4).
-_SUFFIXES = {
-    "image/png": ".png",
-    "image/jpeg": ".jpg",
-    "image/webp": ".webp",
-    "image/gif": ".gif",
-    "text/markdown": ".md",
-    "text/plain": ".txt",
-    "json": ".json",
-    "annotations": ".json",
-    "text/yaml": ".yaml",
-    "text/toml": ".toml",
-    "text/html": ".html",
-    "audio/wav": ".wav",
-    "audio/mpeg": ".mp3",
-    "audio/ogg": ".ogg",
-    "video/mp4": ".mp4",
-    "video/webm": ".webm",
-    "video/x-matroska": ".mkv",
-    "model/gltf-binary": ".glb",
-    "model/gltf+json": ".gltf",
-    "model/fbx": ".fbx",
-    "file/zip": ".zip",
-}
 _OUTPUT_REF = re.compile(r"steps\.(?P<step>[A-Za-z0-9_.*\[\]'\"-]+?)\.outputs\.(?P<port>\w+)")
 _BUILDER = re.compile(r"^(?P<file>.+\.py):(?P<function>[A-Za-z_][A-Za-z0-9_]*)$")
 #: One port line of ``python -m grida.fx nodes <type>``: ``output  image: image/png``.
@@ -126,35 +95,8 @@ def write_project(
     return folder
 
 
-def _project_file(start: Path) -> Path | None:
-    """The nearest ``fx.yaml`` at or above ``start``."""
-    here = start.resolve()
-    if here.is_file():
-        here = here.parent
-    for folder in (here, *here.parents):
-        candidate = folder / PROJECT_FILE
-        if candidate.is_file():
-            return candidate
-    return None
-
-
 def _read_yaml(path: Path) -> Any:
     return yaml.safe_load(path.read_text(encoding="utf-8-sig"))
-
-
-def store_root(start: Path) -> Path:
-    """The store of the project found from ``start``: its ``cache`` setting, resolved against
-    its folder, or ``.fx/cache`` there (beside ``start`` when no project holds it)."""
-
-    project = _project_file(start)
-    if project is None:
-        here = start.resolve()
-        return (here.parent if here.is_file() else here) / DEFAULT_CACHE
-    document = _read_yaml(project)
-    cache_setting = document.get("cache") if isinstance(document, dict) else None
-    if not isinstance(cache_setting, str) or not cache_setting:
-        cache_setting = DEFAULT_CACHE
-    return (project.parent / cache_setting).resolve()
 
 
 def _workflow_header(document: Any) -> bool:
@@ -214,7 +156,6 @@ class Instance:
     waiting_on: tuple[str, ...]
     low_usd: float
     high_usd: float
-    view: bool | str | None
 
     @property
     def inputs_from(self) -> tuple[str, ...]:
@@ -255,7 +196,6 @@ class Instance:
             waiting_on=tuple(row.get("waiting_on") or ()),
             low_usd=float(price.get("low_usd", 0.0)),
             high_usd=float(price.get("high_usd", 0.0)),
-            view=row.get("view"),
         )
 
 
@@ -294,7 +234,6 @@ class StepDescription:
     #: type, ``fx/<name>@<major>.<version>`` for a built-in (FX ``spec/identity.md`` section
     #: 6), so a minor bump of a built-in moves it as it moves every key that uses it.
     type_identity: str
-    judge: bool
     capabilities: tuple[str, ...]
 
 
@@ -312,7 +251,6 @@ class WorkflowDescription:
 @dataclass(frozen=True, slots=True)
 class _Resolved:
     identity: str
-    judge: bool
     capabilities: tuple[str, ...]
     #: Output port name -> (kind, shape).
     outputs: Mapping[str, tuple[str, str]]
@@ -444,7 +382,6 @@ def _resolve(uses: str, home: Path) -> _Resolved:
         capability = uses.removeprefix("fx/").rsplit("@", 1)[0]
         return _Resolved(
             identity=_builtin_identities()[uses],
-            judge=kind == "judge",
             capabilities=(capability,) if kind == "paid" else (),
             outputs=_builtin_outputs(uses),
         )
@@ -458,7 +395,6 @@ def _resolve(uses: str, home: Path) -> _Resolved:
         raise ValueError(f"{uses} has no version; every first-party node type is versioned")
     return _Resolved(
         identity=f"{file.relative_to(home).as_posix()}#{attribute}@{spec.version}",
-        judge=spec.judge,
         capabilities=tuple(sorted(spec.calls)),
         outputs={name: (port.kind, port.shape) for name, port in spec.outputs.items()},
     )
@@ -480,7 +416,7 @@ def _landing(name: str, expression: Any, resolved: Mapping[str, _Resolved]) -> s
     port = None if found is None or match is None else found.outputs.get(match["port"])
     if port is None or port[1] != "one":
         return f"outputs/{name}/"
-    return f"outputs/{name}{_SUFFIXES.get(port[0], '')}"
+    return f"outputs/{name}{suffix_of_kind(port[0])}"
 
 
 def _target(target: str | Path, cwd: Path) -> tuple[Path, Path, Mapping[str, Any]]:
@@ -490,13 +426,13 @@ def _target(target: str | Path, cwd: Path) -> tuple[Path, Path, Mapping[str, Any
     text = os.fspath(target)
     builder = _BUILDER.match(text)
     if builder is not None:
-        project = _project_file(cwd)
+        project = project_file(cwd)
         home = cwd if project is None else project.parent
         built = _build(cwd / builder["file"], builder["function"], home, cwd, {})
         return cwd / builder["file"], home, built.document()
     is_file = Path(text).suffix in (".yaml", ".yml")
     path = (cwd / text).resolve() if is_file else workflow_file(text)
-    project = _project_file(path)
+    project = project_file(path)
     home = path.parent if project is None else project.parent
     document = _read_yaml(path)
     if not _workflow_header(document):
@@ -523,7 +459,6 @@ def describe(target: str | Path, *, cwd: Path | None = None) -> WorkflowDescript
                     description=body.get("description"),
                     uses=uses,
                     type_identity=found.identity,
-                    judge=found.judge,
                     capabilities=found.capabilities,
                 )
             )
@@ -569,7 +504,7 @@ def declared_outputs(
     if builder is None:
         _, _, document = _target(target, cwd)
     else:
-        project = _project_file(cwd)
+        project = project_file(cwd)
         root = cwd if project is None else project.parent
         built = _build(cwd / builder["file"], builder["function"], root, cwd, arguments or {})
         document = built.document()
@@ -607,13 +542,9 @@ def _operation(capabilities: Sequence[str]) -> str:
 
 
 def _node_type(folder: str, step: StepDescription) -> NodeType:
-    archetype = ViewArchetype.JUDGE if step.judge else ViewArchetype.TRANSFORM
-    for capability in step.capabilities:
-        archetype = _ARCHETYPES.get(capability.split(".", 1)[0], archetype)
     return NodeType(
         type_id=f"{folder}/{step.path.replace('.', '/')}",
         title=step.title or step.path.rsplit(".", 1)[-1],
-        archetype=archetype,
         operation=_operation(step.capabilities),
         contract_version=step.type_identity,
     )
@@ -682,7 +613,7 @@ class FxWorkflow:
             sorted([node.node_id, list(node.depends_on)] for node in nodes), separators=(",", ":")
         )
         return SamplePlan(
-            kind=GRAPH_KIND,
+            kind=FX_GRAPH_KIND,
             topology_sha256=hashlib.sha256(topology.encode()).hexdigest(),
             nodes=tuple(nodes),
             artifact_refs=frozenset(self.description.outputs.values()),
@@ -712,7 +643,6 @@ def fx_workflow(
 
     def identity() -> Identity:
         return {
-            "graph_kinds": [GRAPH_KIND],
             "node_types": node_type_inventory(workflow.types.values()),
         }
 
@@ -730,7 +660,6 @@ def fx_workflow(
         implemented_types=lambda: frozenset(t.type_id for t in workflow.types.values()),
         sample_plan=sample_plan,
         owns_run=workflow.owns_run,
-        implementation_root=package,
         no_sample_plan=no_sample_plan,
         import_example=import_example,
         no_importer=no_importer,
@@ -739,7 +668,6 @@ def fx_workflow(
 
 
 __all__ = [
-    "GRAPH_KIND",
     "WORKFLOWS_ROOT",
     "WORKFLOW_FILE",
     "FxWorkflow",
@@ -754,7 +682,6 @@ __all__ = [
     "first_takes",
     "fx_workflow",
     "instances",
-    "store_root",
     "workflow_file",
     "write_project",
 ]

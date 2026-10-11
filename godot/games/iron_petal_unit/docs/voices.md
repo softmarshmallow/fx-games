@@ -228,7 +228,7 @@ is drawn and billed.
 ```sh
 cd godot/games/iron_petal_unit
 uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs --live --max-usd 2
-(cd ../../.. && uv run python scripts/view.py out/runs)
+uv run python -m grida.fx start --open
 ```
 
 The line plays in the dashboard after the level and length gates a build

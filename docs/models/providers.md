@@ -268,7 +268,6 @@ steps:
       resolution: 720p
       aspect_ratio: "16:9"
     takes: 4
-    view: true
 outputs:
   clip: ${{ steps.film.outputs.video }}
 ```
@@ -280,9 +279,8 @@ USD 4.00 to 5.00, and
 uv run python -m grida.fx run clip-audition.yaml --live --max-usd 5
 ```
 
-draws them into its `runs/` folder. From the repository root,
-`uv run python scripts/view.py out/<audition>/runs` shows each take. Back in the folder,
-`uv run python -m grida.fx pick runs/<run> film 3` makes the third take the one the workflow
+draws them into its `runs/` folder, and `uv run python -m grida.fx start --open` there shows each
+take. `uv run python -m grida.fx pick runs/<run> film 3` makes the third take the one the workflow
 outputs, and `uv run python -m grida.fx run clip-audition.yaml --deliver clip=the_cold.mp4`
 copies it out from the cache without drawing anything again. A game that films a shot in its own build gates and reviews each take there
 instead; see [the shell spec](../../godot/games/ember_hollow/docs/shell.md) for Ember Hollow's,

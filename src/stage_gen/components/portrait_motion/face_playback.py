@@ -20,9 +20,9 @@ from PIL import Image
 from .face_crop import FloatArray, Transform, restore_feature
 from .face_patches import apply_offset_patch, isolate_patch, make_face_input
 from .models import FeatureGroup, PortraitMotionSpec
+from .playback import feature_supports
 
 PixelArray = NDArray[np.uint8]
-BoolArray = NDArray[np.bool_]
 StatePair = tuple[str, str]
 
 
@@ -43,35 +43,6 @@ def _groups(spec: PortraitMotionSpec) -> dict[FeatureGroup, list[str]]:
     for state in spec.states:
         groups[state.feature_group].append(state.state_id)
     return groups
-
-
-def _supports(
-    masks: Mapping[str, FloatArray], size: tuple[int, int]
-) -> tuple[dict[FeatureGroup, BoolArray], dict[FeatureGroup, list[str]]]:
-    occupied = np.zeros((size[1], size[0]), dtype=np.bool_)
-    supports: dict[FeatureGroup, BoolArray] = {
-        "eyes": occupied.copy(),
-        "mouth": occupied.copy(),
-    }
-    features: dict[FeatureGroup, list[str]] = {"eyes": [], "mouth": []}
-    for feature, mask in masks.items():
-        if feature not in ("canvas_left_eye", "canvas_right_eye", "mouth"):
-            raise ValueError("Face playback received an unsupported feature ID")
-        alpha = np.asarray(mask, dtype=np.float64)
-        if alpha.shape != occupied.shape or not np.isfinite(alpha).all():
-            raise ValueError("Native feature mask shape or finite values are invalid")
-        if (alpha < 0).any() or (alpha > 1).any():
-            raise ValueError("Native feature mask alpha must be in [0, 1]")
-        support = alpha > 0
-        if not support.any():
-            raise ValueError("An admitted native feature must have nonempty support")
-        if (occupied & support).any():
-            raise ValueError("Mapped feature supports overlap")
-        occupied |= support
-        group: FeatureGroup = "mouth" if feature == "mouth" else "eyes"
-        supports[group] |= support
-        features[group].append(feature)
-    return supports, features
 
 
 def build_face_combinations(
@@ -126,7 +97,7 @@ def build_face_combinations(
             native_masks[feature] = native_mask
         mapped[state.state_id] = np.asarray(current, dtype=np.uint8)
 
-    supports, active_features = _supports(native_masks, source.size)
+    supports, active_features = feature_supports(native_masks, source.size)
     groups = _groups(spec)
     combinations: dict[StatePair, Image.Image] = {}
     records: list[dict[str, Any]] = []
@@ -188,7 +159,7 @@ def encode_face_preview(
         raise ValueError("Preview needs the complete declared Cartesian state combinations")
     original = frames.combinations[("rest", "rest")].convert("RGBA")
     base = np.asarray(original, dtype=np.uint8)
-    supports, active_features = _supports(frames.masks, original.size)
+    supports, active_features = feature_supports(frames.masks, original.size)
     selections: dict[StatePair, Image.Image] = {}
     for (eyes, mouth), image in frames.combinations.items():
         if image.mode not in ("RGB", "RGBA") or image.size != original.size:

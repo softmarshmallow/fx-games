@@ -10,8 +10,6 @@ _REQUIRED_RELATIVE_PATHS = (
     "fixtures/image_gen_templates/inventory_template.png",
     "fixtures/image_gen_templates/terrain_atlas_12x4_template.png",
     "fixtures/image_gen_templates/terrain_atlas_godot_topology_reference.png",
-    "fixtures/prompts.txt",
-    "fixtures/styles.txt",
     "prompting/image_style_vocabulary_v1.json",
     "skills/anchor-image-style/SKILL.md",
     "terrain/godot_3x3_minimal_lookup_v1.json",

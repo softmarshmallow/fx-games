@@ -2,7 +2,7 @@
 
 Stage Gen runs from a source checkout. You need Python 3.12 or newer,
 [uv](https://docs.astral.sh/uv/) and, for the engine, cargo from [rustup.rs](https://rustup.rs).
-The viewer and the site also need [Bun](https://bun.sh).
+The site also needs [Bun](https://bun.sh).
 
 ## Install and look around
 
@@ -56,17 +56,18 @@ or the project's `.env` file. Read [provider setup](models/providers.md) before 
 ## See runs and examples
 
 ```sh
-(cd web && bun install --frozen-lockfile)
-uv run python scripts/view.py
+uv run python -m grida.fx start --open
 ```
 
-The [viewer](viewer.md) lists every run under `out/runs/` (or the folders you name), grouped by
-workflow, with each run's graph, its steps' views and its artifacts. It never starts a run.
+FX's viewer lists every run under `out/runs/`, grouped by workflow, and draws each run's graph
+with its steps' files on a canvas. It never starts a run; the
+[FX guide](https://github.com/gridaco/fx/blob/main/docs/guide/07-viewing.md) shows how to use it.
 
 The [site](site.md) shows each workflow with the example it pins, and the docs. Build and serve
 it locally:
 
 ```sh
+(cd web/site && bun install --frozen-lockfile)
 uv run python scripts/site.py build --allow-missing-examples
 uv run python scripts/site.py serve --port 8790
 ```

@@ -101,7 +101,6 @@ steps:
             - ${{ steps.repaint.outputs.image }}
             - ${{ steps.mirror.outputs.image }}
             - ${{ item.file }}
-        view: true
 
   compose:
     title: Compose the scrolling background
@@ -114,7 +113,6 @@ steps:
       constructions: ${{ steps.layer.*.loop.facts.chosen }}
       specs: ${{ inputs.layers }}
       canvas: ${{ inputs.canvas }}
-    view: ./views/parallax.html
 
 outputs:
   manifest: ${{ steps.compose.outputs.manifest }}

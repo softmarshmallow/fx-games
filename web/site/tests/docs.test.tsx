@@ -10,7 +10,7 @@ describe("doc links", () => {
   test("a relative link leads to the site's page, or keeps only its words", async () => {
     const source = "See the [site](site.md#pages), the [runs code](../src/stage_gen/runs.py) and [uv](https://docs.astral.sh/uv/).";
     const resolve = (target: string) => (target.startsWith("site.md") ? `/docs/site/${target.slice("site.md".length)}` : null);
-    const Content = await compileSource(source, "md", { from: "docs/viewer.md", resolve });
+    const Content = await compileSource(source, "md", { from: "docs/getting-started.md", resolve });
     const html = renderToStaticMarkup(createElement(Content, { components: docComponents() }));
     expect(html).toContain('href="/docs/site/#pages"');
     expect(html).toContain("the runs code and");

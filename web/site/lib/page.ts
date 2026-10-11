@@ -12,15 +12,15 @@ import type {
   Catalog,
   CatalogWorkflow,
   ExampleEntry,
-} from "@stage-gen/ui/contracts/catalog";
+} from "@/lib/contracts/catalog";
 import type {
   Currency,
   ExampleNode,
   ExampleTool,
   GameExampleEntry,
   WorkflowExample,
-} from "@stage-gen/ui/contracts/example";
-import type { JsonObject, JsonValue } from "@stage-gen/ui/contracts/wire";
+} from "@/lib/contracts/example";
+import type { JsonObject, JsonValue } from "@/lib/contracts/wire";
 
 /** Thrown for anything a page source asks of its data that the data does not hold. */
 export class PageError extends Error {

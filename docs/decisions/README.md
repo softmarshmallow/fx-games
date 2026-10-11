@@ -27,6 +27,8 @@ that 0071 listed and replaces the execution substrates 0071 left in place.
 Studio is no longer an application but a skill users install.
 [0074](0074-stage-gen-runs-on-grida-fx.md) moves the engine out of this repository: Stage Gen
 runs on Grida FX, gnode is deleted, and 0072's R9, R9b and `gnode-*` documents are superseded.
+[0075](0075-runs-are-seen-in-fx.md) retires the viewer 0071 split out: runs are seen in FX's
+viewer.
 
 | # | Title | In one line |
 | --- | --- | --- |
@@ -104,3 +106,4 @@ runs on Grida FX, gnode is deleted, and 0072's R9, R9b and `gnode-*` documents a
 | [0072](0072-gnode-is-one-engine-behind-text-contracts.md) | gnode is one engine behind text contracts | Four substrates become one runner; workflows become YAML over standard node types, bodies one callback, runs one event log, ported milestone by milestone with honest re-keys |
 | [0073](0073-concept-studio-is-a-skill-not-an-application.md) | Concept Studio is a skill, not an application | The `stage-gen-concept` distribution goes; concept work is an installable skill that stands alone in any folder and draws through Grida FX |
 | [0074](0074-stage-gen-runs-on-grida-fx.md) | Stage Gen runs on Grida FX | gnode becomes a standalone product consumed as a submodule; no cache replay, stand-ins replace injected services, and the run view moves into Stage Gen |
+| [0075](0075-runs-are-seen-in-fx.md) | Runs are seen in FX | Stage Gen's viewer goes; FX's viewer draws every run, and the run view stays only for the examples store |

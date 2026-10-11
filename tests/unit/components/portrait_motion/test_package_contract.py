@@ -61,7 +61,6 @@ def test_capability_modules_are_ordinary_package_imports(module: str) -> None:
 def test_component_imports_respect_provider_and_composition_boundaries() -> None:
     forbidden = (
         "stage_gen.recipes",
-        "stage_gen.viewer",
         "repainting",
         "native_preview",
         "four_panel",

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import contextlib
 import ipaddress
 import json
@@ -194,19 +193,6 @@ class ProvenanceInput(PersistedContractModel):
 class AtomicWriteError(OSError):
     """An atomic commit or its rollback failed."""
 
-    def __init__(self, message: str, *, provider_operations: int | None = None) -> None:
-        super().__init__(message)
-        if provider_operations is None:
-            return
-        if (
-            isinstance(provider_operations, bool)
-            or not isinstance(provider_operations, int)
-            or provider_operations < 0
-        ):
-            raise ValueError("provider_operations must be a non-negative integer")
-        self.attempts = max(1, provider_operations)
-        self.provider_operations = provider_operations
-
 
 _LOCAL_FILES = LocalFileOperations()
 
@@ -376,43 +362,6 @@ def write_artifact_with_provenance(
     _safe_remove(files, artifact_backup)
     _safe_remove(files, sidecar_backup)
     return sidecar_path
-
-
-async def write_artifact_with_provenance_async(
-    artifact_path: str | os.PathLike[str],
-    artifact: BinaryArtifact,
-    provenance: ProvenanceInput,
-    *,
-    secrets: Sequence[str] = (),
-    now: datetime | None = None,
-    operations: FileOperations | None = None,
-) -> Path:
-    """Write the pair in a worker thread, preserving spend on persistence failure.
-
-    ``AtomicWriteError.provider_operations`` comes from ``provenance.attempts``.
-    Cancellation propagates but does not stop work already running in the thread.
-    """
-
-    try:
-        return await asyncio.to_thread(
-            write_artifact_with_provenance,
-            artifact_path,
-            artifact,
-            provenance,
-            secrets=secrets,
-            now=now,
-            operations=operations,
-        )
-    except asyncio.CancelledError:
-        raise
-    except Exception as error:
-        # The provider result already exists when a caller enters artifact
-        # persistence. Preserve that completed spend even when provenance
-        # serialization, publication, or rollback fails afterward.
-        raise AtomicWriteError(
-            redact_secrets(str(error).strip() or type(error).__name__, secrets),
-            provider_operations=provenance.attempts,
-        ) from None
 
 
 def normalize_artifact_media_type(value: object) -> str:

@@ -36,18 +36,6 @@ for _side in ("left", "right"):
 PARENTS.update({"tail_1": "pelvis", "tail_2": "tail_1", "tail_3": "tail_2"})
 TAIL_BONES = ("tail_1", "tail_2", "tail_3")
 PAW_CURL_BONES = tuple(f"{side}_paw_{index}" for side in ("left", "right") for index in (1, 2))
-MOTION_SEMANTICS = {
-    "shoulder_raise": (
-        "Bilateral forelimb raise for shoulder attachment and deformation inspection."
-    ),
-    "elbow_bend": "Forelimb bend for elbow deformation inspection.",
-    "knee_bend": "Biped hindlimb bend for knee deformation inspection.",
-    "paw_curl": (
-        "Soft grouped paw squeeze toward the observed palm; no opposing thumb is required."
-    ),
-    "cheer": ("Restrained biped cheer with soft paw squeeze and optional tail wag."),
-    "tail_wag": ("Optional attached tail-chain wag; inspect root and curved surface stability."),
-}
 
 
 def _vector(value: object, label: str) -> list[float]:

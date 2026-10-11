@@ -25,10 +25,7 @@ GAME_MODULES = (
     "the_grain_pipeline",
 )
 COMPONENT_ROOT = SOURCE_ROOT / "stage_gen" / "components"
-FORBIDDEN_COMPONENT_DEPENDENCIES = (
-    "stage_gen.workflows",
-    "stage_gen.viewer",
-)
+FORBIDDEN_COMPONENT_DEPENDENCIES = ("stage_gen.workflows",)
 
 
 def _package_for(path: Path) -> str:
@@ -329,6 +326,10 @@ RETIRED_MODULES = (
     "stage_gen.identity",
     "stage_gen.workflows._gnode",
     "stage_gen.workflows._reference",
+    "stage_gen.viewer",
+    "stage_gen.runview.contexts",
+    "stage_gen.runview.facts",
+    "stage_gen.runview.refresh",
 )
 
 

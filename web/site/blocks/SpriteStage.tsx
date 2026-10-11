@@ -1,9 +1,9 @@
 // <SpriteStage>: The delivered strips on a stage, drawn the way the game draws them, to play one by one or to drive.
 // Port of the retired showcase's `sprite_stage` component.
-// The player is web/ui/players/sprite-stage.ts, mounted by <SpriteStagePlayer>; it reads the
+// The player is lib/players/sprite-stage.ts, mounted by <SpriteStagePlayer>; it reads the
 // JSON config and the data-* hooks below.
 
-import type { JsonObject } from "@stage-gen/ui/contracts/wire";
+import type { JsonObject } from "@/lib/contracts/wire";
 import { capitalize } from "@/lib/page";
 import SpriteStagePlayer from "@/components/players/SpriteStagePlayer";
 import type { BlockProps } from "./shared";

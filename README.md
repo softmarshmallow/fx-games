@@ -4,9 +4,9 @@ Stage Gen is a general asset generation toolkit. Each workflow turns a small inp
 named deliverable, such as a transparent idle loop, a rigged 3D character or a set of
 repeating parallax layers, and every workflow is a [Grida FX](https://github.com/gridaco/fx)
 workflow you can plan, run and inspect. Every workflow plans offline, with its price, before
-any spend, and most reuse a node cache across runs. Inspect runs in the viewer, the local
-read-only client that `uv run python scripts/view.py` opens. Your application decides how the
-assets become a game, an animation or a tool.
+any spend, and most reuse a node cache across runs. Inspect runs in FX's viewer, which
+`uv run python -m grida.fx start --open` opens. Your application decides how the assets become
+a game, an animation or a tool.
 
 ![Iron Petal Unit key art: a young mechanic-pilot riding a rescue robot through an orbital greenhouse](godot/games/iron_petal_unit/inputs/references/cover.png)
 
@@ -52,7 +52,7 @@ uv run python src/stage_gen/workflows/looping_parallax/inputs/supplied_layers/ma
 uv run python -m grida.fx plan looping-parallax --inputs out/looping-parallax-input/inputs.yaml
 uv run python -m grida.fx run looping-parallax --inputs out/looping-parallax-input/inputs.yaml
 uv run python -m grida.fx inspect looping-parallax --verify
-uv run python scripts/view.py
+uv run python -m grida.fx start --open
 ```
 
 That run is offline: committed scripts draw the input layers, and no provider is called.
@@ -68,8 +68,6 @@ builder, which `python -m grida.fx plan` and `run` take the same way; the
 
 - [Getting started](docs/getting-started.md), the
   [FX guide](https://github.com/gridaco/fx/tree/main/docs/guide) and the [glossary](docs/glossary.md).
-- [Viewer](docs/viewer.md): `uv run python scripts/view.py`, the local read-only client over
-  run folders.
 - [Site](docs/site.md): the static landing and documentation site built from the catalog
   and the example store.
 - [Architecture](ARCHITECTURE.md), the [documentation index](docs/README.md), the

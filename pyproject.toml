@@ -30,7 +30,6 @@ dev = [
   "mypy>=1.15,<2",
   "pytest>=8.3,<9",
   "pytest-asyncio>=0.26,<1",
-  "pytest-timeout>=2.3,<3",
   "ruff>=0.11,<1",
   "types-pyyaml>=6.0.12,<7",
 ]

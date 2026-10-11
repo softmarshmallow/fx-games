@@ -164,8 +164,8 @@ uv run python -m grida.fx run universe --inputs <dir>/inputs.yaml --live --max-u
 The second command continues from the first's cache: the world is not proposed again, and the
 gallery is drawn inside the ceiling. Raise that ceiling for a large census: a 36-image gallery's
 images alone may bill up to about USD 21. `uv run python -m grida.fx inspect universe` reads the
-newest run back with no provider call, and the workflow's own view shows the gallery in the viewer
-(`uv run python scripts/view.py`).
+newest run back with no provider call, and FX's viewer (`uv run python -m grida.fx start --open`)
+shows the gallery's pictures.
 
 ## Outputs
 

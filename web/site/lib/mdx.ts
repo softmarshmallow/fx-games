@@ -185,7 +185,7 @@ export function compileSource(
 }
 
 /** A staged page source by its path under .catalog/pages/; throws when it was not staged. */
-export function pageSource(relative: string): string {
+function pageSource(relative: string): string {
   const source = readPageSource(relative);
   if (source === null) {
     throw new PageError(`${relative} is not staged; run \`uv run python scripts/site.py build\``);

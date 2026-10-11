@@ -1,10 +1,10 @@
-"""An FX run, projected for the viewer: ``plan.json`` and ``events.jsonl`` as one run view.
+"""An FX run, projected: ``plan.json`` and ``events.jsonl`` as one run view.
 
-The viewer draws every run from one document (``stage-gen-run-view-v1``). It is a pure
-projection of the run folder: the plan the run started from, the record of what happened
-(instances a later phase or take added included), and the files the record names. Nothing else
-enters it, so a copied run folder projects the same on any machine; reading never writes, and
-a record cut short by a crash is read up to its last whole line.
+The run view (``stage-gen-run-view-v1``) is a pure projection of the run folder: the plan the
+run started from, the record of what happened (instances a later phase or take added
+included), and the files the record names. Nothing else enters it, so a copied run folder
+projects the same on any machine; reading never writes, and a record cut short by a crash is
+read up to its last whole line.
 """
 
 from __future__ import annotations
@@ -37,19 +37,10 @@ from stage_gen.runview.model import (
     RunView,
     RunViewArtifact,
     RunViewNode,
-    ViewArchetype,
     artifact_media_type,
 )
 
 _DISPLAYS = (("image/", "image"), ("audio/", "audio"), ("video/", "video"), ("text/", "text"))
-_ARCHETYPES = {
-    "image": ViewArchetype.IMAGE,
-    "structured": ViewArchetype.STRUCTURED,
-    "vision": ViewArchetype.JUDGE,
-    "video": ViewArchetype.VIDEO,
-    "music": ViewArchetype.MUSIC,
-    "sound": ViewArchetype.SOUND,
-}
 _FINISHED = frozenset({"node_finished", "node_failed", "node_skipped"})
 
 
@@ -106,16 +97,6 @@ def _artifacts(
                 )
             )
     return artifacts
-
-
-def _archetype(entry: Mapping[str, Any]) -> ViewArchetype:
-    if entry.get("judges"):
-        return ViewArchetype.JUDGE
-    for capability in entry.get("routes", {}):
-        found = _ARCHETYPES.get(str(capability).split(".", 1)[0])
-        if found is not None:
-            return found
-    return ViewArchetype.TRANSFORM
 
 
 def project_run(run_dir: Path) -> RunView:
@@ -202,7 +183,6 @@ def project_run(run_dir: Path) -> RunView:
                 node_id=identifier,
                 type_id=str(entry.get("uses", "")),
                 title=step.get("title") or path.rsplit(".", 1)[-1],
-                archetype=_archetype(entry),
                 domain=workflow_id,
                 description=step.get("description") or f"{entry.get('uses', 'step')} at {path}",
                 depends_on=tuple(dep for dep in entry.get("reads", []) if dep in entries),

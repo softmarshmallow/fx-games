@@ -17,9 +17,9 @@ magenta exterior, cyan guide lattice, and locked checker placeholder. The image
 provider receives the template first as the strict edit target and the original
 grid crop second as topology-only visual instruction. Deterministic chroma-key
 extraction owns alpha after validation; neither Godot-derived input becomes a
-runtime asset. `scripts/build_terrain_atlas_template.py` verifies both attributed
-source digests and synchronizes the packaged copies; it does not claim
-independent authorship of the source pixels.
+runtime asset. `tests/contract/test_packaged_resources.py` holds both packaged
+copies to their attributed source digests, sizes and modes; Stage Gen does not
+claim independent authorship of the source pixels.
 
 The desert, frozen, and temperate images used during exploration remain
 unreviewed external work products. They are not copied into this repository,

@@ -31,7 +31,7 @@ function CardBody({ card }: { card: Card }): ReactElement {
 }
 
 /** The cards of the grid, in order: a link each, or a faded card for an absent example. */
-export function Cards({ cards }: { cards: readonly Card[] }): ReactElement {
+function Cards({ cards }: { cards: readonly Card[] }): ReactElement {
   return (
     <>
       {cards.map((card) =>

@@ -12,7 +12,6 @@ import Frame from "./Frame";
 import Guards from "./Guards";
 import Guard from "./Guard";
 import Models from "./Models";
-import Columns from "./Columns";
 import Files from "./Files";
 import File from "./File";
 import Scope from "./Scope";
@@ -52,7 +51,6 @@ export const BLOCKS: Readonly<Record<string, BlockSpec>> = {
   Guards: { render: Guards, props: {}, required: [] },
   Guard: { render: Guard, props: { node: "string", how: "string" }, required: ["node", "how"] },
   Models: { render: Models, props: {}, required: [] },
-  Columns: { render: Columns, props: {}, required: [] },
   Files: { render: Files, props: {}, required: [] },
   File: { render: File, props: { path: "string" }, required: ["path"] },
   Scope: { render: Scope, props: {}, required: [] },

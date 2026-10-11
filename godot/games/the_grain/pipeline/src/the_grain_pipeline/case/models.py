@@ -212,10 +212,8 @@ class Beat(CaseModel):
         return self.member.removesuffix(ROOM_DOCUMENT_SUFFIX).rstrip("/")
 
 
-#: One safe path segment, matching the producer's run-tag contract exactly - the
-#: same shape `web/viewer/lib/shell/runs.ts` enforces before it resolves a run directory.
-#: Generated tags happen to be lower-case, but an explicit producer tag may carry
-#: upper case, `_`, or `.`.
+#: One safe path segment, matching the producer's run-tag contract exactly. Generated tags
+#: happen to be lower-case, but an explicit producer tag may carry upper case, `_`, or `.`.
 RUN_TAG_PATTERN = r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
 
 

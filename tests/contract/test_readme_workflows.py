@@ -47,6 +47,5 @@ def test_readme_is_a_short_front_page_with_its_hero_media() -> None:
     assert len(images) >= 3
     for image in images:
         assert (REPOSITORY_ROOT / image).is_file(), image
-    # The viewer is named once, with the command that opens it.
-    assert "the local read-only client" in text
-    assert "scripts/view.py" in text
+    # Runs are seen in FX's viewer, named with the command that opens it.
+    assert "python -m grida.fx start" in text

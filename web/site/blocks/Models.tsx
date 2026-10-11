@@ -5,7 +5,7 @@
 // provider_names); a name the catalog does not map is already a display name.
 
 import type { ReactElement } from "react";
-import type { ExampleModel } from "@stage-gen/ui/contracts/example";
+import type { ExampleModel } from "@/lib/contracts/example";
 import type { Page } from "@/lib/page";
 import type { BlockProps } from "./shared";
 import { CELL } from "./shared";

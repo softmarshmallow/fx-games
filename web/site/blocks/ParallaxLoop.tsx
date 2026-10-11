@@ -5,7 +5,7 @@
 // The camera runs on its own at a chosen speed and direction, or follows a drag or the arrow keys.
 // Toggles move every layer at one speed and mark each layer's wrap and cuts; the table turns each
 // layer on or off and changes its speed, height and size. The element's sentence is the caption.
-// web/ui/players/parallax-playground.ts drives it through [data-parallax-playground], mounted
+// lib/players/parallax-playground.ts drives it through [data-parallax-playground], mounted
 // by <ParallaxPlaygroundPlayer>.
 
 import ParallaxPlaygroundPlayer from "@/components/players/ParallaxPlaygroundPlayer";

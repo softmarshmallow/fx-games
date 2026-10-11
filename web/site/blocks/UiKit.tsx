@@ -1,6 +1,6 @@
 // <UiKit>: A small game screen built from the delivered UI sheets and laid out by the gate's own measurements.
 // Port of the retired showcase's `ui_kit` component (and `nine_slice`, TEXT_TONE).
-// The player is web/ui/players/ui-kit.ts, mounted on [data-ui-kit] by <UiKitPlayer>.
+// The player is lib/players/ui-kit.ts, mounted on [data-ui-kit] by <UiKitPlayer>.
 
 import UiKitPlayer from "@/components/players/UiKitPlayer";
 import type { BlockProps } from "./shared";

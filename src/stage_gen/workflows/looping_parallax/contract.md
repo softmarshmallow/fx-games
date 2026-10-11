@@ -28,7 +28,7 @@ Outputs, under the run folder's `outputs/`:
 - `manifest.json`: `parallax-background-v2`, carrying the canvas, each layer's `asset_ref` (`parallax/layers/<layer_id>.png`, where `--deliver layers=parallax/layers/{key}.png` puts it), dimensions, order, offsets, repeat flags, scroll factors, and its `construction`: `mirror_repeat`, `seam_repaint`, or `admitted` when the supplied layer already looped.
 - `preview.png`: a deterministic frame for inspection.
 
-A seam layer's repaint step also places, under the run folder's `files/`, the provider's return (`edit`) and the loop report (`report`) with the cut and its stitches; the `seam_ok` judge's verdict is a fact in the run's record. The compose step's view composes and scrolls the same layers in the viewer (`uv run python scripts/view.py`). A consumer computes position as `offset - scroll * parallax` and repeats each declared axis. The caller supplies scroll input; no player, physics, level, camera controller, or gameplay state is prescribed.
+A seam layer's repaint step also places, under the run folder's `files/`, the provider's return (`edit`) and the loop report (`report`) with the cut and its stitches; the `seam_ok` judge's verdict is a fact in the run's record. The compose step's `preview.png` shows the composed frame. A consumer computes position as `offset - scroll * parallax` and repeats each declared axis. The caller supplies scroll input; no player, physics, level, camera controller, or gameplay state is prescribed.
 
 ## Graph
 

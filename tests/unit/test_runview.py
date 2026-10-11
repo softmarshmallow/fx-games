@@ -1,4 +1,4 @@
-"""Reading an FX run folder: the run view, the view contexts and the names FX places files at.
+"""Reading an FX run folder: the run view and the names FX places files at.
 
 The run here is a real FX run of a small workflow in a scratch project, its one paid step
 answered by a stand-in: the drawing's first take is opaque, which its judge rejects, so a
@@ -8,10 +8,8 @@ is checked against the engine's own (``inspect --json``).
 
 from __future__ import annotations
 
-import hashlib
 import io
 import json
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -22,7 +20,6 @@ from grida.fx import Answer, RunResult, StandInCall, run
 from PIL import Image
 
 from stage_gen.runview import (
-    VIEW_CONTEXT_KIND,
     find_file,
     is_fx_run,
     is_stand_in,
@@ -32,8 +29,6 @@ from stage_gen.runview import (
     read_plan,
     store_of,
     verify_run,
-    view_contexts,
-    workflow_home,
 )
 from stage_gen.workflows._fx import write_project
 from tests.unit._fx import failures
@@ -50,7 +45,6 @@ steps:
     title: Draw a lantern
     uses: fx/image.generate@1
     with: { prompt: a lantern, background: transparent, size: 64x64 }
-    view: true
   clean:
     uses: fx/image.check_alpha@1
     judges: draw
@@ -60,15 +54,10 @@ steps:
   loud:
     uses: ./nodes/test_nodes.py#shout
     with: { text: lantern }
-    view: ./views/words.html
-  quiet:
-    uses: ./nodes/test_nodes.py#shout
-    with: { text: unseen }
   measure:
     title: Measure the picture
     uses: ./nodes/test_nodes.py#measure
     with: { image: "${{ inputs.picture }}" }
-    view: true
   words:
     for_each: [harbour, lantern]
     key: ${{ item }}
@@ -80,7 +69,6 @@ steps:
 outputs:
   image: ${{ steps.draw.outputs.image }}
   words: ${{ steps.words.*.loud.outputs.text }}
-view: ./views/whole.html
 """
 NODES = """\
 from PIL import Image
@@ -99,8 +87,6 @@ def measure(ctx: Ctx) -> dict:
         width, height = picture.size
     return {"size": ctx.out.json({"width": width, "height": height})}
 """
-WORDS = "<!doctype html><p>words</p>\n"
-WHOLE = "<!doctype html><p>the whole run</p>\n"
 
 
 def _png(width: int, height: int, alpha: int) -> bytes:
@@ -122,9 +108,6 @@ def _project(folder: Path) -> Path:
     )
     (folder / "nodes").mkdir()
     (folder / "nodes/test_nodes.py").write_text(NODES, encoding="utf-8")
-    (folder / "views").mkdir()
-    (folder / "views/words.html").write_text(WORDS, encoding="utf-8")
-    (folder / "views/whole.html").write_text(WHOLE, encoding="utf-8")
     (folder / "flow.yaml").write_text(FLOW, encoding="utf-8")
     (folder / "art").mkdir()
     (folder / "art/picture.png").write_bytes(_png(40, 30, 255))
@@ -151,12 +134,6 @@ def _inspected(run_dir: Path) -> dict[str, list[str]]:
     return {step["id"]: sorted(file["path"] for file in step["files"]) for step in steps}
 
 
-def _contexts(run_dir: Path) -> dict[str, dict[str, Any]]:
-    return {
-        context["node_id"] or "workflow": context for context in view_contexts(run_dir).contexts
-    }
-
-
 # ---------------------------------------------------------------- the run view
 
 
@@ -172,11 +149,11 @@ def test_the_run_view_names_every_file_where_fx_placed_it(flow: RunResult) -> No
     assert projected["draw#2"] == ["files/draw#2/image.png"]
     assert projected["words['lantern'].loud#1"] == ["files/words__lantern__.loud/text.txt"]
     assert verify_run(flow.run_dir) == []
-    assert view.kind == "stage-gen-run-view-v1" and view.schema_version == 3
+    assert view.kind == "stage-gen-run-view-v1" and view.schema_version == 4
     assert view.run_state == "succeeded" and view.known_cost_usd == 0
     draw = next(node for node in view.nodes if node.node_id == "draw#1")
     assert (draw.operation, draw.model, draw.provider) == ("image.generate", *ROUTE.split("@"))
-    assert draw.archetype == "image" and draw.title == "Draw a lantern"
+    assert draw.title == "Draw a lantern"
 
 
 def test_a_run_is_told_by_its_plan_kind_and_its_mode(flow: RunResult, tmp_path: Path) -> None:
@@ -253,146 +230,9 @@ def test_a_cancelled_run_and_its_spend(tmp_path: Path) -> None:
     assert draw.error == "the run ended before this step finished"
 
 
-# ---------------------------------------------------------------- the view contexts
-
-
-def test_step_views_read_their_step(flow: RunResult) -> None:
-    views = view_contexts(flow.run_dir)
-    contexts = _contexts(flow.run_dir)
-    assert set(contexts) == {"draw#1", "draw#2", "loud#1", "measure#1", "workflow"}
-    for context in views.contexts:
-        assert context["kind"] == VIEW_CONTEXT_KIND
-        assert views.templates[context["template"]].is_file()
-
-    draw = contexts["draw#2"]
-    assert draw["step"]["title"] == "Draw a lantern"
-    assert (draw["step"]["take"], draw["step"]["cost_usd"]) == (2, 0)
-    assert draw["step"]["with"]["prompt"] == "a lantern"
-    assert draw["inputs"] == {}
-    assert draw["run"] == {
-        "id": flow.run_dir.name,
-        "workflow": "flow",
-        "status": "succeeded",
-        "cost_usd": 0,
-    }
-    image = draw["outputs"]["image"]
-    assert image["ref"] == f"views/files/{image['digest']}.png"
-    assert views.files[image["ref"]] == flow.run_dir / "files/draw#2/image.png"
-    assert (image["facts"]["width"], image["facts"]["has_alpha"]) == (64, True)
-    generic = views.templates[draw["template"]].read_text(encoding="utf-8")
-    assert 'from "/_views/view.js"' in generic and "<title>Pictures</title>" in generic
-
-    loud = contexts["loud#1"]
-    assert views.templates[loud["template"]].read_text(encoding="utf-8") == WORDS
-    assert loud["template"] == f"views/{hashlib.sha256(WORDS.encode()).hexdigest()}.html"
-    assert loud["outputs"]["text"]["kind"] == "text/plain"
-
-
-def test_a_json_output_is_inlined_and_an_input_is_found_in_the_stand_in_store(
-    flow: RunResult,
-) -> None:
-    views = view_contexts(flow.run_dir)
-    measure = _contexts(flow.run_dir)["measure#1"]
-    assert "<title>Data</title>" in views.templates[measure["template"]].read_text("utf-8")
-    assert measure["outputs"]["size"]["value"] == {"width": 40, "height": 30}
-    picture = measure["inputs"]["image"]
-    assert (picture["facts"]["width"], picture["facts"]["height"]) == (40, 30)
+def test_an_input_is_found_in_the_stand_in_store(flow: RunResult) -> None:
     plan = read_plan(flow.run_dir)
+    digest = plan["inputs"]["picture"]["file"]
     store = store_of(flow.run_dir, plan)
     assert store.name == "stand-in" and store.parent == (flow.run_dir.parents[2] / "cache")
-    source = find_file(flow.run_dir, picture["digest"], plan)
-    assert source == store / "files" / picture["digest"][:2] / picture["digest"]
-    assert views.files[picture["ref"]] == source
-
-
-def test_the_workflow_view_reads_the_whole_run(flow: RunResult) -> None:
-    views = view_contexts(flow.run_dir)
-    whole = _contexts(flow.run_dir)["workflow"]
-    assert whole["scope"] == "workflow" and whole["node_id"] is None
-    assert views.templates[whole["template"]].read_text(encoding="utf-8") == WHOLE
-    instances = whole["steps"]["words"]["instances"]
-    assert [instance["key"] for instance in instances] == ["harbour", "lantern"]
-    loud = instances[1]["steps"]["loud"]
-    assert (loud["title"], loud["status"]) == ("Shout it", "succeeded")
-    assert views.files[loud["outputs"]["text"]["ref"]].read_text(encoding="utf-8") == "LANTERN"
-    assert whole["outputs"]["image"]["kind"] == "image/png"
-    assert whole["run"]["status"] == "succeeded"
-
-
-def test_a_view_outside_the_home_or_through_a_link_is_not_shown(
-    flow: RunResult, tmp_path: Path
-) -> None:
-    project = tmp_path / "project"
-    shutil.copytree(flow.run_dir.parents[2], project, symlinks=True)
-    run_dir = project / flow.run_dir.relative_to(flow.run_dir.parents[2])
-    assert workflow_home(run_dir, read_plan(run_dir)) == project.resolve()
-    outside = tmp_path / "outside.html"
-    outside.write_text(WORDS, encoding="utf-8")
-    (project / "views/words.html").unlink()
-    (project / "views/words.html").symlink_to(outside)
-    workflow = (project / "flow.yaml").read_text(encoding="utf-8")
-    (project / "flow.yaml").write_text(
-        workflow.replace("view: ./views/whole.html", "view: ../outside.html"), encoding="utf-8"
-    )
-    # The step's view is read from the plan, the workflow's from its file.
-    shown = _contexts(run_dir)
-    assert "loud#1" not in shown and "workflow" not in shown
-    assert {"draw#1", "draw#2", "measure#1"} <= set(shown)
-
-
-SEVERAL = """\
-fx: workflow/v1
-id: several
-title: Several
-steps:
-  sketch:
-    uses: ./nodes/several.py#sketch
-    view: true
-  assemble:
-    uses: ./nodes/several.py#assemble
-    view: true
-"""
-SEVERAL_NODES = """\
-from PIL import Image
-
-from grida.fx import Ctx, node
-
-
-@node("sketch", outputs={"canonical": "image/png", "bundle": "json"})
-def sketch(ctx: Ctx) -> dict:
-    picture = Image.new("RGBA", (8, 8), (200, 120, 40, 255))
-    return {"canonical": ctx.out.png(picture), "bundle": ctx.out.json({"views": 1})}
-
-
-@node("assemble", outputs={"model": "model/gltf-binary", "record": "json"})
-def assemble(ctx: Ctx) -> dict:
-    model = ctx.out.bytes(b"glTF" + bytes(8), "model/gltf-binary")
-    return {"model": model, "record": ctx.out.json({"parts": 2})}
-"""
-
-
-def test_a_generic_view_follows_its_kinds_not_its_port_names(tmp_path: Path) -> None:
-    """A run records ports in sorted order, so ``view: true`` picks by kind: a picture beside
-    data shows pictures though its port sorts after the data, and data beside a model still
-    shows the data."""
-
-    project = write_project(tmp_path / "project", runs="runs", cache="cache", workflows=())
-    (project / "nodes").mkdir()
-    (project / "nodes/several.py").write_text(SEVERAL_NODES, encoding="utf-8")
-    (project / "several.yaml").write_text(SEVERAL, encoding="utf-8")
-    result = run("several.yaml", cwd=project)
-    assert result.ok, failures(result)
-    finished = {
-        event["id"]: list(event["outputs"])
-        for event in read_events(result.run_dir)
-        if event.get("event") == "node_finished"
-    }
-    assert finished["sketch#1"] == ["bundle", "canonical"]
-    assert finished["assemble#1"] == ["model", "record"]
-
-    views = view_contexts(result.run_dir)
-    contexts = _contexts(result.run_dir)
-    sketch = views.templates[contexts["sketch#1"]["template"]].read_text(encoding="utf-8")
-    assert "<title>Pictures</title>" in sketch
-    assemble = views.templates[contexts["assemble#1"]["template"]].read_text(encoding="utf-8")
-    assert "<title>Data</title>" in assemble
+    assert find_file(flow.run_dir, digest, plan) == store / "files" / digest[:2] / digest

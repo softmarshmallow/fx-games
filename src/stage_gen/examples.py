@@ -98,14 +98,6 @@ def display_names() -> DisplayNames:
     )
 
 
-def model_name(model: str | None) -> str | None:
-    return display_names().model(model)
-
-
-def provider_name(provider: str | None) -> str | None:
-    return display_names().provider(provider)
-
-
 # ---------------------------------------------------------------- documents
 
 
@@ -1271,12 +1263,10 @@ __all__ = [
     "has_alpha",
     "import_fx_run",
     "index",
-    "model_name",
     "models_of",
     "node",
     "outputs_of",
     "pin_of",
-    "provider_name",
     "read_entry",
     "read_example",
     "read_figures",

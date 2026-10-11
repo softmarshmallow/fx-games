@@ -106,7 +106,7 @@ gate() {
 		uv sync --all-groups --frozen --quiet
 		uv run --all-groups ruff format --check .
 		uv run --all-groups ruff check .
-		(cd web && bun install --frozen-lockfile --silent && bun test)
+		(cd web/site && bun install --frozen-lockfile --silent && bun test)
 		uv run --all-groups pytest tests/contract -q
 	) || status=$?
 	cleanup "$scratch"

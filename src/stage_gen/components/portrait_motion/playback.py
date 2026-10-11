@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import io
+from collections.abc import Mapping
 from itertools import product
 
 import numpy as np
@@ -29,9 +30,10 @@ def _rgb(image: Image.Image, size: tuple[int, int]) -> Image.Image:
     return image.convert("RGB")
 
 
-def _supports(
-    masks: dict[str, FloatArray], size: tuple[int, int]
+def feature_supports(
+    masks: Mapping[str, FloatArray], size: tuple[int, int]
 ) -> tuple[dict[FeatureGroup, BoolArray], dict[FeatureGroup, list[str]]]:
+    """Each group's support and the admitted features it holds; supports never overlap."""
     shape = (size[1], size[0])
     occupied = np.zeros(shape, dtype=np.bool_)
     supports: dict[FeatureGroup, BoolArray] = {
@@ -44,14 +46,14 @@ def _supports(
             raise ValueError("Playback received an unsupported feature ID")
         weights = np.asarray(alpha, dtype=np.float64)
         if weights.shape != shape or not np.isfinite(weights).all():
-            raise ValueError("Playback mask shape or finite values are invalid")
+            raise ValueError("Feature mask shape or finite values are invalid")
         if (weights < 0).any() or (weights > 1).any():
-            raise ValueError("Playback alpha must be in [0, 1]")
+            raise ValueError("Feature mask alpha must be in [0, 1]")
         support = weights > 0
         if not support.any():
-            raise ValueError("An admitted playback feature must have nonempty support")
+            raise ValueError("An admitted feature must have nonempty support")
         if (support & occupied).any():
-            raise ValueError("Playback feature supports overlap")
+            raise ValueError("Feature supports overlap")
         occupied |= support
         group: FeatureGroup = "mouth" if feature == "mouth" else "eyes"
         supports[group] |= support
@@ -87,61 +89,6 @@ def _timeline(
     if elapsed > 60000:
         raise ValueError("Playback duration exceeds sixty seconds")
     return timeline
-
-
-def encode_playback(
-    source: Image.Image,
-    frames: dict[str, Image.Image],
-    state_groups: dict[str, FeatureGroup],
-    masks: dict[str, FloatArray],
-    segments: list[PlaybackSegment],
-    *,
-    size: tuple[int, int] | None = None,
-) -> tuple[bytes, dict[str, object]]:
-    """Select preblended group frames and verify a looping animated WebP.
-
-    Each frame must already equal the source outside its declared group support.
-    A partial feature set remains partial: absent feature groups select the source
-    and are recorded as inactive. A timeline with no visible motion is refused,
-    rather than returning a static WebP as an animation.
-    """
-    original = _rgb(source, source.size)
-    if set(frames) != set(state_groups) or "rest" in frames:
-        raise ValueError("State frames and group declarations must agree and reserve rest")
-    if any(group not in ("eyes", "mouth") for group in state_groups.values()):
-        raise ValueError("Playback state group must be eyes or mouth")
-    timeline = _timeline(segments, state_groups)
-    supports, active_features = _supports(masks, original.size)
-    source_pixels = np.asarray(original, dtype=np.uint8)
-    saved: dict[str, PixelArray] = {}
-    for state, frame in frames.items():
-        pixels = np.asarray(_rgb(frame, original.size), dtype=np.uint8)
-        if not np.array_equal(
-            pixels[~supports[state_groups[state]]], source_pixels[~supports[state_groups[state]]]
-        ):
-            raise ValueError(f"State frame changed source pixels outside its group: {state}")
-        saved[state] = pixels
-    selections: dict[tuple[str, str], Image.Image] = {}
-    for segment in segments:
-        key = (segment.eyes, segment.mouth)
-        if key not in selections:
-            selected = source_pixels.copy()
-            choices: tuple[tuple[FeatureGroup, str], ...] = (
-                ("eyes", segment.eyes),
-                ("mouth", segment.mouth),
-            )
-            for group, state in choices:
-                if state != "rest":
-                    support = supports[group]
-                    selected[support] = saved[state][support]
-            selections[key] = Image.fromarray(selected)
-    data, report = _encode_selected(original, selections, segments, timeline, size)
-    return data, {
-        **report,
-        "active_features": active_features,
-        "inactive_groups": [group for group, names in active_features.items() if not names],
-        "source_exact_outside_active_support_at_native_size": True,
-    }
 
 
 def _encode_selected(
@@ -254,7 +201,7 @@ def build_combinations(
         raise ValueError("Donors must match the complete declared state set")
     if set(masks) - set(spec.requested_features):
         raise ValueError("Masks include features outside the requested set")
-    supports, active_features = _supports(masks, original.size)
+    supports, active_features = feature_supports(masks, original.size)
     base = np.asarray(original, dtype=np.uint8)
     alpha_by_group: dict[FeatureGroup, FloatArray] = {
         "eyes": np.zeros(base.shape[:2], dtype=np.float64),

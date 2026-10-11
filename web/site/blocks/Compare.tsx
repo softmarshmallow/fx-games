@@ -1,6 +1,6 @@
 // <Compare>: Two same-sized pictures of one node, one over the other, with a handle to wipe between them.
 // Port of the retired showcase's `compare` component.
-// The wipe itself is web/ui/players/compare.ts, mounted on [data-compare] by <ComparePlayer>.
+// The wipe itself is lib/players/compare.ts, mounted on [data-compare] by <ComparePlayer>.
 
 import { picture } from "@/lib/page";
 import ComparePlayer from "@/components/players/ComparePlayer";

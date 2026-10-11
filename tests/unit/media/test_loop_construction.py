@@ -19,7 +19,6 @@ from stage_gen.media import (
     build_seam_repaint_conditioning,
     measure_registration,
     mirror_repeat,
-    tile_to_width,
 )
 
 #: A seam cut sized for the 32-pixel test window: the tail band is columns 8 to 12 and the head
@@ -152,17 +151,6 @@ def test_generated_bridge_normalizes_a_missized_provider_return() -> None:
 
     assert record["period_width"] == 72
     assert _column(looped, 71) == _column(looped, 0)
-
-
-def test_tile_to_width_repeats_a_short_period() -> None:
-    source = _gradient(width=16)
-
-    tiled = tile_to_width(_png(source), 40)
-
-    with Image.open(io.BytesIO(tiled)) as opened:
-        image = opened.convert("RGBA")
-    assert image.width == 40
-    assert image.crop((16, 0, 32, 16)).tobytes() == source.tobytes()
 
 
 def test_bridge_conditioning_rejects_an_oversized_context() -> None:

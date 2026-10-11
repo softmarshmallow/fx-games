@@ -81,7 +81,7 @@ jobs:
           bun-version: "1.4.0"
       - run: uv sync --frozen
       - run: bun install --frozen-lockfile
-        working-directory: web
+        working-directory: web/site
       - uses: actions/download-artifact@v4
         with:
           name: grida-fx

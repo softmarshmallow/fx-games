@@ -155,320 +155,256 @@
   "node_types": [
    [
     "character_3d/build/assembly/assemble",
-    "character_3d/build/assembly/assemble",
     "nodes/assembly.py#assemble@1"
    ],
    [
-    "character_3d/build/assembly/review",
     "character_3d/build/assembly/review",
     "nodes/assembly.py#review@1"
    ],
    [
     "character_3d/build/part/mesh",
-    "character_3d/build/part/mesh",
     "fx/mesh.generate@1.1"
    ],
    [
-    "character_3d/build/part/normalize",
     "character_3d/build/part/normalize",
     "nodes/parts.py#normalize@1"
    ],
    [
     "character_3d/build/part/review",
-    "character_3d/build/part/review",
     "nodes/parts.py#review@1"
    ],
    [
-    "character_3d/build/part/views",
     "character_3d/build/part/views",
     "nodes/references.py#role_views@2"
    ],
    [
     "character_3d/build/rig/agent",
-    "character_3d/build/rig/agent",
     "nodes/rig.py#agent@1"
    ],
    [
-    "character_3d/build/rig/finish",
     "character_3d/build/rig/finish",
     "nodes/rig.py#finish@1"
    ],
    [
     "character_3d/build/rig/review",
-    "character_3d/build/rig/review",
     "nodes/rig.py#review@3"
    ],
    [
-    "character_3d/build/rig/task",
     "character_3d/build/rig/task",
     "fx/mesh.rig@1.1"
    ],
    [
     "character_3d/references/draw",
-    "character_3d/references/draw",
     "nodes/references.py#draw@1"
    ],
    [
-    "character_3d/references/review",
     "character_3d/references/review",
     "nodes/references.py#review@1"
    ],
    [
     "character_3d/result",
-    "character_3d/result",
     "nodes/result.py#result@1"
    ],
    [
-    "character_3d/setup",
     "character_3d/setup",
     "nodes/setup.py#setup@3"
    ],
    [
     "looping_parallax/compose",
-    "looping_parallax/compose",
     "nodes/compose.py#compose@1"
    ],
    [
-    "looping_parallax/layer/loop",
     "looping_parallax/layer/loop",
     "fx/select@1.1"
    ],
    [
     "looping_parallax/layer/loops_already",
-    "looping_parallax/layer/loops_already",
     "nodes/seams.py#loops_already@1"
    ],
    [
-    "looping_parallax/layer/mirror",
     "looping_parallax/layer/mirror",
     "fx/image.mirror_repeat@1.1"
    ],
    [
     "looping_parallax/layer/repaint",
-    "looping_parallax/layer/repaint",
     "nodes/seams.py#seam_repaint@1"
    ],
    [
-    "looping_parallax/layer/seam_ok",
     "looping_parallax/layer/seam_ok",
     "nodes/seams.py#seam_check@1"
    ],
    [
     "movie_sprite/brief",
-    "movie_sprite/brief",
     "nodes/take.py#idle_brief@1"
    ],
    [
-    "movie_sprite/finish",
     "movie_sprite/finish",
     "nodes/finish.py#finish@1"
    ],
    [
     "movie_sprite/plate",
-    "movie_sprite/plate",
     "nodes/take.py#green_plate@1"
    ],
    [
-    "movie_sprite/take",
     "movie_sprite/take",
     "fx/video.generate@1.1"
    ],
    [
     "portrait_motion/check",
-    "portrait_motion/check",
     "nodes/motion.py#check@1"
    ],
    [
-    "portrait_motion/compose/composition",
     "portrait_motion/compose/composition",
     "nodes/motion.py#composition@1"
    ],
    [
     "portrait_motion/compose/quality",
-    "portrait_motion/compose/quality",
     "fx/structured.generate@1.1"
    ],
    [
-    "portrait_motion/compose/quality_ok",
     "portrait_motion/compose/quality_ok",
     "nodes/motion.py#quality_ok@1"
    ],
    [
     "portrait_motion/deliver/keep",
-    "portrait_motion/deliver/keep",
     "nodes/motion.py#keep@1"
    ],
    [
-    "portrait_motion/deliver/render",
     "portrait_motion/deliver/render",
     "nodes/face.py#render@1"
    ],
    [
     "portrait_motion/deliver/result",
-    "portrait_motion/deliver/result",
     "nodes/motion.py#result@1"
    ],
    [
     "portrait_motion/draw/admission",
-    "portrait_motion/draw/admission",
     "fx/structured.generate@1.1"
    ],
    [
-    "portrait_motion/draw/admitted",
     "portrait_motion/draw/admitted",
     "nodes/motion.py#admitted@1"
    ],
    [
     "portrait_motion/draw/atlas",
-    "portrait_motion/draw/atlas",
     "fx/image.edit@1.1"
    ],
    [
-    "portrait_motion/draw/briefs",
     "portrait_motion/draw/briefs",
     "nodes/motion.py#briefs@1"
    ],
    [
     "portrait_motion/draw/guide",
-    "portrait_motion/draw/guide",
     "nodes/motion.py#guide@1"
    ],
    [
-    "portrait_motion/face/crop",
     "portrait_motion/face/crop",
     "nodes/face.py#crop@1"
    ],
    [
     "portrait_motion/face/locate",
-    "portrait_motion/face/locate",
     "fx/structured.generate@1.1"
    ],
    [
-    "portrait_motion/face/located",
     "portrait_motion/face/located",
     "nodes/face.py#located@1"
    ],
    [
     "portrait_motion/fit/geometry",
-    "portrait_motion/fit/geometry",
     "fx/structured.generate@1.1"
    ],
    [
-    "portrait_motion/fit/geometry_ok",
     "portrait_motion/fit/geometry_ok",
     "nodes/motion.py#geometry_ok@1"
    ],
    [
     "portrait_motion/fit/registration",
-    "portrait_motion/fit/registration",
     "nodes/motion.py#registration@1"
    ],
    [
-    "universe/close",
     "universe/close",
     "fx/package@1.1"
    ],
    [
     "universe/entity/brief",
-    "universe/entity/brief",
     "nodes/entities.py#image_prompt@1"
    ],
    [
-    "universe/entity/context",
     "universe/entity/context",
     "nodes/entities.py#entity_context@1"
    ],
    [
     "universe/entity/direct",
-    "universe/entity/direct",
     "fx/structured.generate@1.1"
    ],
    [
-    "universe/entity/direct_ok",
     "universe/entity/direct_ok",
     "nodes/judges.py#direction_ok@1"
    ],
    [
     "universe/entity/draw",
-    "universe/entity/draw",
     "fx/image.generate@1.1"
    ],
    [
-    "universe/entity/record",
     "universe/entity/record",
     "nodes/entities.py#record@1"
    ],
    [
     "universe/entity/review",
-    "universe/entity/review",
     "fx/structured.generate@1.1"
    ],
    [
-    "universe/entity/sealed",
     "universe/entity/sealed",
     "nodes/entities.py#review_record@1"
    ],
    [
     "universe/look/grammar",
-    "universe/look/grammar",
     "fx/structured.generate@1.1"
    ],
    [
-    "universe/look/grammar_ok",
     "universe/look/grammar_ok",
     "nodes/judges.py#grammar_ok@1"
    ],
    [
     "universe/look/projection",
-    "universe/look/projection",
     "nodes/world.py#grammar_projection@1"
    ],
    [
-    "universe/world/admit",
     "universe/world/admit",
     "nodes/world.py#admit@1"
    ],
    [
     "universe/world/plan",
-    "universe/world/plan",
     "fx/structured.generate@1.1"
    ],
    [
-    "universe/world/plan_ok",
     "universe/world/plan_ok",
     "nodes/judges.py#plan_ok@1"
    ],
    [
     "universe/world/poster_small",
-    "universe/world/poster_small",
     "fx/image.resize@1.1"
    ],
    [
-    "universe/world/projection",
     "universe/world/projection",
     "nodes/world.py#projection@1"
    ],
    [
     "universe/world/proposal_ok",
-    "universe/world/proposal_ok",
     "nodes/judges.py#proposal_ok@1"
    ],
    [
     "universe/world/propose",
-    "universe/world/propose",
     "fx/structured.generate@1.1"
    ],
    [
     "universe/world/review",
-    "universe/world/review",
     "fx/structured.generate@1.1"
    ],
    [
-    "universe/world/source",
     "universe/world/source",
     "nodes/world.py#source@1"
    ]
-  ],
-  "view_schema_version": 3
+  ]
  }
 }

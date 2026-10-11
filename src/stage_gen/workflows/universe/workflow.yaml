@@ -83,7 +83,6 @@ steps:
           context: ["${{ steps.poster_small.outputs.image }}"]
           vars: { source: "${{ steps.source.outputs.source }}" }
           max_tokens: 90000
-        view: true
 
       proposal_ok:
         title: Check the proposal
@@ -137,7 +136,6 @@ steps:
             proposal: ${{ steps.propose.outputs.json }}
             plan: ${{ steps.plan.outputs.json }}
           max_tokens: 20000
-        view: true
 
       admit:
         title: Admit the world
@@ -241,7 +239,6 @@ steps:
           prompt: ${{ steps.brief.outputs.prompt }}
           size: ${{ lookup(tables.size_by_mode, item.concept_mode) }}
           background: opaque
-        view: true
 
       sealed:
         title: Seal what the reviewer sees
@@ -299,5 +296,3 @@ outputs:
   universe: ${{ steps.world.admit.outputs.universe }}
   gallery: ${{ steps.close.outputs.files }}
   manifest: ${{ steps.close.outputs.manifest }}
-
-view: ./views/gallery.html

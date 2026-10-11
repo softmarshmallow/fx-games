@@ -9,6 +9,8 @@ import sys
 import zipfile
 from pathlib import Path
 
+from stage_gen.provider_env import PROVIDER_ENV_KEYS
+
 
 def _install_wheel(repository: Path, tmp_path: Path, environment: dict[str, str]) -> Path:
     wheels = tmp_path / "wheels"
@@ -57,7 +59,6 @@ class NoConsumers(importlib.abc.MetaPathFinder):
             raise AssertionError('Public surface imported optional consumer: ' + fullname)
 sys.meta_path.insert(0, NoConsumers())
 import stage_gen.runview
-import stage_gen.viewer
 import stage_gen.application
 import stage_gen.components
 for module in pkgutil.iter_modules(stage_gen.components.__path__):
@@ -82,13 +83,7 @@ print('public imports have no optional consumers')
 def test_selected_product_tests_collect_using_only_the_installed_core(tmp_path: Path) -> None:
     repository = Path(__file__).resolve().parents[2]
     environment = os.environ.copy()
-    for key in (
-        "OPENAI_API_KEY",
-        "OPENROUTER_API_KEY",
-        "FAL_KEY",
-        "ELEVENLABS_API_KEY",
-        "PYTHONPATH",
-    ):
+    for key in (*PROVIDER_ENV_KEYS, "PYTHONPATH"):
         environment.pop(key, None)
     environment["GRIDA_FX_DISABLE_DOTENV"] = "1"
     installed = _install_wheel(repository, tmp_path, environment)

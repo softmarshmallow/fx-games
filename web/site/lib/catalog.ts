@@ -8,21 +8,17 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { parseCatalog, type Catalog } from "@stage-gen/ui/contracts/catalog";
+import { parseCatalog, type Catalog } from "@/lib/contracts/catalog";
 import { exampleMediaBase } from "./media";
 
-/** web/site, found from the working directory whether Next (web/site) or Bun (web/) runs. */
+/** web/site: the working directory Next and Bun run in, unless SITE_ROOT names it. */
 export function siteRoot(): string {
-  const override = process.env.SITE_ROOT;
-  if (override) return path.resolve(override);
-  const cwd = process.cwd();
-  for (const candidate of [cwd, path.join(cwd, "site"), path.join(cwd, "web", "site")]) {
-    const manifest = path.join(candidate, "package.json");
-    if (existsSync(manifest) && JSON.parse(readFileSync(manifest, "utf8")).name === "@stage-gen/site") {
-      return candidate;
-    }
+  const root = path.resolve(process.env.SITE_ROOT || process.cwd());
+  const manifest = path.join(root, "package.json");
+  if (existsSync(manifest) && JSON.parse(readFileSync(manifest, "utf8")).name === "@stage-gen/site") {
+    return root;
   }
-  throw new Error(`cannot find web/site from ${cwd}; set SITE_ROOT`);
+  throw new Error(`${root} is not web/site; run from web/site or set SITE_ROOT`);
 }
 
 export function catalogDir(): string {
@@ -90,13 +86,4 @@ export function loadCatalog(): Catalog {
   const raw = JSON.parse(readFileSync(file, "utf8")) as Raw;
   cached = parseCatalog(rewriteMedia(raw));
   return cached;
-}
-
-/** Whether the catalog has been staged, for tests that skip without it. */
-export function catalogStaged(): boolean {
-  try {
-    return existsSync(path.join(catalogDir(), "catalog.json"));
-  } catch {
-    return false;
-  }
 }

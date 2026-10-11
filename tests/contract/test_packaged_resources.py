@@ -12,6 +12,10 @@ from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
 
 import yaml
+from PIL import Image
+
+from stage_gen.provider_env import PROVIDER_ENV_KEYS
+from stage_gen.resources import terrain_atlas_template_path, terrain_atlas_topology_reference_path
 
 PORTRAIT_FACE_MODULES = {
     "stage_gen/components/portrait_motion/face_crop.py",
@@ -51,11 +55,9 @@ MOVIE_SPRITE_MODULES = {
             "nodes/take.py",
             "nodes/finish.py",
             "prompts/idle.md",
-            "views/loop.html",
             "inputs/supplied_clip/make_inputs.py",
         )
     ),
-    *(f"stage_gen/runview/views/{name}.html" for name in ("image", "json", "video")),
 }
 UNIVERSE_WORKFLOW = {
     f"stage_gen/workflows/universe/{name}"
@@ -70,7 +72,6 @@ UNIVERSE_WORKFLOW = {
         "prompts/review-image.md",
         "schemas/proposal.json",
         "schemas/image-review.json",
-        "views/gallery.html",
     )
 }
 
@@ -87,7 +88,7 @@ WORKFLOW_MANIFESTS = {
 }
 
 #: A workflow written as a workflow file ships whole: its file, its home, its node types,
-#: prompts, view, lock and sample inputs.
+#: prompts, lock and sample inputs.
 PARALLAX_WORKFLOW = {
     f"stage_gen/workflows/looping_parallax/{name}"
     for name in (
@@ -97,7 +98,6 @@ PARALLAX_WORKFLOW = {
         "nodes/seams.py",
         "nodes/compose.py",
         "prompts/seam.md",
-        "views/parallax.html",
         "inputs/supplied_layers/make_inputs.py",
     )
 }
@@ -107,8 +107,6 @@ WHEEL_RESOURCES = {
     "stage_gen/resources/fixtures/image_gen_templates/inventory_template.png",
     "stage_gen/resources/fixtures/image_gen_templates/terrain_atlas_12x4_template.png",
     "stage_gen/resources/fixtures/image_gen_templates/terrain_atlas_godot_topology_reference.png",
-    "stage_gen/resources/fixtures/prompts.txt",
-    "stage_gen/resources/fixtures/styles.txt",
     "stage_gen/resources/prompting/image_style_vocabulary_v1.json",
     "stage_gen/resources/skills/anchor-image-style/SKILL.md",
     "stage_gen/resources/terrain/godot_3x3_minimal_lookup_v1.json",
@@ -221,11 +219,9 @@ GAME_INPUT_ROOTS = tuple(
 def test_built_distributions_are_small_clean_and_resource_complete(tmp_path: Path) -> None:
     repository = Path(__file__).resolve().parents[2]
     distribution_directory = tmp_path / "distributions"
-    environment = os.environ.copy()
-    environment.pop("OPENAI_API_KEY", None)
-    environment.pop("OPENROUTER_API_KEY", None)
-    environment.pop("FAL_KEY", None)
-    environment.pop("ELEVENLABS_API_KEY", None)
+    environment = {
+        name: value for name, value in os.environ.items() if name not in PROVIDER_ENV_KEYS
+    }
     subprocess.run(
         [
             sys.executable,
@@ -366,10 +362,7 @@ def test_built_distributions_are_small_clean_and_resource_complete(tmp_path: Pat
         env_handle = sdist.extractfile(f"{root}/.env.example")
         assert env_handle is not None
         env_example = env_handle.read().decode("utf-8")
-        assert _env_value(env_example, "OPENAI_API_KEY") == ""
-        assert _env_value(env_example, "OPENROUTER_API_KEY") == ""
-        assert _env_value(env_example, "FAL_KEY") == ""
-        assert _env_value(env_example, "ELEVENLABS_API_KEY") == ""
+        assert all(_env_value(env_example, key) == "" for key in PROVIDER_ENV_KEYS)
         sdist.extractall(extracted_sdist_parent, filter="data")
 
     extracted_sdist = extracted_sdist_parent / root
@@ -455,7 +448,7 @@ def verified(run_dir):
     return inspected.returncode == 0 and verify_run(run_dir) == []
 
 paths = required_resource_paths()
-assert len(paths) == 8
+assert len(paths) == 6
 assert all(path.is_file() and path.stat().st_size > 0 for path in paths)
 assert image_template_dir().is_dir()
 assert terrain_atlas_template_path().is_file()
@@ -548,6 +541,26 @@ assert face_plan.ok and face_plan.estimate()[1] > 0
         capture_output=True,
         text=True,
     )
+
+
+def test_terrain_atlas_templates_are_their_attributed_sources() -> None:
+    for path, digest, size, mode in (
+        (
+            terrain_atlas_template_path(),
+            "cccc9a429162eed8715060b6755c06cc460adce7f54c565633dd099ab0ce7781",
+            (1600, 900),
+            "RGB",
+        ),
+        (
+            terrain_atlas_topology_reference_path(),
+            "9c49a9b7e504e7eef4da348c3437d0a23c8ce29bca4251bbdc95e15fe06fd4d9",
+            (769, 257),
+            "RGBA",
+        ),
+    ):
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == digest, path.name
+        with Image.open(path) as image:
+            assert (image.size, image.mode) == (size, mode), path.name
 
 
 def test_repository_media_obeys_git_size_and_location_policy() -> None:
@@ -677,12 +690,8 @@ def test_repository_media_obeys_git_size_and_location_policy() -> None:
                     and package_parts[2] == "references"
                 )
                 assert relative.suffix.lower() in IMAGE_MEDIA_SUFFIXES
-        if relative.parts[0] == "web":
-            # The viewer's own static files; the site's example media is staged, never tracked.
-            assert relative.parts[:3] == ("web", "viewer", "public") or relative.parts[:2] == (
-                "web",
-                "scripts",
-            )
+        # The site's example media is staged, never tracked.
+        assert relative.parts[0] != "web"
         if relative.suffix.lower() in {".mp4", ".webm"}:
             assert relative.parts[0] == "docs"
         path = repository / relative

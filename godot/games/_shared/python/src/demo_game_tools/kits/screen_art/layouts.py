@@ -8,8 +8,8 @@ column the control stack occupies, the strip a card or a tip is read from. They 
 reserved regions, and the gate measures them on the plate the model returned.
 
 Every shell plate is one 2560 by 1440 canvas: the native 16:9 size the bound image
-route already draws for the universe recipe's wide mode (``WIDE_SIZE``), so this
-family invents no raster shape.
+route already draws for the universe workflow's wide modes (its ``size_by_mode``
+table), so this family invents no raster shape.
 
 Rects are canvas pixels. A consumer scales the whole canvas to its window and scales
 every rect by the same factor, so nothing here is a screen size.

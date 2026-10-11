@@ -13,6 +13,7 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from scripts.media_rights import check_generated_media_publication
+from stage_gen.provider_env import PROVIDER_ENV_KEYS
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 
@@ -40,7 +41,7 @@ def _walk_files(path: Path, suffixes: frozenset[str]) -> list[Path]:
 
 
 def _web_files(repo: Path, suffixes: frozenset[str]) -> list[Path] | None:
-    """The web workspace's own files: tracked, plus untracked ones a commit would take.
+    """The web package's own files: tracked, plus untracked ones a commit would take.
 
     Build output, installs and staged catalogs (``.next``, ``out``, ``node_modules``,
     ``.catalog``, copied example media) are ignored, so they are never scanned. None when
@@ -91,10 +92,6 @@ CHECKED_BY_PATTERN = re.compile(r"^> \*\*Checked by:\*\* (.+)$", re.MULTILINE)
 
 #: Where each workflow keeps its prose beside its code: page.mdx, contract.md, input notes.
 WORKFLOWS_SOURCE = "src/stage_gen/workflows"
-PROMPT_FIXTURES = (
-    "src/stage_gen/resources/fixtures/prompts.txt",
-    "src/stage_gen/resources/fixtures/styles.txt",
-)
 
 # The words decision 0071 retired from product prose, and where the lint reads. A retired word
 # survives only where it is a frozen persisted string or a path: inside code spans and fenced
@@ -115,7 +112,6 @@ RETIRED_TERM_DOCUMENTS = (
     "docs/README.md",
     "docs/getting-started.md",
     "docs/glossary.md",
-    "docs/viewer.md",
     "docs/site.md",
     ".agents/skills/asset-pipeline/SKILL.md",
 )
@@ -320,7 +316,6 @@ def run_docs_check(repo: Path = REPOSITORY_ROOT) -> DocsCheckResult:
         repo / "ARCHITECTURE.md",
     ]
     governance = [repo / "AGENTS.md", repo / "TODO.md"]
-    prompt_fixtures = [repo / relative for relative in PROMPT_FIXTURES]
     concept_markdown = [
         path
         for path in _walk_files(repo / "concept-studio", frozenset({".md"}))
@@ -375,25 +370,7 @@ def run_docs_check(repo: Path = REPOSITORY_ROOT) -> DocsCheckResult:
 
     env_example = (repo / ".env.example").read_text(encoding="utf-8")
     env_assignments = dict(re.findall(r"^([A-Z][A-Z0-9_]*)=(.*)$", env_example, re.MULTILINE))
-    consumed_env_names: set[str] = set()
-    # The viewer's shell is where it reads its environment; a scan that matched no file
-    # would prove nothing, so an empty one fails below with the no-spawn rule.
-    for web_env_source in sorted((repo / "web/viewer/lib/shell").glob("*.ts")):
-        consumed_env_names.update(
-            re.findall(
-                r"process\.env\.([A-Z][A-Z0-9_]*)", web_env_source.read_text(encoding="utf-8")
-            )
-        )
-    for name in sorted(consumed_env_names):
-        if name not in env_assignments:
-            failures.append(f".env.example: missing viewer config name {name}")
-    for secret_name in (
-        "OPENAI_API_KEY",
-        "OPENROUTER_API_KEY",
-        "FAL_KEY",
-        "ELEVENLABS_API_KEY",
-        "TRIPO_API_KEY",
-    ):
+    for secret_name in PROVIDER_ENV_KEYS:
         if env_assignments.get(secret_name, "") != "":
             failures.append(f".env.example: {secret_name} must remain blank")
 
@@ -492,7 +469,6 @@ def run_docs_check(repo: Path = REPOSITORY_ROOT) -> DocsCheckResult:
     for path in [
         *doctrine,
         *governance,
-        *prompt_fixtures,
         *concept_markdown,
         repo / "docs",
         repo / "library",
@@ -563,56 +539,19 @@ def run_docs_check(repo: Path = REPOSITORY_ROOT) -> DocsCheckResult:
         if account_funding.search(source):
             failures.append(f"{relative}: account-specific funding note")
 
-    imitation_patterns = (
-        re.compile(r"\bin the style of\b", re.IGNORECASE),
-        re.compile(r"\bstyle of\b", re.IGNORECASE),
-        re.compile(r"\binspired by\b", re.IGNORECASE),
-        re.compile(r"""\blike\s+["'A-Z]"""),
-        re.compile(r"""\bmeets\s+["'A-Z]"""),
-    )
-    for policy_file in prompt_fixtures:
-        if not policy_file.exists():
-            continue
-        source = policy_file.read_text(encoding="utf-8")
-        if any(pattern.search(source) for pattern in imitation_patterns):
-            failures.append(
-                f"{policy_file.relative_to(repo).as_posix()}: imitation-style prompt language"
-            )
-    for fixture in prompt_fixtures:
-        if not fixture.exists():
-            continue
-        lines = [
-            line.strip()
-            for line in fixture.read_text(encoding="utf-8").splitlines()
-            if line.strip().startswith("- ")
-        ]
-        if fixture.name == "prompts.txt" and any(
-            not line.startswith("- Create an original ") for line in lines
-        ):
-            failures.append(
-                f"{PROMPT_FIXTURES[0]}: every preset must explicitly request an original result"
-            )
-        if fixture.name == "styles.txt" and any(
-            re.search(r"""["'()]|\b(?:game|film|studio|artist)\b""", line, re.IGNORECASE)
-            for line in lines
-        ):
-            failures.append(
-                f"{PROMPT_FIXTURES[1]}: style hints must remain neutral property descriptions"
-            )
-
     readme = (repo / "README.md").read_text(encoding="utf-8")
-    # The viewer is a local command: the sentence that names it names that command.
+    # Runs are seen in FX's viewer: the sentence that names it names the command that opens it.
     viewer_sentences = [
         sentence
         for sentence in re.split(r"(?<=[.!?])\s+", " ".join(readme.split()))
         if re.search(r"\bviewer\b", sentence, re.IGNORECASE)
     ]
     if re.search(r"\bgeneral\b", readme, re.IGNORECASE) is None or not any(
-        "scripts/view.py" in sentence for sentence in viewer_sentences
+        "grida.fx start" in sentence for sentence in viewer_sentences
     ):
         failures.append(
             "README.md: missing general-core / viewer framing (a sentence naming the "
-            "viewer and `scripts/view.py`)"
+            "viewer and `python -m grida.fx start`)"
         )
     failures.extend(check_retired_terms(repo))
     failures.extend(check_user_skills(repo))
@@ -693,7 +632,7 @@ def run_docs_check(repo: Path = REPOSITORY_ROOT) -> DocsCheckResult:
             "opaque exclusion",
         ),
         (
-            "docs/viewer.md",
+            "docs/site.md",
             re.compile(
                 r"(?:web/` (?:starts|launches|plays) no run|does not (?:start|launch|generate)"
                 r"|never (?:starts|launches|generates))",
@@ -702,23 +641,23 @@ def run_docs_check(repo: Path = REPOSITORY_ROOT) -> DocsCheckResult:
             "web is not a generation authority",
         ),
         (
-            "docs/viewer.md",
+            "docs/site.md",
             re.compile(r"no gameplay", re.IGNORECASE),
             "web holds no game logic",
         ),
     )
-    # The viewer consumes published contracts; it must not be able to start a run. A shell
-    # that can spawn a process is one refactor away from being a second generator, so the
-    # absence of the capability is checked rather than described. A scan that matched no
-    # file proves nothing, so an empty one fails too.
-    web_shell = sorted((repo / "web/viewer/lib/shell").glob("*.ts"))
-    if not web_shell:
-        failures.append("web/viewer/lib/shell: the no-spawn rule matched no file")
-    for source_path in web_shell:
+    # The web consumes published contracts; it must not be able to start a run. Code that can
+    # spawn a process is one refactor away from being a second generator, so the absence of
+    # the capability is checked rather than described. A scan that matched no file proves
+    # nothing, so an empty one fails too.
+    web_code = _web_files(repo, frozenset({".ts", ".tsx", ".js", ".mjs"}))
+    if not web_code:
+        failures.append("web: the no-spawn rule matched no file")
+    for source_path in web_code or ():
         source = source_path.read_text(encoding="utf-8")
         if "node:child_process" in source or "Bun.spawn" in source:
             relative = source_path.relative_to(repo).as_posix()
-            failures.append(f"{relative}: web shell must not spawn a generation process")
+            failures.append(f"{relative}: web code must not spawn a generation process")
     for relative, pattern, label in required_contracts:
         if pattern.search((repo / relative).read_text(encoding="utf-8")) is None:
             failures.append(f"{relative}: missing {label}")

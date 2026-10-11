@@ -10,7 +10,7 @@ steps still run. Live calls and semantic or listening review are separate, expli
 ```sh
 uv sync --frozen
 uv run python scripts/check.py                    # product: Python SDK, tests, build
-uv run python scripts/check.py --scope web        # Bun workspace, the site build, web contract tests
+uv run python scripts/check.py --scope web        # the site: check, test, build; web contract tests
 uv run python scripts/check.py --scope docs       # links, paths, checkers, vocabulary, media inventory
 uv run --group games python scripts/check.py --scope games
 uv run --group games python scripts/check.py --scope godot
@@ -30,15 +30,13 @@ and `python -m grida.fx --help`.
 
 ## Web
 
-The web scope requires `bun install --frozen-lockfile` in `web`, the one Bun workspace
-(`ui`, `viewer`, `site`, one `bun.lock`). It type-checks each package with `bun run check`,
-runs `bun test`, builds the [site](docs/site.md) with
-`uv run python scripts/site.py build --allow-missing-examples`, and runs the web-owned Python
-tests, which hold the hand-authored `web/ui` contract fixtures to the Python models. The
-flag lets a clean clone build without the local example store; a present but mismatched
-example still fails. A release build of the site drops the flag, so every approved example
-must be in the store. `bun run --cwd viewer build` builds the [viewer](docs/viewer.md),
-which `uv run python scripts/view.py` otherwise runs in development mode.
+The web scope requires `bun install --frozen-lockfile` in `web/site`, the one Bun package
+(one `bun.lock`). It type-checks the site with `bun run check`, runs `bun test`, builds the
+[site](docs/site.md) with `uv run python scripts/site.py build --allow-missing-examples`, and
+runs the web-owned Python tests, which hold the hand-authored contract fixtures in
+`web/site/lib/contracts` to the Python models. The flag lets a clean clone build without the
+local example store; a present but mismatched example still fails. A release build of the
+site drops the flag, so every approved example must be in the store.
 
 ## Docs
 
@@ -47,11 +45,11 @@ Godot docs, every workflow's prose and the games' example pages; that every spec
 game consumer spec and workflow `contract.md` names a true checker; that the front-page
 documents and every workflow's `page.mdx` and `contract.md` use none of the retired words
 the [glossary](docs/glossary.md) lists; that a user skill under `skills/` names nothing of
-this repository; the prompt fixtures' originality rules; and the generated-media inventory.
+this repository; and the generated-media inventory.
 The product gate, not this scope, holds the remaining docs claims:
 `tests/contract/test_documented_commands.py` holds every documented `python -m grida.fx`
-command to what `python -m grida.fx <verb> --help` states, and every `scripts/view.py` command
-to the viewer's help, and refuses a retired command line or a bare `grida-fx`;
+command to what `python -m grida.fx <verb> --help` states, and refuses a retired command line,
+such as the old viewer launcher, or a bare `grida-fx`;
 `tests/contract/test_workflow_contract_docs.py` holds each workflow's graph contract to its
 offline sample plan (`uv run python scripts/write_workflow_contracts.py --check` runs the same
 check by hand).
@@ -70,7 +68,7 @@ For a repository-wide change:
 
 ```sh
 uv sync --all-groups --frozen
-(cd web && bun install --frozen-lockfile)
+(cd web/site && bun install --frozen-lockfile)
 uv run --all-groups python scripts/check.py --scope all
 ```
 

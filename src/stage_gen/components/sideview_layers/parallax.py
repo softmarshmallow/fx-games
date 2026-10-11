@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import hashlib
 import math
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
 
@@ -233,17 +233,6 @@ def render_parallax(
     return encode_png(canvas)
 
 
-def prepare_parallax(
-    spec: ParallaxSpec, read_source: Callable[[str], bytes]
-) -> dict[str, PreparedParallaxLayer]:
-    """Prepare in memory; the host owns confined reads and atomic publication."""
-
-    return {
-        layer.layer_id: prepare_parallax_layer(read_source(layer.source), layer)
-        for layer in spec.layers
-    }
-
-
 __all__ = [
     "MIRROR_CONSTRUCTION_ID",
     "PARALLAX_KIND",
@@ -253,7 +242,6 @@ __all__ = [
     "ParallaxSpec",
     "PreparedParallaxLayer",
     "parallax_manifest",
-    "prepare_parallax",
     "prepare_parallax_layer",
     "render_parallax",
 ]

@@ -12,7 +12,6 @@ from typing import Any
 from grida.fx import Answer, RunResult, StandInCall, run_async
 from PIL import Image
 
-from stage_gen.runview import view_contexts
 from stage_gen.workflows.universe import models
 from tests.unit._fx import caches, schema_of, scratch_project, verify
 from tests.unit.workflows.universe._universe_fixture import entity_direction
@@ -154,10 +153,8 @@ async def test_the_world_is_admitted_and_each_entity_gets_one_reviewed_image(
         assert (gallery / f"entities/{entity_id}.md").read_text().startswith("# ")
     assert verify(outcome.run_dir) == []
 
-    (whole,) = [c for c in view_contexts(outcome.run_dir).contexts if c["scope"] == "workflow"]
-    keys = [instance["key"] for instance in whole["steps"]["entity"]["instances"]]
-    assert sorted(keys) == sorted(entities)
-    assert whole["outputs"]["universe"]["value"]["universe_id"] == "lantern_ferry"
+    universe = json.loads((outcome.run_dir / "outputs/universe.json").read_text())
+    assert universe["universe_id"] == "lantern_ferry"
 
 
 async def test_a_second_run_is_answered_from_the_cache(tmp_path: Path) -> None:

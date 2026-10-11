@@ -1,9 +1,8 @@
-"""The hand-authored wire fixtures in web/ui/contracts are documents the product would write.
+"""The hand-authored wire fixtures in web/site/lib/contracts are documents the product would write.
 
-The TypeScript parsers in ``web/ui`` read these fixtures in their Bun tests. Here the same
-files are held to the Python side of each contract, so neither half can drift unseen: the run
-view against ``stage_gen.runview.RunView`` (schema 3), the example and its
-ledger against ``stage_gen.examples``, and the catalog against the structure
+The site's TypeScript parsers read these fixtures in their Bun tests. Here the same
+files are held to the Python side of each contract, so neither half can drift unseen: the
+example and its ledger against ``stage_gen.examples``, and the catalog against the structure
 ``scripts/catalog.py`` actually writes, built here over a store holding the fixture's
 game example.
 """
@@ -25,11 +24,10 @@ from stage_gen.examples import (
     GameExampleEntry,
     WorkflowExample,
 )
-from stage_gen.runview import RUN_VIEW_KIND, RunView
 from stage_gen.workflows._catalog import CATALOG_KIND, build
 from stage_gen.workflows._registry import ExampleEntry, WorkflowManifest
 
-CONTRACTS = Path(__file__).resolve().parents[2] / "web" / "ui" / "contracts"
+CONTRACTS = Path(__file__).resolve().parents[2] / "web" / "site" / "lib" / "contracts"
 
 
 def _fixture(name: str) -> Any:
@@ -57,20 +55,6 @@ def exported(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Any]:
     return catalog
 
 
-def test_run_view_fixture_is_a_workflow_run_view() -> None:
-    raw = (CONTRACTS / "run-view.fixture.json").read_bytes()
-    view = RunView.model_validate_json(raw)
-    assert view.schema_version == 3
-    assert view.kind == RUN_VIEW_KIND == "stage-gen-run-view-v1"
-    # Every edge and card reference names a node the document declares.
-    declared = {node.node_id for node in view.nodes}
-    for node in view.nodes:
-        assert set(node.depends_on) <= declared
-        if node.card is not None:
-            assert {ref.node_id for ref in node.card.reference_inputs} <= declared
-    assert view.model_dump(mode="json") == json.loads(raw)
-
-
 def test_example_fixture_is_a_workflow_example() -> None:
     document = _fixture("example")
     example = WorkflowExample.model_validate(document)
@@ -88,7 +72,6 @@ def test_catalog_fixture_has_the_shape_the_export_writes(exported: dict[str, Any
     assert _keys(fixture) == _keys(exported)
 
     real_workflow = exported["workflows"][0]
-    real_plan = next(w["sample_plan"] for w in exported["workflows"] if w["sample_plan"])
     real_step = real_workflow["steps"][0]
     real_example = next(e for w in exported["workflows"] for e in w["examples"])
     for workflow in fixture["workflows"]:
@@ -96,15 +79,10 @@ def test_catalog_fixture_has_the_shape_the_export_writes(exported: dict[str, Any
         manifest = WorkflowManifest.model_validate(workflow["manifest"])
         assert manifest.model_dump(mode="json", by_alias=True) == workflow["manifest"]
         assert manifest.id == workflow["id"]
-        assert isinstance(workflow["identity"]["graph_kinds"], list)
         for step in workflow["steps"]:
             assert _keys(step) == _keys(real_step)
             for member in step["members"]:
                 assert _keys(member) == _keys(real_step["members"][0])
-        plan = workflow["sample_plan"]
-        assert _keys(plan) == _keys(real_plan)
-        for node in plan["nodes"]:
-            assert _keys(node) == _keys(real_plan["nodes"][0])
         for example in workflow["examples"]:
             assert _keys(example) == _keys(real_example)
             entry = {key: example[key] for key in ExampleEntry.model_fields}

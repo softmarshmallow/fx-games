@@ -229,45 +229,6 @@ def normalize_png_cover(
     return output, record
 
 
-def normalize_image_to_png(data: bytes) -> tuple[bytes, ImageNormalizationRecord]:
-    """Decode a supported provider image and re-encode its exact pixel dimensions as PNG."""
-
-    source = inspect_image(data)
-    decoded = _decode_image(data)
-    has_alpha = "A" in decoded.getbands() or "transparency" in decoded.info
-    color_mode = "RGBA" if has_alpha else "RGB"
-    output = _encode_png(decoded.convert(color_mode))
-    result = inspect_image(output, expected_media_type="image/png")
-    if (result.width, result.height) != (source.width, source.height):
-        raise ValueError("image-to-PNG normalization changed pixel dimensions")
-    record = ImageNormalizationRecord(
-        operation="image-to-png",
-        source={
-            "width": source.width,
-            "height": source.height,
-            "bytes": len(data),
-            "sha256": sha256(data).hexdigest(),
-            "media_type": source.media_type,
-        },
-        output={
-            "width": result.width,
-            "height": result.height,
-            "bytes": len(output),
-            "sha256": sha256(output).hexdigest(),
-            "media_type": result.media_type,
-        },
-        transform={
-            "format": "png",
-            "color_mode": color_mode,
-            "compression_level": 9,
-            "metadata": "stripped",
-            "pixels_resampled": False,
-        },
-        tool={"name": "Pillow", "version": pillow_version},
-    )
-    return output, record
-
-
 def apply_chroma_transparency(
     data: bytes,
     *,
@@ -450,32 +411,6 @@ def decontaminate_magenta_edges(
         opaque_removed_pixels=opaque_removed,
     )
     return _encode_png(output), facts
-
-
-def compose_source_with_alpha(
-    source_data: bytes,
-    *,
-    removed_data: bytes | None = None,
-    mask_data: bytes | None = None,
-) -> tuple[bytes, AlphaFacts]:
-    if removed_data is None and mask_data is None:
-        raise ValueError("background removal returned neither a mask nor alpha")
-    source = _decode_rgba(source_data)
-    if mask_data is not None:
-        mask = _decode_image(mask_data).convert("L")
-        if mask.size != source.size:
-            raise ValueError("background removal mask dimensions changed")
-        alpha = mask
-    else:
-        removed = _decode_image(removed_data or b"")
-        if removed.size != source.size:
-            raise ValueError("background removal output dimensions changed")
-        if "A" not in removed.getbands() and "transparency" not in removed.info:
-            raise ValueError("background removal returned neither a mask nor alpha")
-        alpha = removed.convert("RGBA").getchannel("A")
-    source.putalpha(alpha)
-    facts = _alpha_facts(source.tobytes())
-    return _encode_png(source), facts
 
 
 def _decode_image(data: bytes) -> Image.Image:

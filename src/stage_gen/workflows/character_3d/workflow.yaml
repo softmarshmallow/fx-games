@@ -122,7 +122,6 @@ steps:
           generations: ${{ inputs.limits.reference_images }}
           crops: ${{ inputs.limits.crops }}
           recent_images: ${{ inputs.limits.recent_images }}
-        view: true
       review:
         title: Review the references
         if: ${{ inputs.review == 'required' }}
@@ -211,7 +210,6 @@ steps:
               max_steps: ${{ inputs.limits.producer_turns }}
               revisions: ${{ inputs.limits.revisions }}
               recent_images: ${{ inputs.limits.recent_images }}
-            view: true
           review:
             title: Review the assembly
             if: ${{ inputs.review == 'required' }}
@@ -272,7 +270,6 @@ steps:
               record: ${{ steps.finish.outputs.record || steps.agent.outputs.record }}
               profile: ${{ steps.setup.outputs.profile }}
               bar: ${{ steps.setup.outputs.bar }}
-            view: true
         regenerate:
           max: ${{ lookup(tables.lane, inputs.profile) == 'agent' && inputs.rounds || 1 }}
           until: ${{ inputs.review == 'none' || steps.review.facts.verdict == 'accept' }}

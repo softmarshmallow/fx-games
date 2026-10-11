@@ -7,7 +7,7 @@ from pydantic import ValidationError
 from stage_gen.components.sideview_layers.parallax import (
     ParallaxLayer,
     ParallaxSpec,
-    prepare_parallax,
+    prepare_parallax_layer,
     render_parallax,
 )
 from stage_gen.media.codec import decode_rgba, encode_png
@@ -39,7 +39,7 @@ def _spec(offset_x: float = 0.0) -> ParallaxSpec:
 
 def test_constructed_repeat_has_exact_edges_and_periodic_playback() -> None:
     spec = _spec()
-    prepared = prepare_parallax(spec, lambda _ref: _source())
+    prepared = {"clouds": prepare_parallax_layer(_source(), spec.layers[0])}
     image = decode_rgba(prepared["clouds"].data)
     assert image.size == (16, 8)
     assert image.crop((0, 0, 1, 8)).tobytes() == image.crop((15, 0, 16, 8)).tobytes()
@@ -54,6 +54,6 @@ def test_layer_request_rejects_traversal_and_nonfinite_placement() -> None:
         ParallaxLayer(layer_id="clouds", source="clouds.png", parallax=float("inf"))
     spec = _spec()
     spec.layers[0].parallax = 1e308
-    prepared = prepare_parallax(spec, lambda _ref: _source())
+    prepared = {"clouds": prepare_parallax_layer(_source(), spec.layers[0])}
     with pytest.raises(ValueError, match="finite coordinate"):
         render_parallax(spec, prepared, scroll_x=1e308)

@@ -387,7 +387,7 @@ def test_a_built_in_is_pinned_by_the_identity_fx_resolves(
     ]
     assert built_ins
     assert all(re.fullmatch(r"fx/[a-z_.]+@\d+\.\d+", identity) for identity in built_ins)
-    pinned = {str(entry[2]) for entry in GOLDEN["identities"]["node_types"]}
+    pinned = {str(entry[1]) for entry in GOLDEN["identities"]["node_types"]}
 
     character = FxWorkflow.read("stage_gen.workflows.character_3d")
     sample = character.root / "inputs/sample/inputs.yaml"

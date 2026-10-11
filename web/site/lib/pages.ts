@@ -4,8 +4,8 @@
 // these from generateStaticParams, so a page exists exactly when the catalog says so.
 
 import path from "node:path";
-import type { Catalog, CatalogExample, CatalogWorkflow } from "@stage-gen/ui/contracts/catalog";
-import type { WorkflowExample } from "@stage-gen/ui/contracts/example";
+import type { Catalog, CatalogExample, CatalogWorkflow } from "@/lib/contracts/catalog";
+import type { WorkflowExample } from "@/lib/contracts/example";
 import { loadCatalog, readPageSource } from "./catalog";
 import { href } from "./media";
 import {
@@ -325,17 +325,6 @@ export function gameParams(catalog: Catalog = loadCatalog()): { game: string; ex
   );
 }
 
-/** Every example-bound page, keyed "<owner>/<example id>", as the parity harness addresses them. */
-export function pageForExample(owner: string, exampleId: string, catalog: Catalog = loadCatalog()): Page {
-  if (catalog.gameExamples.some((example) => example.owner === owner && example.id === exampleId)) {
-    return gamePage(owner, exampleId, catalog);
-  }
-  const workflow = findWorkflowOrThrow(catalog, owner);
-  return coverOf(workflow)?.id === exampleId
-    ? workflowPage(owner, catalog)
-    : examplePage(owner, exampleId, catalog);
-}
-
 // ------------------------------------------------------------------------------ landing
 
 export interface Card {
@@ -469,7 +458,7 @@ export function findDoc(slug: readonly string[], catalog: Catalog = loadCatalog(
  * Where a relative link of a staged doc, page body or contract leads on the site: the route
  * of the doc, workflow page or workflow contract it names, with its fragment, or null when
  * the site does not publish its target. `from` is the source's checkout path
- * ("docs/viewer.md", "src/stage_gen/workflows/movie_sprite/contract.md").
+ * ("docs/site.md", "src/stage_gen/workflows/movie_sprite/contract.md").
  */
 export function docLink(from: string, target: string, catalog: Catalog = loadCatalog()): string | null {
   const [file, fragment] = target.split("#", 2) as [string, string | undefined];

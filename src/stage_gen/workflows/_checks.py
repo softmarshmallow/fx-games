@@ -292,25 +292,12 @@ def game_example(
 
 def identity(workflow: LoadedWorkflow, golden: Mapping[str, Any]) -> list[str]:
     """``CODE.identity()`` must agree with the identity golden wherever the golden pins it."""
-    problems: list[str] = []
-    pinned = golden["identities"]
-    stated = workflow.identity
-    prefix = f"{workflow.id}: identity"
-    document = stated.get("graph_document")
-    if isinstance(document, Mapping) and pinned.get("graph_documents", {}).get(
-        document.get("recipe")
-    ) != dict(document):
-        problems.append(f"{prefix} graph document differs from the golden")
-    cache = stated.get("cache", {})
-    if isinstance(cache, Mapping):
-        for key, value in cache.items():
-            if pinned["cache"].get(key) != value:
-                problems.append(f"{prefix} cache constant {key} differs from the golden")
-    inventory = {tuple(entry) for entry in pinned["node_types"]}
-    for entry in _entries(stated.get("node_types", [])):
-        if entry not in inventory:
-            problems.append(f"{prefix} node type {entry[0]} is not in the golden inventory")
-    return problems
+    inventory = {tuple(entry) for entry in golden["identities"]["node_types"]}
+    return [
+        f"{workflow.id}: identity node type {entry[0]} is not in the golden inventory"
+        for entry in _entries(workflow.identity.get("node_types", []))
+        if entry not in inventory
+    ]
 
 
 def _entries(value: object) -> Iterable[tuple[str, ...]]:

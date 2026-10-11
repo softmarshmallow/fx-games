@@ -86,8 +86,8 @@ stack, and nothing under `godot/` loads a `FontFile` at all.
 The face lives at `godot/games/<game>/inputs/fonts/`, its licence text beside it, and its
 licence must be one that permits redistributing the font file — because publishing a run
 copies it. The accepted set is `OFL-1.1`, `Apache-2.0` and `CC0-1.0`; widening it is a
-rights decision. The record is the one `web/viewer/public/fonts/*/README.md` already keeps per
-face, promoted from a README convention into a contract a resolver can refuse. See
+rights decision. The record is the one each face's README keeps, promoted from a README
+convention into a contract a resolver can refuse. See
 [decision 0063](../../../../docs/decisions/0063-a-typeface-is-a-package-input.md).
 
 ### A shot's plate is a still or a clip, and that is the only difference
@@ -189,7 +189,7 @@ cache, and only the shot is drawn.
 ```bash
 cd godot/games/ember_hollow
 uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs --live --max-usd 40
-(cd ../../.. && uv run python scripts/view.py out/runs)
+uv run python -m grida.fx start --open
 ```
 
 Each take meets the admission gate a kept take meets, is published in the codec the host

@@ -6,20 +6,17 @@ workflow id must fail here, not on the reader's machine. Commands are read from 
 each workflow's ``page.mdx``, ``contract.md`` and example pages, the Godot docs, and each
 ``workflow.toml`` ``[try]`` table. A ``python -m grida.fx`` command is checked against what
 ``python -m grida.fx <verb> --help`` states, with only its workflow's own input flags beside
-it; a ``python scripts/view.py`` command against the viewer's help. A retired command line,
-or a bare ``grida-fx``, fails wherever it is still shown. None is executed.
+it. A retired command line, or a bare ``grida-fx``, fails wherever it is still shown. None is
+executed.
 """
 
 from __future__ import annotations
 
 import re
 import shlex
-import subprocess
-import sys
 import tomllib
 from collections.abc import Iterator
 from dataclasses import dataclass
-from functools import cache
 from pathlib import Path
 
 import pytest
@@ -39,10 +36,8 @@ ENVIRONMENT = re.compile(r"^[A-Z_][A-Z0-9_]*=")
 UV_RUN_FLAGS_WITH_VALUE = {"--group", "--extra", "--with", "--python", "--directory"}
 COMMAND_SEPARATORS = {"&&", "||", ";", "|"}
 FX = " ".join(FX_PROGRAM)
-VIEWER = "python scripts/view.py"
-#: Command lines a reader may no longer be shown.
-RETIRED_PROGRAMS = ("stage-gen", "gnode", "grida-fx")
-_VIEWER_OPTION = re.compile(r"^\s+(?:-\w, )?(?P<long>--[\w-]+)(?P<value> [A-Z_]+)?(?:\s|$)")
+#: Command lines a reader may no longer be shown; FX's viewer replaced ``scripts/view.py``.
+RETIRED_PROGRAMS = ("stage-gen", "gnode", "grida-fx", "scripts/view.py")
 
 
 @dataclass(frozen=True, slots=True)
@@ -100,15 +95,15 @@ def _program(words: list[str]) -> tuple[str, tuple[str, ...]] | None:
                 words = words[1:]
     if tuple(words[: len(FX_PROGRAM)]) == FX_PROGRAM:
         return FX, tuple(words[len(FX_PROGRAM) :])
-    if words[:2] == ["python", "scripts/view.py"]:
-        return VIEWER, tuple(words[2:])
+    if words[:1] == ["python"]:
+        words = words[1:]
     if words and words[0] in RETIRED_PROGRAMS:
         return words[0], tuple(words[1:])
     return None
 
 
 def _commands(line: str) -> Iterator[tuple[str, tuple[str, ...]]]:
-    """The FX, viewer and retired invocations in one shell line."""
+    """The FX and retired invocations in one shell line."""
     try:
         tokens = shlex.split(line, comments=True)
     except ValueError:
@@ -160,52 +155,12 @@ def test_the_scan_reads_every_kind_of_source() -> None:
     )
 
 
-@cache
-def _viewer_options() -> dict[str, bool]:
-    """Each option of ``scripts/view.py`` to whether it takes a value, from its help."""
-    done = subprocess.run(
-        [sys.executable, "scripts/view.py", "--help"],
-        capture_output=True,
-        text=True,
-        check=True,
-        cwd=REPOSITORY_ROOT,
-    )
-    options = {"-h": False}
-    for line in done.stdout.splitlines():
-        if (match := _VIEWER_OPTION.match(line)) is not None:
-            options[match["long"]] = match["value"] is not None
-    return options
-
-
-def viewer_command_problems(arguments: tuple[str, ...]) -> list[str]:
-    """What is wrong with one viewer command line: every option is one its help states, and
-    the rest are run folders."""
-    options = _viewer_options()
-    problems: list[str] = []
-    words = list(arguments)
-    while words:
-        word = words.pop(0)
-        if not word.startswith("-"):
-            continue
-        option, equals, _ = word.partition("=")
-        if option not in options:
-            problems.append(f"{option} is not a viewer option")
-        elif options[option] and not equals and not words:
-            problems.append(f"{option} needs a value")
-        elif options[option] and not equals:
-            words.pop(0)
-    return problems
-
-
 @pytest.mark.parametrize("command", DOCUMENTED, ids=str)
 def test_documented_command_parses_with_the_real_cli(command: Documented) -> None:
     assert command.program not in RETIRED_PROGRAMS, (
-        f"{command}: {command.program} is retired; show uv run {FX} (or {VIEWER} for the viewer)"
+        f"{command}: {command.program} is retired; show uv run {FX}"
     )
-    if command.program == VIEWER:
-        problems = viewer_command_problems(command.arguments)
-    else:
-        problems = fx_command_problems(command.arguments)
+    problems = fx_command_problems(command.arguments)
     assert not problems, f"{command.source}: {problems}"
 
 

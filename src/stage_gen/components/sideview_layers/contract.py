@@ -17,8 +17,6 @@ from stage_gen.media import (
 
 LAYER_PLACEMENT_CANONICALIZER = "prepared-map-layer-placement-v1"
 
-LayerVerticalAnchor = Literal["canvas_cover", "screen_top", "screen_bottom", "walk_surface"]
-
 #: Anchors whose offset the producer measures rather than trusting an authored guess. They do not
 #: share a registration rule: `screen_bottom` seals the frame edge and needs a row every column
 #: spans, while `walk_surface` meets the ground and registers on the row the content rests on,

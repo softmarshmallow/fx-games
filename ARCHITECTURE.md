@@ -33,7 +33,7 @@ tests enforce; this ordering is not tested.
    Stage Gen imports only its public names.
 2. **Glue** (`src/stage_gen/workflows/_fx.py`, `src/stage_gen/runview/`): Stage Gen reads FX
    plans for its catalog and checks and writes the scratch projects its code plans in, and
-   projects FX run folders to run views and view contexts (`stage-gen-run-view-v1`). It adds
+   projects FX run folders to run views (`stage-gen-run-view-v1`) for the examples store. It adds
    no graph engine of its own: every workflow, game build and user project is an FX workflow
    file or Python builder.
 3. **Components** (`src/stage_gen/components/`): bounded building blocks, such as contracts,
@@ -64,14 +64,14 @@ tests enforce; this ordering is not tested.
 6. **Runs.** A run is one FX run folder under `out/runs/<workflow id>/`: its plan
    (`plan.json`, `fx-graph-v1`), its record (`events.jsonl`) and its steps' files. Results live
    in the store (`out/fx-cache`), so deleting a run folder loses nothing.
-   `python -m grida.fx inspect` reads a run back, and `stage_gen.runview` projects it.
+   `python -m grida.fx inspect` reads a run back, FX's viewer draws it, and `stage_gen.runview`
+   projects it for the examples store.
 7. **Surfaces.** `python -m grida.fx` plans, runs and inspects every workflow by its id: the
-   root `fx.yaml` finds them (`workflows: [src/stage_gen/workflows]`). The
-   [viewer](docs/viewer.md) (`web/viewer`, which `scripts/view.py` starts through
-   `stage_gen.viewer`) reads run folders. The [site](docs/site.md) (`web/site`) is built
-   from the catalog export and the example store. `web/` is one Bun workspace and the only
-   Node boundary; the viewer and the site share only `web/ui` and the versioned data
-   contracts.
+   root `fx.yaml` finds them (`workflows: [src/stage_gen/workflows]`), and
+   `python -m grida.fx start` serves FX's viewer over their runs. The [site](docs/site.md)
+   (`web/site`) is built from the catalog export and the example store. It is the one Bun
+   package and the only Node boundary, and keeps its players and data contracts in
+   `web/site/lib`.
 8. **Consumers.** The Godot example project.
 
 Provider configuration, credentials and concrete services belong to Grida FX: each project's
@@ -91,7 +91,7 @@ matched at least one file:
   modules and the rest the test lists) are gone, and nothing imports them.
 - Workflows never import each other. A workflow may import its own package,
   `stage_gen.workflows._registry` and `stage_gen.workflows._fx`.
-- Components import no workflow and not the viewer; the registry, catalog, checks, `_fx.py`
+- Components import no workflow; the registry, catalog, checks, `_fx.py`
   and `stage_gen.examples` import no workflow either.
 - The product imports no game, and no optional consumer.
 
@@ -101,7 +101,6 @@ Moving or renaming code must not move a cache key or a persisted identity, and
 `tests/contract/test_workflow_identity.py` pins them in one machine-independent golden
 (`scripts/write_workflow_identity.py` writes it):
 
-- the run-view schema version;
 - the node-type inventory: every leaf step of each workflow file, with the type identity FX
   resolves its `uses:` to (`fx/mesh.generate@1.1` for a built-in,
   `nodes/assembly.py#assemble@1` for a versioned type of the workflow's own);
@@ -142,11 +141,9 @@ require users to describe general-purpose computation or gameplay as YAML or TOM
 
 ## Consumers and optional tools
 
-The viewer reads public graph, trace, manifest and view records; `scripts/view.py` derives a
-missing view into a user cache, never into a run folder. The viewer never starts a run or
-implements a game's logic. Basic previews are generic; specialist inspectors are optional
-adapters over bounded metadata. Unknown preview contracts retain readable metadata rather than
-disappearing.
+Runs are seen in FX's viewer (`python -m grida.fx start`); Stage Gen keeps no viewer of its own
+([decision 0075](docs/decisions/0075-runs-are-seen-in-fx.md)). The site never starts a run or
+implements a game's logic.
 
 `godot/packages/` contains independently bounded reusable runtime packages. `godot/games/`
 contains playable consumers. `godot/templates/` contains starting projects whose preparation
@@ -190,7 +187,7 @@ through Grida FX.
 Import tests enforce FX's public surface, the absence of the retired engine and the absence
 of product-to-game dependencies. Package tests verify installed use outside the checkout.
 Product verification runs without optional consumers; the aggregate gate additionally
-verifies game readers, Godot and the web workspace. Each workflow's graph contract lives in
+verifies game readers, Godot and the site. Each workflow's graph contract lives in
 its `contract.md`, and each game's in that game's docs. There is no repository-wide canonical
 game graph.
 
@@ -198,5 +195,6 @@ Cache identity, route preflight, retry ownership, atomic persistence, provenance
 confinement and media review rules hold through every move. See
 [verification](VERIFICATION.md), decisions
 [0071](docs/decisions/0071-workflows-are-the-product-unit-and-the-web-splits-into-site-and-viewer.md)
-and [0074](docs/decisions/0074-stage-gen-runs-on-grida-fx.md), and the
+[0074](docs/decisions/0074-stage-gen-runs-on-grida-fx.md) and
+[0075](docs/decisions/0075-runs-are-seen-in-fx.md), and the
 [directory preview](docs/repository-layout.md).

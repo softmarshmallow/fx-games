@@ -3,7 +3,7 @@
 FX owns the folder (``spec/store.md`` section 8 of the FX engine). This module only reads it:
 ``plan.json`` (``fx-graph-v1``) and ``events.jsonl`` (``fx-run-events-v1``), the placed names
 under ``files/``, and the store a file's bytes are kept in. The names are FX's, reimplemented
-here so a view never has to start the engine; a test checks them against
+here so the examples store never has to start the engine; a test checks them against
 ``python -m grida.fx inspect --json``. Nothing here writes into a run folder.
 """
 
@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import unicodedata
 from collections.abc import Iterator, Mapping
 from pathlib import Path
@@ -346,37 +345,16 @@ def find_file(
     run_dir: Path,
     digest: str,
     plan: Mapping[str, Any],
-    *,
-    placed: Mapping[str, list[Path]] | None = None,
 ) -> Path:
     """A file the run read or made, by digest: where the folder placed it, else in its store.
-    The bytes are checked against the digest; ``FileNotFoundError`` when none match.
-    ``placed`` is :func:`placed_files` of the run, when the caller has it already."""
+    The bytes are checked against the digest; ``FileNotFoundError`` when none match."""
 
-    if placed is None:
-        placed = placed_files(run_dir, read_events(run_dir))
+    placed = placed_files(run_dir, read_events(run_dir))
     stored = store_of(run_dir, plan) / "files" / digest[:2] / digest
     for path in [*placed.get(digest, []), stored]:
         if path.is_file() and not path.is_symlink() and _digest_of(path) == digest:
             return path
     raise FileNotFoundError(f"{run_dir.name} read {digest[:12]}, whose bytes are gone")
-
-
-def relative_within(root: Path, path: Path) -> bool:
-    """Whether ``path`` resolves inside ``root`` without passing through a symbolic link."""
-
-    try:
-        relative = path.relative_to(root)
-    except ValueError:
-        return False
-    current = root
-    for part in relative.parts:
-        if part in {"", ".", ".."}:
-            return False
-        current = current / part
-        if current.is_symlink():
-            return False
-    return os.path.realpath(path).startswith(os.path.realpath(root) + os.sep)
 
 
 __all__ = [
@@ -398,12 +376,10 @@ __all__ = [
     "keyed_path",
     "named",
     "output_path",
-    "placed_files",
     "placed_path",
     "project_file",
     "read_events",
     "read_plan",
-    "relative_within",
     "route_id",
     "safe_name",
     "setting",

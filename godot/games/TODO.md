@@ -28,7 +28,7 @@ Current sessions, optional reading transport and supported snapshots are impleme
 
 ## The Godot promotion
 
-The ruling is [0061](../../docs/decisions/0061-every-genre-runs-on-godot-and-web-is-the-viewer.md); the path is [the promotion plan](../../docs/plans/godot-promotion-plan.md), which dies when it is walked. Every genre's host is a Godot host and `web/` becomes the run viewer alone. Each line below is a step's remaining work, and each retirement carries its own record.
+The ruling is [0061](../../docs/decisions/0061-every-genre-runs-on-godot-and-web-is-the-viewer.md); the path is [the promotion plan](../../docs/plans/godot-promotion-plan.md), which dies when it is walked. Every genre's host is a Godot host, and runs are seen in FX's viewer (`uv run python -m grida.fx start --open`). Each line below is a step's remaining work, and each retirement carries its own record.
 
 The browser gameplay retirement and named-game ownership moves are complete.
 Use the [current Godot roadmap](../docs/roadmap.md) for remaining organization work;
@@ -118,7 +118,7 @@ The adoption and what it refuses are [0025](../../docs/decisions/0025-cookierun-
 
 ## Survival
 
-The contract is [oblique-survival](ember_hollow/docs/generation-v1.md); the host ruling is [0057](../../docs/decisions/0057-the-survival-game-runs-on-godot.md), extended to every genre by [0061](../../docs/decisions/0061-every-genre-runs-on-godot-and-web-is-the-viewer.md). The game has no browser surface; its build's runs are legible in the run viewer (`uv run python scripts/view.py`), as every Grida FX run is.
+The contract is [oblique-survival](ember_hollow/docs/generation-v1.md); the host ruling is [0057](../../docs/decisions/0057-the-survival-game-runs-on-godot.md), extended to every genre by [0061](../../docs/decisions/0061-every-genre-runs-on-godot-and-web-is-the-viewer.md). The game has no browser surface; its build's runs are legible in FX's viewer (`uv run python -m grida.fx start --open`), as every Grida FX run is.
 
 - [ ] Act on the seasons review's advisory that the standing-plant sheet's thin outlines and brighter palette sit a step outside the set's muted ink: it is a re-brief of the sheet's style emphasis and one image operation, and the user's verdict comes first ([survival ground](ember_hollow/docs/ground.md)).
 - [ ] Remove the snow mound the winter look clause invites under a tuft's base — the ground has its own snow, so a look must not paint it twice; one clause edit plus per-state overrides for the three pairs whose winter twin re-branches rather than caps ([survival seasons](ember_hollow/docs/seasons.md)).

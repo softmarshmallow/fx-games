@@ -3,7 +3,7 @@
 //
 // The panes are the page's own <Agent> and <Shell>, as in the showcase. A <Try> without a
 // <Shell> gets a "Command line" pane of the commands the page's source declares: the
-// workflow.toml [try] commands, or a game example entry's command. web/ui/players/tabs.ts
+// workflow.toml [try] commands, or a game example entry's command. lib/players/tabs.ts
 // drives the [data-tabs] hook, through <TabsPlayer>, and copy.ts each [data-copy] button.
 
 import { createElement, isValidElement, type ReactElement } from "react";

@@ -1,6 +1,6 @@
 # Side-view platformer image asset contracts
 
-> **Checked by:** `tests/contract/test_docs_check.py`.
+> **Checked by:** none.
 
 This is the recipe-specific contract for 2D side-view platformer media: what each
 prepared-package asset is, its dimensions, its reference and layout inputs, and
@@ -333,17 +333,7 @@ for the declared `x` or `y` wrap, plus every stitch a construction cut into the
 unit, and a three-repeat preview. It claims nothing about the other axis.
 
 See [verified single-axis image repeat](../image-repeat.md) for the
-validator and preview contracts. When no verified repeat artifact exists, the
-browser preview may use the explicitly temporary legacy
-`repeat-x-seam-overlap` fallback for an
-alpha-bearing source layer. It tapers the source alpha across both
-256-source-pixel edge bands and
-composites a second copy at a phase of `sourceWidthPx - 256`; complementary
-edge bands overlap under normal alpha blending. Opaque layers use ordinary
-`repeat-x` without a partner. This in-memory preview treatment neither changes
-the published PNG nor claims that it is a verified repeat. Once a verified
-repeat unit is selected, the fallback is ineligible and the declared period is
-rendered without overlap.
+validator and preview contracts.
 
 ### Per-layer fields (from the agent)
 
@@ -352,7 +342,7 @@ rendered without overlap.
 | `id` | Lowercase snake-case slug used as filename suffix. |
 | `title` | Human-readable name. |
 | `z_index` | Integer; lower = deeper (drawn first). 0 for the opaque backdrop, ascending for layers painted on top. |
-| `parallax` | Browser screen-velocity ratio to the gameplay plane. 0 for the opaque backdrop; distant/mid layers are `<=1`; the one front-most transparent near foreground is exactly 1.8. |
+| `parallax` | Screen-velocity ratio to the gameplay plane. 0 for the opaque backdrop; distant/mid layers are `<=1`; the one front-most transparent near foreground is exactly 1.8. |
 | `opaque` | `true` for exactly ONE layer (the deepest backdrop). All others must be `false`. |
 | `paint_region` | Free-form text describing which Y/X range to paint in canvas fractions (e.g. "paint Y 3/5..5/5") and which remains exterior background. |
 | `description` | One sentence — what to paint (e.g. "silhouettes of jagged ash mountains receding into haze"). |

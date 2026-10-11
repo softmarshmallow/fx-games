@@ -6,7 +6,7 @@ import { loadCatalog } from "@/lib/catalog";
 import { href } from "@/lib/media";
 import { renderMarkdown } from "@/lib/mdx";
 import { docLink, workflowParams, workflowRoute } from "@/lib/pages";
-import type { CatalogWorkflow } from "@stage-gen/ui/contracts/catalog";
+import type { CatalogWorkflow } from "@/lib/contracts/catalog";
 
 type Params = { id: string };
 

@@ -6,7 +6,7 @@
 // The keys are the showcase's (snake_case): the graph player reads them as it did. The JSON
 // inside `verdict` and `pictures` is passed through as the example document holds it.
 
-import type { JsonObject, JsonValue } from "@stage-gen/ui/contracts/wire";
+import type { JsonObject, JsonValue } from "@/lib/contracts/wire";
 import type { Page } from "@/lib/page";
 import { clock, money } from "./shared";
 

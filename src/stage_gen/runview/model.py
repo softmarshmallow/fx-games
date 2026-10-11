@@ -1,4 +1,4 @@
-"""The run view: one derived, read-only document a client renders a run from.
+"""The run view: one derived, read-only document the examples store reads a run from.
 
 Stage Gen projects it from an FX run folder's plan and record (:mod:`stage_gen.runview.project`).
 It is derived state, which is why it carries a hard-drop versioning policy: a consumer refuses
@@ -17,9 +17,9 @@ from pydantic import Field, JsonValue, model_validator
 
 from stage_gen.contracts import SHA256_PATTERN, PersistedContractModel
 
-#: The run view's kind and version, shared with every client that reads it.
+#: The run view's kind and version.
 RUN_VIEW_KIND = "stage-gen-run-view-v1"
-RUN_VIEW_SCHEMA_VERSION = 3
+RUN_VIEW_SCHEMA_VERSION = 4
 
 NODE_ID_PATTERN = r"^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
 PORT_ID_PATTERN = r"^[a-z0-9]+(?:_[a-z0-9]+)*$"
@@ -55,27 +55,6 @@ _MEDIA_TYPES = {
     ".md": "text/markdown",
     ".txt": "text/plain",
 }
-
-
-class ViewArchetype(StrEnum):
-    """Which dedicated view a renderer gives nodes of a type.
-
-    A closed vocabulary on purpose: renderers implement one view per archetype, and a new
-    archetype is a renderer feature, not a workflow detail.
-    """
-
-    SOURCE = "source"  # roots: resolve/capture an authored input
-    IMAGE = "image"  # image generation or masked edit
-    STRUCTURED = "structured"  # schema-strict structured output
-    JUDGE = "judge"  # recognition verdict on composed evidence
-    MUSIC = "music"  # instrumental music generation
-    SOUND = "sound"  # text-to-sound-effect generation
-    VIDEO = "video"  # generated moving image
-    MATTE = "matte"  # background removal / foreground matting
-    TRANSFORM = "transform"  # deterministic local processing
-    VALIDATE = "validate"  # blocking local contract gate
-    REVIEW = "review"  # human-facing composed review sheet
-    PACKAGE = "package"  # terminal assembly of a bundle or manifest
 
 
 class RetryOwner(StrEnum):
@@ -140,7 +119,7 @@ class AuthoredInput(PersistedContractModel):
 
 
 class NodeCard(PersistedContractModel):
-    """The definition a renderer shows for a node: what it is told, statically.
+    """A node's definition: what it is told, statically.
 
     ``prompt`` is the instruction text as known at plan time; ``template_ref`` names a packaged
     template resource when composition is runtime-bound; ``reference_inputs`` point at the
@@ -156,8 +135,7 @@ class NodeCard(PersistedContractModel):
 
 
 #: A plan node declared a ``type_id`` the exporter's registry does not carry, so
-#: its title and archetype could not be joined and a renderer falls back to the
-#: generic view.
+#: its title could not be joined.
 class RunViewGap(PersistedContractModel):
     gap_id: str = Field(min_length=1, max_length=96)
     detail: str = Field(min_length=1, max_length=512)
@@ -172,7 +150,7 @@ class RunViewArtifact(PersistedContractModel):
     display: ArtifactDisplay
     # Historical view payload, interpreted only by the consuming application.
     motion: dict[str, JsonValue] | None = None
-    # Renderer hints are opaque JSON to the projection; consumers own each kind.
+    # Hints are opaque JSON to the projection; consumers own each kind.
     preview: dict[str, JsonValue] | None = None
 
 
@@ -180,9 +158,8 @@ class RunViewNode(PersistedContractModel):
     node_id: str
     type_id: str
     #: Joined from the exporter's type registry; absent when the type is
-    #: unregistered (recorded as a gap) so a renderer falls back generically.
+    #: unregistered (recorded as a gap) so a reader falls back generically.
     title: str | None = None
-    archetype: ViewArchetype | None = None
     domain: str
     description: str
     params: dict[str, str] = Field(default_factory=dict)
@@ -217,7 +194,7 @@ class RunViewNode(PersistedContractModel):
 
 
 class RunView(PersistedContractModel):
-    """One derived, hard-drop-versioned document a client renders a run from."""
+    """One derived, hard-drop-versioned document the examples store reads a run from."""
 
     schema_version: int = Field(ge=1)
     kind: str = Field(min_length=1, max_length=96)
@@ -262,6 +239,5 @@ __all__ = [
     "RunViewArtifact",
     "RunViewGap",
     "RunViewNode",
-    "ViewArchetype",
     "artifact_media_type",
 ]

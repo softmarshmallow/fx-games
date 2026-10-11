@@ -9,10 +9,8 @@ from PIL import Image
 
 from stage_gen.media import (
     apply_chroma_transparency,
-    compose_source_with_alpha,
     decontaminate_magenta_edges,
     inspect_image,
-    normalize_image_to_png,
     normalize_png,
     normalize_png_cover,
 )
@@ -95,49 +93,6 @@ def test_normalize_png_cover_promotes_provider_near_opaque_interior() -> None:
     assert record.transform["promoted_to_opaque_pixels"] == 1
 
 
-@pytest.mark.parametrize("source_format", ["JPEG", "PNG", "WEBP"])
-def test_normalize_image_to_png_accepts_provider_formats_without_resampling(
-    source_format: str,
-) -> None:
-    image = Image.new("RGB", (5, 3), (23, 45, 67))
-    source_io = BytesIO()
-    image.save(source_io, format=source_format)
-
-    first, first_record = normalize_image_to_png(source_io.getvalue())
-    second, second_record = normalize_image_to_png(source_io.getvalue())
-
-    assert first == second
-    assert first_record == second_record
-    assert inspect_image(first, expected_media_type="image/png") == inspect_image(first)
-    assert (inspect_image(first).width, inspect_image(first).height) == (5, 3)
-    assert first_record.operation == "image-to-png"
-    assert (
-        first_record.source["media_type"]
-        == {
-            "JPEG": "image/jpeg",
-            "PNG": "image/png",
-            "WEBP": "image/webp",
-        }[source_format]
-    )
-    assert first_record.transform == {
-        "format": "png",
-        "color_mode": "RGB",
-        "compression_level": 9,
-        "metadata": "stripped",
-        "pixels_resampled": False,
-    }
-
-
-def test_normalize_image_to_png_preserves_rgba_pixels() -> None:
-    source = _png("RGBA", (2, 1), [(1, 2, 3, 0), (4, 5, 6, 127)])
-
-    output, record = normalize_image_to_png(source)
-
-    assert _rgba(output) == [(1, 2, 3, 0), (4, 5, 6, 127)]
-    assert inspect_image(output).has_alpha
-    assert record.transform["color_mode"] == "RGBA"
-
-
 def _animated_image(source_format: str) -> bytes:
     first = Image.new("RGB", (8, 8), (255, 0, 0))
     second = Image.new("RGB", (8, 8), (0, 255, 0))
@@ -153,14 +108,6 @@ def _animated_image(source_format: str) -> bytes:
         **format_options,
     )
     return source_io.getvalue()
-
-
-@pytest.mark.parametrize("source_format", ["GIF", "PNG", "WEBP"])
-def test_normalize_image_to_png_rejects_animated_inputs(source_format: str) -> None:
-    source = _animated_image(source_format)
-
-    with pytest.raises(ValueError, match="animated images are not supported"):
-        normalize_image_to_png(source)
 
 
 def test_normalize_png_rejects_animated_png() -> None:
@@ -180,24 +127,6 @@ def test_chroma_transparency_handles_every_matching_pixel() -> None:
     assert facts.transparent_pixels == 2
     assert facts.nontransparent_pixels == 2
     assert inspect_image(output, expected_media_type="image/png").has_alpha
-
-
-def test_alpha_composition_prefers_mask_and_rejects_degenerate_alpha() -> None:
-    source = _png("RGB", (2, 1), [(10, 20, 30), (40, 50, 60)])
-    removed = _png("RGBA", (2, 1), [(1, 1, 1, 255), (2, 2, 2, 255)])
-    mask = _png("L", (2, 1), [0, 255])
-
-    output, facts = compose_source_with_alpha(
-        source,
-        removed_data=removed,
-        mask_data=mask,
-    )
-
-    assert facts.transparent_pixels == 1
-    assert facts.nontransparent_pixels == 1
-    assert inspect_image(output).has_alpha
-    with pytest.raises(ValueError, match="both transparent and nontransparent"):
-        compose_source_with_alpha(source, mask_data=_png("L", (2, 1), [255, 255]))
 
 
 def _rgba(data: bytes) -> list[tuple[int, int, int, int]]:

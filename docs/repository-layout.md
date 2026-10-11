@@ -10,12 +10,12 @@ already has an end-to-end generation example.
 ```text
 stage-gen/
 ├── src/
-│   └── stage_gen/                     # Components, workflows, run view, viewer
+│   └── stage_gen/                     # Components, workflows, run view
 ├── third_party/
 │   └── fx/                            # Grida FX, the engine (gridaco/fx), a pinned submodule
 ├── fx.yaml                            # Root FX project: workflows by id, runs and store in out/
 ├── library/                           # Committed, approved character-3d examples
-├── web/                               # One Bun workspace: ui/, viewer/ and site/
+├── web/                               # The site (site/), the one Bun package
 ├── godot/
 │   ├── packages/                      # Reusable, bounded runtime SDKs
 │   ├── templates/                     # Copyable application starting points
@@ -52,8 +52,7 @@ alone: it names no path in this repository and no command of it. `.agents/skills
 src/stage_gen/
 ├── components/                        # Reusable components and bounded formats
 ├── workflows/                         # One folder per product deliverable
-├── runview/                           # FX run folders projected to run views; the view cache
-├── viewer.py                          # The viewer command behind scripts/view.py
+├── runview/                           # FX run folders projected to run views, for examples
 ├── examples.py                        # The public example contract
 ├── media/                             # Shared inspection and transforms
 ├── contracts.py, fs.py, provenance.py, canonical.py   # Engine-free utilities
@@ -132,13 +131,13 @@ src/stage_gen/workflows/
 ├── looping_parallax/                  # An FX workflow file, run by `python -m grida.fx`
 │   ├── workflow.yaml, fx.yaml         # The workflow; its home (sources, routes, out/ folders)
 │   ├── fx.lock                        # The source behind each versioned node type
-│   ├── nodes/, prompts/, views/       # Its node types, the repaint brief, the compose view
+│   ├── nodes/, prompts/               # Its node types and the repaint brief
 │   ├── workflow.py, workflow.toml     # Registry hook; what the workflow file cannot say
 │   ├── page.mdx, contract.md          # The reader's page; the exact contract
 │   └── inputs/supplied_layers/        # Original layers and the inputs.yaml that places them
 ├── movie_sprite/                      # A workflow file: plate, brief, take, finish
 │   ├── workflow.yaml, fx.yaml, fx.lock
-│   ├── nodes/, prompts/, views/       # Plate, brief and finish; the idle template; the loop view
+│   ├── nodes/, prompts/               # Plate, brief and finish; the idle template
 │   ├── workflow.py, example.py        # Registry hook; the example importer
 │   └── inputs/supplied_clip/          # Original geometric actor: a still and a lossless clip
 ├── portrait_motion/                   # A workflow file: face, draw, fit, compose, deliver
@@ -147,7 +146,6 @@ src/stage_gen/workflows/
 │   └── inputs/                        # The specs, and an original sprite with stand-in answers
 ├── universe/                          # A workflow file: world, look, entity, close
 │   ├── nodes/, prompts/, schemas/     # Judges and projections; templates; answer schemas
-│   ├── views/gallery.html             # The workflow's own view: the gallery
 │   ├── models.py, medium.py, ontology.py  # The contract models, mediums and vocabulary
 │   └── inputs/lantern_ferry/          # The committed fixture world and its inputs.yaml
 └── character_3d/                      # workflow.yaml, nodes/, profiles/, prompts/, support.py
@@ -178,7 +176,7 @@ owner's manifest pins them by digest.
 ## Documentation
 
 `docs/` holds only what crosses workflows: [getting started](getting-started.md), the
-[glossary](glossary.md), the [viewer](viewer.md) and [site](site.md) guides, provider notes
+[glossary](glossary.md), the [site](site.md) guide, provider notes
 under `models/`, policy (storage, publication, IP), cross-cutting specifications under
 `spec/`, and the history under `decisions/`, `plans/` and `research/`. A workflow's guide and
 contract live in its own `page.mdx` and `contract.md`; a game's documents live under its
@@ -189,14 +187,11 @@ projects, in gridaco/fx.
 ## Preview and runtime consumers
 
 ```text
-web/                                   # One Bun workspace and the only Node boundary
-├── ui/
-│   ├── contracts/                     # Catalog, example and run-view parsers and fixtures
-│   └── players/                       # Framework-free page players: mount(el, config)
-├── viewer/                            # scripts/view.py starts it: read-only client over runs
-│   ├── app/                           # Run, workflow and artifact pages
-│   └── lib/shell/                     # Confined read-only access to persisted runs
-└── site/                              # Static landing and documentation (Next export)
+web/site/                              # Static landing and documentation (Next export),
+│                                      # the one Bun package and the only Node boundary
+└── lib/
+    ├── contracts/                     # Catalog and example parsers and fixtures
+    └── players/                       # Framework-free page players: mount(el, config)
 
 godot/
 ├── games/
@@ -297,11 +292,6 @@ packages; its `demo-games` commands support existing format inspection and fixtu
 maintenance. The optional `games` installation group keeps all of this outside the
 public product's default environment and distributions.
 
-The viewer accepts the public pipeline envelope with arbitrary pipeline identity.
-It retains persisted readers, displays unknown metadata and shows the step views
-`scripts/view.py` keeps for an FX run, sandboxed. Generic MIME handling permits unfamiliar
-assets without adding a workflow enum.
-
 The asset-consumer template copies a selected asset and its verified provenance;
 its GDScript loads that local content. A game can extend preparation to create
 resources, bind animations and wire scenes. Starting Godot reads prepared assets
@@ -321,12 +311,12 @@ remains in `docs/spec/`; its former Scenario page points to the Godot owner. His
 | Scheduling, graph state, the store, run records, prices, retries | Grida FX (`third_party/fx`, under its own rules) |
 | A capability, route or provider request/response adaptation | Grida FX |
 | A project's choice of routes | That project's `fx.yaml` |
-| Reading FX runs for the viewer and examples | `stage_gen.runview` |
+| Reading FX runs for examples | `stage_gen.runview` |
 | Asset-specific processing and admission | Component |
 | Several asset stages with a bounded output | Workflow |
 | User-specific graph composition | The user's own FX workflow file or Python builder |
 | Workflow asset parameters | The workflow's typed `inputs:`, given by an inputs file or flags |
-| A specialized preview | Viewer inspector or bounded runtime package |
+| A specialized preview | A site player, a view in FX, or a bounded runtime package |
 | VN-oriented narrative authoring and invocation | Godot Scenario package |
 | Episode direction and installed game capabilities | Consuming game |
 | Resource import and asset-to-scene binding | Consumer's preparation script |

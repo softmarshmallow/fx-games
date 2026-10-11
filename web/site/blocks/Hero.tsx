@@ -2,12 +2,12 @@
 // Port of the retired showcase's `hero` component.
 //
 // The parallax loop's markup (data-parallax-loop, data-loop, data-world, data-loop-map,
-// data-loop-reference) is driven by web/ui/players/parallax-loop.ts through
+// data-loop-reference) is driven by lib/players/parallax-loop.ts through
 // <ParallaxLoopPlayer>; the model's <model-viewer id="mv"> and #clips by
-// web/ui/players/model-viewer.ts through <ModelClipsPlayer>.
+// lib/players/model-viewer.ts through <ModelClipsPlayer>.
 
 import { Fragment, type ReactElement, type ReactNode } from "react";
-import type { JsonObject, JsonValue } from "@stage-gen/ui/contracts/wire";
+import type { JsonObject, JsonValue } from "@/lib/contracts/wire";
 import { picture } from "@/lib/page";
 import ModelClipsPlayer from "@/components/players/ModelClipsPlayer";
 import ParallaxLoopPlayer from "@/components/players/ParallaxLoopPlayer";

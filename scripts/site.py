@@ -34,6 +34,8 @@ import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
+from stage_gen.provider_env import PROVIDER_ENV_KEYS
+
 REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
 SITE_ROOT = REPOSITORY_ROOT / "web" / "site"
 CATALOG_ROOT = SITE_ROOT / ".catalog"
@@ -47,7 +49,6 @@ DEFAULT_EXAMPLES = REPOSITORY_ROOT / "out" / "examples"
 SITE_DOCS: Mapping[str, tuple[str, str]] = {
     "getting-started": ("docs/getting-started.md", "Getting started"),
     "glossary": ("docs/glossary.md", "Glossary"),
-    "viewer": ("docs/viewer.md", "Viewer"),
     "site": ("docs/site.md", "Site"),
     "decision-0071": (
         "docs/decisions/0071-workflows-are-the-product-unit-and-the-web-splits-into-site-and-viewer.md",
@@ -220,7 +221,9 @@ def build(examples: Path, *, allow_missing_examples: bool, base_path: str | None
     bun = shutil.which("bun")
     if bun is None:
         raise SiteError("the site builds with Bun; install it (https://bun.sh) and run this again")
-    environment = dict(os.environ)
+    environment = {
+        name: value for name, value in os.environ.items() if name not in PROVIDER_ENV_KEYS
+    }
     if base_path is not None:
         environment["SITE_BASE_PATH"] = base_path
     completed = subprocess.run(

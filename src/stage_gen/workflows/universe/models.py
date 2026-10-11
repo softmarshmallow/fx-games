@@ -34,7 +34,6 @@ from stage_gen.workflows.universe.ontology import (
 )
 
 StableId = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{1,95}$")]
-Sha256 = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
 Text = Annotated[str, Field(min_length=1)]
 Salience = Literal["major", "supporting", "minor"]
 Grade = Literal["pass", "fail"]
@@ -805,7 +804,6 @@ def evaluate_plan(plan: GalleryPlan, proposal: UniverseProposal) -> PlanEvaluati
     }
 
 
-WET_WORDS = ("rain", "storm", "downpour", "drizzle", "puddle", "soaked", "sodden")
 NIGHT_WORDS = ("night", "moon", "lantern", "dark", "starlight", "torch")
 _WET_ALTERNATION = (
     r"rain|rains|raining|rainfall|rainy|storm|storms|stormy"

@@ -72,7 +72,6 @@ steps:
     with:
       image: ${{ inputs.character }}
       aspect_ratio: ${{ inputs.aspect_ratio }}
-    view: true
 
   brief:
     title: Write the motion brief
@@ -103,7 +102,6 @@ steps:
       duration: ${{ inputs.seconds }}
       resolution: ${{ inputs.resolution }}
       aspect_ratio: ${{ inputs.aspect_ratio }}
-    view: true
 
   finish:
     title: Key, loop and verify
@@ -115,7 +113,6 @@ steps:
     with:
       video: ${{ steps.take.outputs.video || inputs.footage }}
       settings: ${{ inputs.finish }}
-    view: ./views/loop.html
 
 outputs:
   loop: ${{ steps.finish.outputs.loop }}

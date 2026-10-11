@@ -1,9 +1,9 @@
 // <Painter>: A small tile map you can draw on, composed live from a real atlas through its neighbour lookup.
 // Port of the retired showcase's `painter` component.
-// The painting itself is web/ui/players/painter.ts, mounted on [data-painter] with this config
+// The painting itself is lib/players/painter.ts, mounted on [data-painter] with this config
 // by <PainterPlayer>.
 
-import type { JsonObject, JsonValue } from "@stage-gen/ui/contracts/wire";
+import type { JsonObject, JsonValue } from "@/lib/contracts/wire";
 import { capitalize } from "@/lib/page";
 import PainterPlayer from "@/components/players/PainterPlayer";
 import type { BlockProps } from "./shared";

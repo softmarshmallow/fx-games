@@ -35,12 +35,11 @@ def _minimal_repository(root: Path) -> None:
     """The files the docs gate reads unconditionally, all empty."""
     for relative in (
         ".env.example",
-        "web/viewer/lib/shell/runs.ts",
         "README.md",
         "docs/generated-media-publication.md",
         "godot/games/_shared/docs/game-package.md",
         "docs/spec/agent-prompts.md",
-        "docs/viewer.md",
+        "docs/site.md",
     ):
         path = root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -116,18 +115,16 @@ def test_a_user_skill_names_nothing_in_this_repository(tmp_path: Path) -> None:
     ]
 
 
-def test_web_text_walk_reads_git_files_and_the_viewer_shell_may_not_spawn(
-    tmp_path: Path,
-) -> None:
-    """The web walk is git's list, so ignored build output is never scanned, and a
-    viewer shell module that can start a process fails the gate."""
+def test_web_text_walk_reads_git_files_and_web_code_may_not_spawn(tmp_path: Path) -> None:
+    """The web walk is git's list, so ignored build output is never scanned, and web code
+    that can start a process fails the gate."""
     _minimal_repository(tmp_path)
     stale = "const gateway = 'https://ai-gateway.vercel.sh';\n"
     (tmp_path / ".gitignore").write_text(".next\n", encoding="utf-8")
-    for relative in ("web/viewer/.next/server/page.js", "web/ui/contracts/stale.ts"):
+    for relative in ("web/site/.next/server/page.js", "web/site/lib/contracts/stale.ts"):
         (tmp_path / relative).parent.mkdir(parents=True, exist_ok=True)
         (tmp_path / relative).write_text(stale, encoding="utf-8")
-    (tmp_path / "web/viewer/lib/shell/launch.ts").write_text(
+    (tmp_path / "web/site/lib/launch.ts").write_text(
         'import { spawn } from "node:child_process";\n', encoding="utf-8"
     )
     subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
@@ -135,25 +132,9 @@ def test_web_text_walk_reads_git_files_and_the_viewer_shell_may_not_spawn(
     result = _load_docs_checker().run_docs_check(tmp_path)
 
     assert sorted(failure for failure in result.failures if failure.startswith("web")) == [
-        "web/ui/contracts/stale.ts: legacy gateway URL",
-        "web/viewer/lib/shell/launch.ts: web shell must not spawn a generation process",
+        "web/site/lib/contracts/stale.ts: legacy gateway URL",
+        "web/site/lib/launch.ts: web code must not spawn a generation process",
     ]
-
-
-def test_every_environment_name_the_viewer_shell_reads_is_documented(tmp_path: Path) -> None:
-    """Any viewer shell module, not only runs.ts, may read the environment that
-    ``scripts/view.py`` sets through the viewer; each name it reads must be in ``.env.example``."""
-    _minimal_repository(tmp_path)
-    (tmp_path / "web/viewer/lib/shell/catalog.ts").write_text(
-        "const file = process.env.STAGE_GEN_CATALOG;\n", encoding="utf-8"
-    )
-
-    failures = _load_docs_checker().run_docs_check(tmp_path).failures
-    assert ".env.example: missing viewer config name STAGE_GEN_CATALOG" in failures
-
-    (tmp_path / ".env.example").write_text("STAGE_GEN_CATALOG=\n", encoding="utf-8")
-    failures = _load_docs_checker().run_docs_check(tmp_path).failures
-    assert not any("STAGE_GEN_CATALOG" in failure for failure in failures)
 
 
 def test_every_spec_names_a_true_checker(tmp_path: Path) -> None:
@@ -236,7 +217,7 @@ def test_character_profile_workflow_is_discoverable_and_version_accurate() -> No
     assert "strict v2 lower_snake_case `dialogue-scene` recipe" not in docs_index
 
 
-def test_image_repeat_contract_and_preview_fallback_are_scoped() -> None:
+def test_image_repeat_contract_is_scoped() -> None:
     repository_root = Path(__file__).parents[2]
     image_repeat = (repository_root / "docs/image-repeat.md").read_text(encoding="utf-8")
     for required in (
@@ -245,21 +226,6 @@ def test_image_repeat_contract_and_preview_fallback_are_scoped() -> None:
         "Two-axis tileability is a non-goal",
     ):
         assert required in image_repeat
-
-    legacy_fallback_documents = (
-        repository_root / "docs/scene-layers.md",
-        repository_root / "docs/spec/asset-contracts.md",
-    )
-
-    for document in legacy_fallback_documents:
-        contract = document.read_text(encoding="utf-8")
-        assert "repeat-x-seam-overlap" in contract
-        assert re.search(r"temporary legacy.{0,100}fallback", contract, re.DOTALL)
-        assert re.search(r"no\s+verified (?:loop|repeat) artifact", contract)
-        assert "sourceWidthPx - 256" in contract
-        assert re.search(r"alpha", contract, re.IGNORECASE)
-        assert re.search(r"verified\s+repeat\s+(?:unit|artifact)", contract)
-        assert "ineligible" in contract
 
 
 def test_terrain_atlas_documentation_matches_runtime_contract() -> None:

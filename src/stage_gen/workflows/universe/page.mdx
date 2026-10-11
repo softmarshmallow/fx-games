@@ -13,7 +13,6 @@ The plan prices the world phase exactly and the gallery at its worst case, since
 there are is a result of the world. A live run needs `--live`, an OpenRouter key and a ceiling
 (`--max-usd`): with `--yes-up-to 1` as well it stops before the gallery once the gallery's price is
 known, and running it again without that draws the gallery from the admitted world, inside the
-ceiling, without proposing it again. The workflow's own view in the viewer
-(`uv run python scripts/view.py`) shows the gallery, one card per entity, with a red dot on an image
-its review rejected. The [contract](contract.md) holds the source roles, both phases, the judges and
-the graph.
+ceiling, without proposing it again. FX's viewer (`uv run python -m grida.fx start --open`)
+shows each entity's image, and the manifest marks the ones its review rejected. The
+[contract](contract.md) holds the source roles, both phases, the judges and the graph.

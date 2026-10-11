@@ -71,7 +71,6 @@ steps:
           portrait: ${{ inputs.portrait }}
           location: ${{ steps.locate.outputs.json }}
           spec: ${{ steps.check.outputs.spec }}
-        view: true
 
   draw:
     title: Decide and draw
@@ -106,7 +105,6 @@ steps:
         with:
           portrait: ${{ steps.face.crop.outputs.image || inputs.portrait }}
           spec: ${{ steps.check.outputs.spec }}
-        view: true
 
       briefs:
         title: Write the questions
@@ -124,7 +122,6 @@ steps:
           prompt: ${{ steps.briefs.outputs.atlas }}
           size: ${{ steps.check.facts.size }}
           background: opaque
-        view: true
 
   fit:
     title: Fit
@@ -179,7 +176,6 @@ steps:
           geometry: ${{ steps.fit.geometry.outputs.json }}
           spec: ${{ steps.check.outputs.spec }}
           eligible: ${{ steps.draw.admitted.facts.eligible_features }}
-        view: true
 
       quality:
         title: Review the result
@@ -237,7 +233,6 @@ steps:
           masks: ${{ steps.compose.composition.outputs.masks }}
           spec: ${{ steps.check.outputs.spec }}
           features: ${{ steps.draw.admitted.facts.eligible_features }}
-        view: true
 
 outputs:
   result: ${{ steps.deliver.result.outputs.result }}

@@ -29,7 +29,7 @@ separate, game-independent asset capability belongs in Stage Gen.
 - Keep generation-specific genre, composition, projection, framing, layout,
   artifact, and validation assumptions in workflows. Keep runtime camera, scene,
   engine, movement, combat, and gameplay assumptions in consumer adapters under
-  `godot/`. The viewer owns inspection only.
+  `godot/`.
 - Do not import `web/` from a reusable component.
 - Keep source identifiers, comments, logs, tests, and user-facing strings in
   English.
@@ -123,15 +123,14 @@ uv run python scripts/check.py
 Use `--scope all` after installing all workspace groups for changes across owners.
 See [VERIFICATION.md](VERIFICATION.md) for the separate consumer gates.
 
-For the web workspace (the viewer, the site and their shared `ui`), run:
+For the site (`web/site`), run:
 
 ```sh
-cd web
+cd web/site
 bun install --frozen-lockfile
 bun run check
 bun test
-bun run --cwd viewer build
-cd ..
+cd ../..
 uv run python scripts/site.py build --allow-missing-examples
 ```
 

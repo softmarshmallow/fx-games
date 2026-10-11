@@ -15,7 +15,8 @@ and [IP](docs/oss-ip.md). This file controls applicability; focused docs control
 - Python is the headless implementation. Grida FX (`third_party/fx`) is the engine; `src/stage_gen/` is the
   application. FX owns the workflow file, planning and prices, the store, the run record, the spending ceiling,
   retries, the built-in node types (`fx/<type>@1`) and the provider adapters. Stage Gen owns components,
-  workflows, the catalog, the run view (`stage_gen.runview`) and the viewer, and adds no engine of its own.
+  workflows, the catalog and the run view (`stage_gen.runview`) the examples store reads, and adds no engine
+  or viewer of its own: runs are seen in FX's viewer.
   Stage Gen and the game code import FX only as `from grida.fx import X`, with `X` in `grida.fx.__all__`:
   never a private module and never `grida.fx.std`. FX knows no Stage Gen package, workflow, game or brand;
   provenance identities come from the application. Stage Gen's utilities (`contracts`, `fs`, `provenance`,
@@ -25,8 +26,8 @@ and [IP](docs/oss-ip.md). This file controls applicability; focused docs control
   workflow-specific canonicalization with its workflow.
 - The product owns asset-pipeline authoring, execution, artifacts and inspection. Components own bounded capabilities;
   workflows compose useful asset outcomes. Their inputs never require a complete game, selected demo or gameplay schema.
-  Consumer adapters own runtime camera, scene, engine and gameplay assumptions. `web/viewer` and `web/site` consume
-  public run/artifact contracts and are not a second generator. Bounded animation, terrain and spatial asset contracts
+  Consumer adapters own runtime camera, scene, engine and gameplay assumptions. `web/site` consumes
+  public catalog and example contracts and is not a second generator. Bounded animation, terrain and spatial asset contracts
   may remain optional. Scenario authoring and execution belong to the Godot package; they are not asset-product components.
 - Scenario is the Godot-owned VN-oriented invocation framework. Games own and invoke their sequences,
   grant installed capabilities and retain simulation, input, objects, cameras and saves. Keep narrative
@@ -80,8 +81,7 @@ and [IP](docs/oss-ip.md). This file controls applicability; focused docs control
   `TRIPO_API_KEY`, `ELEVENLABS_API_KEY` and the base URLs `.env.example` names), from the environment or the
   planning project's `.env`. Stage Gen reads no key's value; its launchers strip the keys from a child's
   environment. Treat `.env` as optional and local; never assume it is populated, overwrite, print, or commit it,
-  or copy provider secrets into `web/` (the viewer, the site or their shared `ui`). `.env.example` owns
-  non-secret defaults.
+  or copy provider secrets into the site (`web/site`). `.env.example` owns non-secret defaults.
 - Offline operation is the default. Planning never spends; a provider call needs `--live`, a ceiling
   (`--max-usd`), explicit task intent and documented opt-in. Tests answer paid calls with FX stand-ins
   (`grida.fx.run(..., stand_in=...)`), never a provider. Re-check current provider contracts before changing a

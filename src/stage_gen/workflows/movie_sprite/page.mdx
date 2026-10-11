@@ -162,8 +162,9 @@ rather than paying for another. `python -m grida.fx reroll <run> take` asks for 
 purpose, which the next live run draws, and `python -m grida.fx pick <run> take <n>` chooses which
 one is finished.
 
-The run folder's step views play the take and the finished loop. Change `finish.json` and run
-again: the plate, the brief and the take come from the cache, and only finishing runs.
+FX's viewer (`python -m grida.fx start`) shows the take and the finished loop beside their steps.
+Change `finish.json` and run again: the plate, the brief and the take come from the cache, and
+only finishing runs.
 
 A clip made elsewhere can be finished instead: give `footage: selected.mp4` (or a Matroska file
 with alpha) and no `character`. That run makes no provider call.

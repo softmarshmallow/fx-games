@@ -59,7 +59,7 @@ Under the run folder's `outputs/`:
 - `report.json` (`movie_sprite_body_processing`): the settings used, the source facts, and a hash of every frame.
 - `frames.zip`: every frame as a numbered PNG, when the finishing settings set `export_frames`.
 
-The finish step's view plays the preview and shows the contact sheet with the report's checks; the take's view plays the take.
+The take, the preview, the contact sheet and the report are files of their steps, which FX's viewer (`python -m grida.fx start`) shows.
 
 ## Graph
 

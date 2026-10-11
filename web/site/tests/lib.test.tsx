@@ -1,16 +1,15 @@
 // The scaffold's own checks, runnable without a staged catalog: Python-faithful number
-// formatting, the parity normaliser, and the page binding refusing what a page lacks
-// (on the shared catalog fixture of web/ui/contracts).
+// formatting and the page binding refusing what a page lacks (on the catalog fixture of
+// lib/contracts).
 
 import { describe, expect, test } from "bun:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import fixture from "@stage-gen/ui/contracts/catalog.fixture.json";
-import { parseCatalog } from "@stage-gen/ui/contracts/catalog";
+import fixture from "@/lib/contracts/catalog.fixture.json";
+import { parseCatalog } from "@/lib/contracts/catalog";
 import { clock, minutes, money, pyFixed, pyFloat, pyRound, size, stateWords } from "@/blocks/shared";
 import { makeComponents } from "@/lib/mdx";
 import { gamePage, landingCards, workflowPage } from "@/lib/pages";
-import { normalize } from "./html";
 
 describe("Python numbers", () => {
   test("round half to even, on the exact value", () => {
@@ -39,24 +38,6 @@ describe("Python numbers", () => {
     expect(size(2_500)).toBe("2 KB");
     expect(stateWords("eyes", "eyes_half")).toBe("Half");
     expect(stateWords("mouth", "mouth_ah")).toBe("AH");
-  });
-});
-
-describe("parity normalisation", () => {
-  test("spelling differences vanish", () => {
-    const python =
-      '<div class="b a" data-x="{&quot;k&quot;: 1.0, &quot;a&quot;: [&quot;media/x.webp&quot;]}" style="aspect-ratio: 3/4;background:#fff">' +
-      "<img src=\"media/y.webp\" alt=\"\">It&#x27;s</div>";
-    const react =
-      '<div style="aspect-ratio:3/4;background:#fff" data-x="{&quot;a&quot;:[&quot;/examples/o/i/media/x.webp&quot;],&quot;k&quot;:1}" class="a b">' +
-      '<img alt="" src="/examples/o/i/media/y.webp"/>It&#39;s</div>';
-    expect(normalize(react)).toEqual(normalize(python));
-  });
-
-  test("real differences stay", () => {
-    expect(normalize('<p class="mt-6">a</p>')).not.toEqual(normalize('<p class="mt-4">a</p>'));
-    expect(normalize("<p>a b</p>")).not.toEqual(normalize("<p>ab</p>"));
-    expect(normalize("<pre>a\n b</pre>")).not.toEqual(normalize("<pre>a\nb</pre>"));
   });
 });
 

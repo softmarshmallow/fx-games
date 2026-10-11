@@ -1,9 +1,9 @@
 // <PartStage>: The delivered model with each of its parts shown or hidden on its own.
 // Port of the retired showcase's `part_stage` component.
-// The player is web/ui/players/part-stage.ts, mounted by <PartStagePlayer>; it reads the JSON
+// The player is lib/players/part-stage.ts, mounted by <PartStagePlayer>; it reads the JSON
 // config and the data-* hooks below.
 
-import type { JsonObject } from "@stage-gen/ui/contracts/wire";
+import type { JsonObject } from "@/lib/contracts/wire";
 import { capitalize, picture } from "@/lib/page";
 import PartStagePlayer from "@/components/players/PartStagePlayer";
 import type { BlockProps } from "./shared";

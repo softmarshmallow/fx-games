@@ -1,7 +1,7 @@
 // <Shell>: The commands of <Try>, with a copy button.
 // Port of the retired showcase's `shell` component.
 //
-// web/ui/players/copy.ts, through <CopyPlayer>, copies a [data-copy] button's text.
+// lib/players/copy.ts, through <CopyPlayer>, copies a [data-copy] button's text.
 
 import { isValidElement, type ReactElement, type ReactNode } from "react";
 import CopyPlayer from "@/components/players/CopyPlayer";

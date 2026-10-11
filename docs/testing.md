@@ -20,7 +20,7 @@ in the test's own folder.
 | Wheel-packaged resources | `uv run pytest tests/contract/test_packaged_resources.py -q` |
 | Import architecture | `uv run pytest tests/contract/test_import_boundaries.py -q` |
 | Persisted identities | `uv run pytest tests/contract/test_workflow_identity.py -q` |
-| Run views and the viewer launcher | `uv run pytest tests/unit/test_runview.py tests/unit/test_run_views.py tests/unit/test_viewer.py -q` |
+| Run views | `uv run pytest tests/unit/test_runview.py -q` |
 | Godot owners | `uv run --group games python godot/tools/check.py` |
 | Scenario compiler/runtime/embedding | `uv run --group games python godot/tools/check.py --owner scenario_runtime` |
 | Formatting and lint | `uv run ruff format --check . && uv run ruff check .` |
@@ -57,24 +57,21 @@ offline check. Its FX run record keeps the route, cost, digests and attempts wit
 credentials. Visual output accepted as evidence still requires semantic review by a
 non-producer; audio quality review is separate from deterministic media validation.
 
-## Optional web adapter
+## Site
 
-The web workspace uses Bun for Next.js tooling. It consumes published contracts
+The site (`web/site`) uses Bun for Next.js tooling. It consumes published contracts
 and starts nothing:
 
 ```sh
-cd web
+cd web/site
 bun install --frozen-lockfile
 bun run check
 bun test
-bun run --cwd viewer build
 ```
 
-Web tests cover run-tag and artifact-path confinement, prepared-manifest
-parsing, the run-view document and its camera math, vertical geometry, one-way
-collision, ladder endpoint and state behavior, camera deadzones, combat,
-progression, and bot navigation. A build must not require provider credentials
-or execute a live generation request.
+Site tests cover the catalog and example parsers, the players' cleanup, page binding,
+doc links and Python-faithful number formatting. A build must not require provider
+credentials or execute a live generation request.
 
 ## Documentation and publication policy
 

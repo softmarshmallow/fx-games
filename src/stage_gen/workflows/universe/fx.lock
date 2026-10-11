@@ -1,15 +1,15 @@
 # fx.lock: the source behind each versioned node type; commit it
 fx: lock/v1
 nodes:
-  nodes/entities.py#entity_context@1: 6d7f01b341ffe8ac887fb81af982efac9bb90de6662d9492581246d205e961aa
-  nodes/entities.py#image_prompt@1: 6d7f01b341ffe8ac887fb81af982efac9bb90de6662d9492581246d205e961aa
-  nodes/entities.py#record@1: 6d7f01b341ffe8ac887fb81af982efac9bb90de6662d9492581246d205e961aa
-  nodes/entities.py#review_record@1: 6d7f01b341ffe8ac887fb81af982efac9bb90de6662d9492581246d205e961aa
-  nodes/judges.py#direction_ok@1: 72336d3938bba88e96c87acee95fb9196f8999eda27781ea8ad3749c48dd6e24
-  nodes/judges.py#grammar_ok@1: 72336d3938bba88e96c87acee95fb9196f8999eda27781ea8ad3749c48dd6e24
-  nodes/judges.py#plan_ok@1: 72336d3938bba88e96c87acee95fb9196f8999eda27781ea8ad3749c48dd6e24
-  nodes/judges.py#proposal_ok@1: 72336d3938bba88e96c87acee95fb9196f8999eda27781ea8ad3749c48dd6e24
-  nodes/world.py#admit@1: b0210a538ecddcc3e5715ee27568e4be7e0df06e9d66c032d93636fa833ee5f9
-  nodes/world.py#grammar_projection@1: b0210a538ecddcc3e5715ee27568e4be7e0df06e9d66c032d93636fa833ee5f9
-  nodes/world.py#projection@1: b0210a538ecddcc3e5715ee27568e4be7e0df06e9d66c032d93636fa833ee5f9
-  nodes/world.py#source@1: b0210a538ecddcc3e5715ee27568e4be7e0df06e9d66c032d93636fa833ee5f9
+  nodes/entities.py#entity_context@1: 4f571d1d7b2585f6b47adce9cfeb4cfecd893a0ded17fa8e86185d943870c603
+  nodes/entities.py#image_prompt@1: 4f571d1d7b2585f6b47adce9cfeb4cfecd893a0ded17fa8e86185d943870c603
+  nodes/entities.py#record@1: 4f571d1d7b2585f6b47adce9cfeb4cfecd893a0ded17fa8e86185d943870c603
+  nodes/entities.py#review_record@1: 4f571d1d7b2585f6b47adce9cfeb4cfecd893a0ded17fa8e86185d943870c603
+  nodes/judges.py#direction_ok@1: fb871b5bd13b665c7ff7d063a451f1b3f68e340d5c2da6c407499c8bf1c4333f
+  nodes/judges.py#grammar_ok@1: fb871b5bd13b665c7ff7d063a451f1b3f68e340d5c2da6c407499c8bf1c4333f
+  nodes/judges.py#plan_ok@1: fb871b5bd13b665c7ff7d063a451f1b3f68e340d5c2da6c407499c8bf1c4333f
+  nodes/judges.py#proposal_ok@1: fb871b5bd13b665c7ff7d063a451f1b3f68e340d5c2da6c407499c8bf1c4333f
+  nodes/world.py#admit@1: c1c5fd1673f21194bcaab55cf2215d84dd3e41106d06369ac69fbda71ac221da
+  nodes/world.py#grammar_projection@1: c1c5fd1673f21194bcaab55cf2215d84dd3e41106d06369ac69fbda71ac221da
+  nodes/world.py#projection@1: c1c5fd1673f21194bcaab55cf2215d84dd3e41106d06369ac69fbda71ac221da
+  nodes/world.py#source@1: c1c5fd1673f21194bcaab55cf2215d84dd3e41106d06369ac69fbda71ac221da

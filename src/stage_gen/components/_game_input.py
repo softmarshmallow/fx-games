@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import re
 import tomllib
 import unicodedata
 from collections.abc import Iterable
@@ -109,18 +108,6 @@ def _reject_temporal_values(value: object, location: str) -> None:
             _reject_temporal_values(item, f"{location}[{index}]")
 
 
-def model_field_names(model: type[BaseModel]) -> frozenset[str]:
-    """Return persisted snake-case field names for documentation and closure checks."""
-
-    return frozenset(model.model_fields)
-
-
-def assert_pattern(value: str, pattern: str, label: str) -> str:
-    if re.fullmatch(pattern, value) is None:
-        raise ValueError(f"{label} has an invalid identifier")
-    return value
-
-
 __all__ = [
     "AuthoredContractLoadError",
     "GAME_ID_PATTERN",
@@ -128,9 +115,7 @@ __all__ = [
     "PACKAGE_ID_PATTERN",
     "SHA256_PATTERN",
     "SNAKE_ID_PATTERN",
-    "assert_pattern",
     "canonical_contract_json",
-    "model_field_names",
     "normalized_text",
     "parse_toml_contract",
     "portable_relative_path",

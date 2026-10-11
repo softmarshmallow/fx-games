@@ -3,13 +3,13 @@
 The site is the static landing and documentation site in [`web/site`](../web/site). It shows
 each workflow with the example it pins, the examples the example games made, each workflow's
 contract and a reference for every workflow. It reads only the catalog that
-`scripts/catalog.py` writes and the example store; it never reads run folders and never
-starts a run. The [viewer](viewer.md) is the local client for runs.
+`scripts/catalog.py` writes and the example store; it never reads run folders, never starts a
+run and holds no gameplay. Runs are seen in FX's viewer (`python -m grida.fx start`).
 
 ## Build and serve it
 
 ```sh
-(cd web && bun install --frozen-lockfile)
+(cd web/site && bun install --frozen-lockfile)
 uv run python scripts/site.py build                            # strict: every approved example present
 uv run python scripts/site.py build --allow-missing-examples   # a clean clone, without the store
 uv run python scripts/site.py serve --port 8790
@@ -23,7 +23,7 @@ gitignored folders, then runs `bun run --cwd web/site build`, which writes `web/
 - the prose from the checkout into `web/site/.catalog/pages/`: each workflow's `page.mdx`,
   `contract.md` and `examples/<id>.mdx`, each game example's `page.mdx` from the store, and the
   Markdown the site shows under `/docs/` (`SITE_DOCS` in the script: getting started, the
-  glossary, the viewer, this guide and decision 0071), with `docs/index.json` listing them;
+  glossary, this guide and decision 0071), with `docs/index.json` listing them;
 - the example media into `web/site/public/examples/<owner>/<id>/media/`, from the store, or for a
   library example from the tracked files its figures ledger names.
 
@@ -44,7 +44,7 @@ library file server.
 | `/workflows/<id>/<example>/` | An example with its own `examples/<example>.mdx` |
 | `/workflows/<id>/contract/` | The workflow's `contract.md` |
 | `/games/<game>/<example>/` | An example a game made, with the `page.mdx` it exported |
-| `/docs/<slug>/` | The guides `SITE_DOCS` names: getting started, glossary, viewer, site, decision 0071 |
+| `/docs/<slug>/` | The guides `SITE_DOCS` names: getting started, glossary, site, decision 0071 |
 | `/docs/workflows/<id>/` | The reference for every workflow, written from the catalog |
 
 How to write, plan and run a workflow is not staged: the landing links the
@@ -68,22 +68,19 @@ image keeps its alt text.
 The interactive players (the graph and its drawer, the painter, the wipe, the UI kit, the face
 rig, the sprite and part stages, the hero's model and clips, the parallax loop, stage and
 playground, the tabs and the copy buttons) are framework-free modules in
-[`web/ui/players`](../web/ui/players). Each exports `mount(el, config)`, which returns the
-cleanup that removes its listeners, timers, observers and frame loops. A block renders its
-player's root through a thin client wrapper in
+[`web/site/lib/players`](../web/site/lib/players). Each exports `mount(el, config)`, which
+returns the cleanup that removes its listeners, timers, observers and frame loops. A block
+renders its player's root through a thin client wrapper in
 [`web/site/components/players`](../web/site/components/players), with the `data-*` hook and
 its JSON config; the wrapper mounts the player after hydration and runs the cleanup when the
 root goes. A page opened at `#graph/<node>` shows the graph view from its first paint: the
 shell's first script marks `<html>`, and the graph player takes over when it mounts.
 `elkjs` and `@google/model-viewer` come from npm.
 
-The viewer keeps its own `MotionPlayer`, step-view frame and execution-graph layout. They
-inspect a strip's frames, a step's own view and a live execution view with React state; the
-site's players drive an example's authored markup, so neither replaces the other.
-
 ## Checks
 
-`uv run python scripts/check.py --scope web` type-checks and tests the workspace and builds the
-site with `--allow-missing-examples`. The site's own tests (`web/site/tests`) cover Python-faithful
-number formatting, the markup normaliser, the page binding's refusals and the docs' link
-resolution.
+`uv run python scripts/check.py --scope web` type-checks and tests the site and builds it with
+`--allow-missing-examples`. The site's own tests (`web/site/tests`) cover Python-faithful number
+formatting, the page binding's refusals and the docs' link resolution; the tests beside the
+contracts and players in `web/site/lib` cover the catalog and example parsers and the players'
+cleanup.

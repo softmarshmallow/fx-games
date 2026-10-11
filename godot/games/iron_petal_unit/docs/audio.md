@@ -245,7 +245,7 @@ back from the call cache, so only the changed clip is drawn and billed.
 ```sh
 cd godot/games/iron_petal_unit
 uv run python -m grida.fx run pipeline/workflow.py:build --arg package=inputs --live --max-usd 2
-(cd ../../.. && uv run python scripts/view.py out/runs)
+uv run python -m grida.fx start --open
 ```
 
 The clip's step plays in the dashboard after the same admission a build applies.

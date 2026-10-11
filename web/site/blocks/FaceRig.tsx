@@ -1,6 +1,6 @@
 // <FaceRig>: The delivered face patches stacked on the rest state, with each eye and the mouth set separately.
 // Port of the retired showcase's `face_rig` component (and FEATURE_WORDS).
-// The player is web/ui/players/face-rig.ts, mounted on [data-face-rig] by <FaceRigPlayer>.
+// The player is lib/players/face-rig.ts, mounted on [data-face-rig] by <FaceRigPlayer>.
 
 import FaceRigPlayer from "@/components/players/FaceRigPlayer";
 import type { BlockProps } from "./shared";

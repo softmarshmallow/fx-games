@@ -2,7 +2,7 @@
  * sources carry, and the showcase's two font stacks.
  *
  * The showcase scanned its templates and its Python components. Their ports live in app/,
- * components/, blocks/ and lib/, and the players' scripts in web/ui/players set classes too.
+ * components/, blocks/ and lib/, where the players' scripts set classes too.
  * The staged page sources (.catalog/) and the example media are never scanned.
  */
 
@@ -12,7 +12,6 @@
 @source "../components";
 @source "../blocks";
 @source "../lib";
-@source "../../ui/players";
 
 @theme {
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;

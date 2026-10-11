@@ -1,10 +1,10 @@
 "use client";
 
 // The live kit of a <UiKit>. The block renders this root with its markup inside; the player in
-// web/ui/players/ui-kit.ts mounts on it after hydration and is torn down with it.
+// lib/players/ui-kit.ts mounts on it after hydration and is torn down with it.
 
 import type { ReactElement } from "react";
-import { mount } from "@stage-gen/ui/players/ui-kit";
+import { mount } from "@/lib/players/ui-kit";
 import { type RootProps, usePlayer } from "./use-player";
 
 export default function UiKitPlayer({ className, style, children }: RootProps): ReactElement {

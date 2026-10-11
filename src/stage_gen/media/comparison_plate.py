@@ -34,7 +34,6 @@ from PIL import Image, ImageDraw, ImageFont
 
 from stage_gen.canonical import content_sha256
 
-COMPARISON_PLATE_SCHEMA_NAME: Final = "comparison_plate_v1"
 COMPARISON_PLATE_ERROR_CODE: Final = "comparison-plate-v1"
 
 #: Alpha above which a pixel counts as painted, matching the runtime's own threshold so a plate

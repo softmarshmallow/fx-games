@@ -28,7 +28,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
     from stage_gen.examples import ExampleImporter, FiguresLedger, WorkflowExample
-    from stage_gen.runview import ViewArchetype
 
 WORKFLOWS_PACKAGE = "stage_gen.workflows"
 MANIFEST_FILE = "workflow.toml"
@@ -52,19 +51,13 @@ class NodeType:
     """One catalog type: a leaf step of a workflow, as readers and the identity fixture see it.
 
     ``contract_version`` is the type identity FX resolves the step's ``uses`` to (a
-    built-in's carries its minor version); ``archetype`` picks the view a renderer gives its
-    instances.
+    built-in's carries its minor version).
     """
 
     type_id: str
     title: str
-    archetype: ViewArchetype
     operation: str
     contract_version: str
-
-    @property
-    def cache_identity(self) -> str:
-        return self.type_id
 
 
 @dataclass(frozen=True, slots=True)
@@ -126,9 +119,8 @@ def sample_artifact_refs(sample: PlannedSample) -> set[str]:
 class WorkflowCode:
     """Everything a workflow's code states about itself.
 
-    - ``identity`` returns the persisted identities its runs write: graph kinds, pipeline ids
-      and namespaces, graph-document literals, cache constants and the node-type inventory.
-      ``tests/contract/fixtures/workflow-identity.json`` must agree with every one of them.
+    - ``identity`` returns the persisted identity its runs write: the node-type inventory.
+      ``tests/contract/fixtures/workflow-identity.json`` must agree with it.
     - ``implemented_types`` reads every type id the implementation can plan from the code;
       the steps must place each of them exactly once.
     - ``sample_plan`` plans offline into a scratch folder, without a provider or FFmpeg, or
@@ -142,7 +134,6 @@ class WorkflowCode:
     implemented_types: Callable[[], frozenset[str]]
     sample_plan: Callable[[Path], PlannedSample | None]
     owns_run: Callable[[Path], bool]
-    implementation_root: str
     no_sample_plan: str | None = None
     import_example: ExampleImporter | None = None
     no_importer: str | None = None
@@ -164,13 +155,8 @@ class WorkflowCode:
 
 
 def node_type_inventory(types: Iterable[NodeType]) -> list[list[str]]:
-    """``[type_id, cache identity, contract version]`` for each type, sorted."""
-    return sorted(
-        [
-            list(entry)
-            for entry in {(t.type_id, t.cache_identity, t.contract_version) for t in types}
-        ]
-    )
+    """``[type_id, contract version]`` for each type, sorted."""
+    return sorted([list(entry) for entry in {(t.type_id, t.contract_version) for t in types}])
 
 
 # ---------------------------------------------------------------- non-code facts

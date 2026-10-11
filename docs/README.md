@@ -25,7 +25,6 @@ both phases and their graphs.
   run and inspect your own workflows and node types, with example projects. Grida FX is the
   engine every workflow runs on, a submodule at `third_party/fx`.
 - [Components](../src/stage_gen/components/README.md): the component table and the component contract.
-- [Viewer](viewer.md): `uv run python scripts/view.py`, the local read-only client over run folders.
 - [Site](site.md): the static landing and documentation site, built by `scripts/site.py` from the catalog and the example store.
 - [Providers](models/providers.md): routes, credentials and live-operation boundaries.
 - [Character library](character-library.md): the committed character profiles and approved 3D examples.

@@ -52,7 +52,6 @@ steps:
       record: ${{ steps.subject.outputs.record }}
       profile: ${{ steps.setup.outputs.profile }}
       bar: ${{ steps.setup.outputs.bar }}
-    view: true
 
 outputs:
   review: ${{ steps.review.outputs.review }}

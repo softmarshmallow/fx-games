@@ -5,7 +5,7 @@
 // the ground is composed from the map's atlas and grid, and the character walks on it. Toggles
 // move every layer at the ground's speed, and mark each layer's wrap and cuts so a seam could be
 // looked for. The table below lists the current map's layers and hides any of them. The element's
-// sentence is the caption. web/ui/players/parallax-stage.ts drives it through
+// sentence is the caption. lib/players/parallax-stage.ts drives it through
 // [data-parallax-stage], mounted by <ParallaxStagePlayer>.
 
 import ParallaxStagePlayer from "@/components/players/ParallaxStagePlayer";

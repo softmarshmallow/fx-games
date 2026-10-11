@@ -20,17 +20,12 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+from stage_gen.provider_env import PROVIDER_ENV_KEYS
+
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
-WEB_ROOT = REPOSITORY_ROOT / "web"
-CREDENTIAL_VARIABLES = (
-    "OPENAI_API_KEY",
-    "OPENROUTER_API_KEY",
-    "FAL_KEY",
-    "ELEVENLABS_API_KEY",
-    "TRIPO_API_KEY",
-)
+WEB_ROOT = REPOSITORY_ROOT / "web" / "site"
 
 
 @dataclass(frozen=True)
@@ -57,7 +52,7 @@ def sanitized_environment(
     run on ``python``, no ``.env`` is read and no provider is reached. ``GRIDA_FX_BIN`` and
     ``GRIDA_FX_TOOL_*`` pass through."""
     environment = dict(os.environ if source is None else source)
-    for variable in CREDENTIAL_VARIABLES:
+    for variable in PROVIDER_ENV_KEYS:
         environment.pop(variable, None)
     environment["GRIDA_FX_PYTHON"] = python
     environment["GRIDA_FX_DISABLE_DOTENV"] = "1"

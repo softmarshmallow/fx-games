@@ -10,8 +10,6 @@ const nextConfig = {
   // SITE_BASE_PATH at build time; lib/media.ts prefixes media URLs with the same value.
   basePath: process.env.SITE_BASE_PATH ?? "",
   reactStrictMode: true,
-  // Shared contracts and players ship as TypeScript source from the workspace.
-  transpilePackages: ["@stage-gen/ui"],
   // `next dev` would otherwise write AGENTS.md and CLAUDE.md into this folder.
   agentRules: false,
 };

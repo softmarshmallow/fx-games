@@ -85,9 +85,9 @@ that writes the family's steps into a game's builder, over the pure parts of a k
 
 A component imports `stage_gen.media`, `stage_gen.canonical`, other components and, where
 it hands an agent a tool (character-3d's studios), `grida.fx`'s public names; never a
-workflow, a game, the viewer or a provider. `tests/contract/test_import_boundaries.py`
-refuses a component that imports a workflow or the viewer, and
-`tests/contract/test_component_structure.py` one without an exported surface.
+workflow, a game or a provider. `tests/contract/test_import_boundaries.py` refuses a
+component that imports a workflow, and `tests/contract/test_component_structure.py` one
+without an exported surface.
 
 ### Independence rule
 
@@ -106,8 +106,8 @@ The Python core implements its minimal alpha-component repacker; generic grid de
 semantic ownership recovery remain planned. The contract does not reserve workflow or consumer
 behavior inside reusable components.
 
-Components must not import `web/`. The viewer and the site consume exported manifests and
-examples; they never reach into a component.
+Components must not import `web/`. The site consumes exported manifests and examples; it
+never reaches into a component.
 
 ## Failure contract
 

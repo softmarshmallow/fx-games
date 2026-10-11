@@ -734,15 +734,3 @@ def assemble_fold_repaint(
         "provider_operations": 1,
         "registration": _registration_record(registration),
     }
-
-
-def tile_to_width(data: bytes, width: int) -> bytes:
-    """Repeat a loop unit horizontally up to ``width`` so mixed periods can be composited."""
-
-    source = _decode(data)
-    if width < 1:
-        raise ValueError("tile target width must be positive")
-    canvas = Image.new("RGBA", (width, source.height), (0, 0, 0, 0))
-    for left in range(0, width, source.width):
-        canvas.alpha_composite(source, (left, 0))
-    return _encode(canvas)

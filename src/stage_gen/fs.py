@@ -7,7 +7,6 @@ import json
 import math
 import os
 import re
-import stat as stat_module
 import uuid
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -31,7 +30,6 @@ _CREDENTIAL_FIELD = re.compile(
 _OPENAI_KEY = re.compile(r"\bsk-(?:or-)?[A-Za-z0-9_-]{8,}\b")
 _LONG_BASE64 = re.compile(r"\b[A-Za-z0-9+/]{80,}={0,2}\b")
 _SENSITIVE_KEY = re.compile(r"(?:api[_-]?key|authorization|token|secret|credential)", re.I)
-_SAFE_SEGMENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 _WINDOWS_ABSOLUTE = re.compile(r"^(?:[A-Za-z]:[\\/]|\\\\)")
 
 
@@ -135,12 +133,6 @@ def atomic_write_json(
     return atomic_write_bytes(path, payload, mode=mode, operations=operations)
 
 
-def assert_safe_path_segment(value: str, label: str) -> str:
-    if not _SAFE_SEGMENT.fullmatch(value) or value in {".", ".."}:
-        raise ValueError(f"{label} must be one safe path segment")
-    return value
-
-
 def resolve_relative_path_within_root(
     root_path: str | os.PathLike[str],
     requested_path: str,
@@ -165,30 +157,6 @@ def resolve_relative_path_within_root(
     except ValueError as error:
         raise ValueError(f"{label} escapes its root") from error
     return output
-
-
-def resolve_writable_path_within_root(
-    root_path: str | os.PathLike[str],
-    requested_path: str,
-    label: str,
-) -> Path:
-    resolve_relative_path_within_root(root_path, requested_path, label)
-    root_unresolved = Path(root_path)
-    root_unresolved.mkdir(parents=True, exist_ok=True)
-    root = root_unresolved.resolve(strict=True)
-    segments = requested_path.split("/")
-    parent = root
-    for segment in segments[:-1]:
-        parent = parent / segment
-        try:
-            stat = parent.lstat()
-        except FileNotFoundError:
-            break
-        if parent.is_symlink():
-            raise ValueError(f"{label} has a symlinked parent")
-        if not stat_module.S_ISDIR(stat.st_mode):
-            raise ValueError(f"{label} parent is not a directory")
-    return resolve_relative_path_within_root(root, requested_path, label)
 
 
 def redact_secrets(value: str, secrets: Sequence[str] = ()) -> str:

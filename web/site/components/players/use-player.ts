@@ -3,7 +3,7 @@
 // (or when React mounts it twice in development).
 
 import { useEffect, useRef, type CSSProperties, type ReactNode, type RefObject } from "react";
-import type { Mount } from "@stage-gen/ui/players/dom";
+import type { Mount } from "@/lib/players/dom";
 
 /**
  * A ref for a player's root. `config` is the JSON the block wrote into the root's data-*

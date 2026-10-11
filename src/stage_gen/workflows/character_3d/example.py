@@ -32,7 +32,6 @@ from stage_gen.examples import (
     hex_colour,
     import_fx_run,
     sha256,
-    sha256_bytes,
 )
 from stage_gen.workflows._fx import FxWorkflow
 
@@ -292,12 +291,4 @@ def read_library(repository: Path, path: str) -> tuple[WorkflowExample, FiguresL
     return example, FiguresLedger.model_validate({"run": path, "files": ledger})
 
 
-def library_pin(repository: Path, path: str) -> tuple[str, str]:
-    """The (example, figures) digests a library character's example is pinned by."""
-    from stage_gen.examples import document_bytes, figures_bytes
-
-    example, figures = read_library(repository, path)
-    return sha256_bytes(document_bytes(example)), sha256_bytes(figures_bytes(figures))
-
-
-__all__ = ["import_example", "library_pin", "read_library"]
+__all__ = ["import_example", "read_library"]

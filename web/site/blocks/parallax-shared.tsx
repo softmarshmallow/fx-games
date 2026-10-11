@@ -1,7 +1,7 @@
 // What <ParallaxLoop> and <ParallaxStage> share: the record's parallax output, read as the
 // player's config types, and the layer table's head.
 
-import type { ParallaxMap, ParallaxWalker } from "@stage-gen/ui/players/parallax";
+import type { ParallaxMap, ParallaxWalker } from "@/lib/players/parallax";
 import type { Page } from "@/lib/page";
 import { HEAD } from "./shared";
 

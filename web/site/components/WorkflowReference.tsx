@@ -3,7 +3,7 @@
 // try it, and its examples.
 
 import type { ReactElement } from "react";
-import type { CatalogWorkflow } from "@stage-gen/ui/contracts/catalog";
+import type { CatalogWorkflow } from "@/lib/contracts/catalog";
 import { CELL, HEAD } from "@/blocks/shared";
 import { href } from "@/lib/media";
 import { contractRoute, workflowRoute } from "@/lib/pages";

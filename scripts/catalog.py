@@ -1,11 +1,11 @@
-"""Export the catalog the site and the viewer read.
+"""Export the catalog the site reads.
 
     uv run python scripts/catalog.py --out DIR [--examples DIR] [--allow-missing-examples]
     uv run python scripts/catalog.py --out DIR --check
 
-Writes ``catalog.json`` (every installed workflow, its steps, identities, offline sample plan
-and pinned examples) into ``--out``, unless ``--check`` asks only for the drift checks or
-something drifted. Prints a JSON summary and exits 1 when any drift problem is found.
+Writes ``catalog.json`` (every installed workflow, its steps and pinned examples) into
+``--out``, unless ``--check`` asks only for the drift checks or something drifted. Prints a
+JSON summary and exits 1 when any drift problem is found.
 """
 
 from __future__ import annotations

@@ -1,6 +1,6 @@
 ---
 name: asset-pipeline
-description: Author or extend an asset workflow on Grida FX (a workflow file or a Python builder, node types, built-in steps) with Stage Gen's components. Use for asset inputs, generation, judges, cache, takes and views; keep complete gameplay inside its consuming application.
+description: Author or extend an asset workflow on Grida FX (a workflow file or a Python builder, node types, built-in steps) with Stage Gen's components. Use for asset inputs, generation, judges, cache and takes; keep complete gameplay inside its consuming application.
 ---
 
 # Asset Pipeline Authoring
@@ -33,10 +33,8 @@ runnable samples beside their owner. Plan before any spend
 `reroll` and `pick`, which write `<workflow id>.takes.yaml`, and copy results out with
 `--deliver`.
 
-Views are optional, read-only HTML templates on a step (`view: <file>`, or `view: true` for a
-generic one) or the whole workflow. Basic media stays inspectable in the viewer
-(`uv run python scripts/view.py`) without one. A specialized view may show a bounded contract
-such as repeating layers or sprite playback without acquiring gameplay responsibility.
+Inspect runs in FX's viewer (`uv run python -m grida.fx start --open`), which shows each step's
+files on the workflow's canvas. A workflow declares no views of its own.
 
 A Godot game builds its assets with its own FX builder (`pipeline/workflow.py`, beside its
 `fx.yaml`) and imports them through its own code. Use

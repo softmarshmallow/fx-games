@@ -2,10 +2,9 @@
 
 ``scripts/catalog.py`` writes ``catalog.json`` (``stage-gen-catalog-v1``) from the
 installed workflows and the example store. Per workflow it holds the manifest, the steps
-with their node titles, the persisted identities, the offline sample plan, and each pinned
-example with its derived currency. It also lists examples the games made, the landing cards
-in their declared order, and model display names. The catalog is derived and never
-committed; the site builds from it.
+with their node titles, and each pinned example with its derived currency. It also lists
+examples the games made, the landing cards in their declared order, and model display names.
+The catalog is derived and never committed; the site builds from it.
 """
 
 from __future__ import annotations
@@ -13,7 +12,6 @@ from __future__ import annotations
 import hashlib
 import json
 import tempfile
-from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -44,7 +42,6 @@ from ._checks import CheckContext, LoadedExample, LoadedWorkflow, drift, game_ex
 from ._registry import (
     DiscoveredWorkflow,
     ExampleEntry,
-    PlannedSample,
     WorkflowCode,
     discover,
     load_code,
@@ -157,28 +154,6 @@ def load_workflow(
     )
 
 
-def _plan_document(workflow: LoadedWorkflow, graph: PlannedSample) -> dict[str, Any]:
-    manifest, types = workflow.discovered.manifest, workflow.code.node_types()
-    return {
-        "kind": graph.kind,
-        "topology_sha256": graph.topology_sha256,
-        "operation_counts": dict(sorted(Counter(node.operation for node in graph.nodes).items())),
-        "nodes": [
-            {
-                "id": node.node_id,
-                "type_id": node.type_id,
-                "title": manifest.label(node.type_id, types.get(node.type_id)),
-                "archetype": types[node.type_id].archetype.value if node.type_id in types else None,
-                "operation": node.operation,
-                "provider": node.provider,
-                "model": node.model,
-                "depends_on": list(node.depends_on),
-            }
-            for node in graph.nodes
-        ],
-    }
-
-
 def _card(workflow: LoadedWorkflow, example: LoadedExample) -> dict[str, Any] | None:
     entry, manifest = example.entry, workflow.discovered.manifest
     if entry.order is None or entry.status != "approved":
@@ -207,11 +182,6 @@ def _workflow_document(workflow: LoadedWorkflow, repository: Path | None) -> dic
         if repository is not None and source.is_relative_to(repository)
         else None,
         "manifest": manifest.model_dump(mode="json", by_alias=True),
-        "implementation_root": code.implementation_root,
-        "no_sample_plan": code.no_sample_plan,
-        "importer": code.import_example is not None,
-        "no_importer": code.no_importer,
-        "identity": workflow.identity,
         "steps": [
             {
                 "label": step.label,
@@ -220,7 +190,6 @@ def _workflow_document(workflow: LoadedWorkflow, repository: Path | None) -> dic
                     {
                         "type_id": (type_id := member.type_id),
                         "title": manifest.label(type_id, types.get(type_id)),
-                        "archetype": types[type_id].archetype.value if type_id in types else None,
                         "operation": types[type_id].operation if type_id in types else None,
                     }
                     for member in step.members
@@ -228,9 +197,6 @@ def _workflow_document(workflow: LoadedWorkflow, repository: Path | None) -> dic
             }
             for step in code.steps
         ],
-        "sample_plan": None
-        if workflow.sample is None
-        else _plan_document(workflow, workflow.sample),
         "examples": [
             {
                 **example.entry.model_dump(mode="json"),

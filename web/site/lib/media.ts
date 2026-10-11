@@ -10,11 +10,6 @@ export function exampleMediaBase(owner: string, id: string): string {
   return `${basePath()}/examples/${owner}/${id}`;
 }
 
-/** One example file: /examples/<owner>/<id>/media/<file>. */
-export function mediaUrl(owner: string, id: string, file: string): string {
-  return `${exampleMediaBase(owner, id)}/media/${file}`;
-}
-
 /** A page link, with the base path and the trailing slash the static export writes. */
 export function href(route: string): string {
   const trimmed = route.replace(/^\/+|\/+$/g, "");
