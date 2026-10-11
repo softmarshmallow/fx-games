@@ -19,7 +19,7 @@
 # About a minute warm, most of it the contract suite, plus FX's engine build: cargo
 # reuses the submodule's own build when the pin is checked out clean, and a dirty or
 # off-pin submodule rebuilds the engine's crates, which takes a few minutes. Needs
-# cargo (https://rustup.rs). Install once with:
+# cargo (https://rustup.rs) and Bun (https://bun.sh). Install once with:
 #   git config core.hooksPath .githooks
 set -euo pipefail
 
@@ -43,23 +43,28 @@ cleanup() {
 }
 
 # FX's engine for the pinned FX commit, placed where the scratch tree's grida finds it.
-# The submodule's own build is reused when it is checked out clean at the pin. Any other
-# state builds the archived copy into its own target folder: cargo judges freshness by
-# mtime, so two source trees sharing one target folder would each look fresh to the other.
+# FX's own tools/build_engine.py builds it, as the gate does: the engine embeds FX's
+# viewer, which Bun builds first, and plain cargo cannot. The submodule's own build is
+# reused when it is checked out clean at the pin. Any other state installs and builds the
+# archived copy into its own target folder: cargo judges freshness by mtime, so two source
+# trees sharing one target folder would each look fresh to the other.
 build_engine() {
-	local scratch="$1" fx="$2" here="$repository/third_party/fx" source target
-	command -v cargo >/dev/null 2>&1 || {
-		echo "pre-push: cargo is not on PATH; FX's engine is built from third_party/fx (https://rustup.rs)" >&2
-		return 1
-	}
+	local scratch="$1" fx="$2" here="$repository/third_party/fx" source target tool
+	for tool in cargo bun python3; do
+		command -v "$tool" >/dev/null 2>&1 || {
+			echo "pre-push: $tool is not on PATH; FX's engine is built from third_party/fx with cargo, Bun and Python" >&2
+			return 1
+		}
+	done
 	if [ "$(git -C "$here" rev-parse HEAD 2>/dev/null)" = "$fx" ] &&
 		[ -z "$(git -C "$here" status --porcelain --untracked-files=all)" ]; then
 		source="$here" target="$here/target"
 	else
 		source="$scratch/third_party/fx" target="$here/target/pre-push"
+		(cd "$source" && bun --no-env-file install --frozen-lockfile --silent) || return 1
 	fi
 	CARGO_INCREMENTAL=0 CARGO_TARGET_DIR="$target" \
-		cargo build --quiet --locked --release -p grida-fx --manifest-path "$source/Cargo.toml" || return 1
+		python3 "$source/tools/build_engine.py" >/dev/null || return 1
 	mkdir -p "$scratch/third_party/fx/python/src/grida/fx/_bin"
 	install -m 0755 "$target/release/grida-fx" "$scratch/third_party/fx/python/src/grida/fx/_bin/grida-fx"
 }
