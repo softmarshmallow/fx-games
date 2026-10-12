@@ -1,0 +1,6 @@
+:HL["/fx-games/_next/static/chunks/1xu5dzf_wa2vc.css","style"]
+:HL["/fx-games/examples/bellweather/terrain-tiles/media/village-scene.webp","image"]
+:HL["/fx-games/examples/bellweather/terrain-tiles/media/village-painted.webp","image"]
+:HL["/fx-games/examples/bellweather/terrain-tiles/media/paint-target.webp","image"]
+:HL["/fx-games/examples/bellweather/terrain-tiles/media/village-atlas.png","image"]
+0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"games","param":null,"prefetchHints":4192,"slots":{"children":{"name":"game","param":{"type":"d","key":"bellweather","siblings":[]},"prefetchHints":4192,"slots":{"children":{"name":"example","param":{"type":"d","key":"terrain-tiles","siblings":[]},"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}}}}}},"staleTime":300,"buildId":"-JqgKXtkDibHywgCI4ww9"}
