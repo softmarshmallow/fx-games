@@ -88,10 +88,11 @@ def keyed(size: str) -> bytes:
     return png(image)
 
 
-def solid(size: str) -> bytes:
-    """An alpha channel with no transparent pixel: FX admits it, a cut-out judge does not."""
+def haze(size: str) -> bytes:
+    """Half transparent everywhere, with no clear pixel. FX's check takes it, since it is not
+    all opaque; a cut-out or face judge, which wants clear ground, does not."""
 
-    return png(Image.new("RGBA", _size(size), (180, 140, 60, 255)))
+    return png(Image.new("RGBA", _size(size), (180, 140, 60, 128)))
 
 
 # ------------------------------------------------------------------------------- stand-ins
@@ -102,8 +103,9 @@ class StandIns:
 
     ``refuse`` names kinds of answer (``cutout``, ``face``, ``narration``) and how many times
     each is answered wrongly before it is answered right, so a test can watch a judge send a
-    take back. A wrong picture passes FX's own checks (the asked size, an alpha channel) and
-    is refused by the game's judge: a cut-out, or a native face, with no transparent pixel.
+    take back. A wrong picture passes FX's own checks (the asked size, an alpha channel that is
+    not all opaque) and is refused by the game's judge: a cut-out, or a native face, with no
+    clear pixel.
     """
 
     def __init__(self, *, refuse: Mapping[str, int] | None = None) -> None:
@@ -157,7 +159,7 @@ class StandIns:
         if self._note(kind, request):
             if request.get("background") != "transparent" or kind not in ("cutout", "face"):
                 raise AssertionError(f"a {kind} cannot be answered wrongly past FX's checks")
-            data = solid(str(request["size"]))
+            data = haze(str(request["size"]))
         return Answer(files={"image": data})
 
     def _structured(self, call: StandInCall) -> Answer:

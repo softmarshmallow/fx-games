@@ -98,8 +98,9 @@ def _png(width: int, height: int, alpha: int) -> bytes:
 
 
 def _answer(call: StandInCall) -> Answer:
-    # Take 1 is opaque everywhere, which the judge rejects; take 2 has a clear background.
-    return Answer(files={"image": _png(64, 64, 255 if call.take == 1 else 0)})
+    # Take 1's ground is half transparent, never clear: FX's own check takes it (it is not all
+    # opaque) and the judge, which wants a clear pixel, rejects it. Take 2's ground is clear.
+    return Answer(files={"image": _png(64, 64, 128 if call.take == 1 else 0)})
 
 
 def _project(folder: Path) -> Path:
