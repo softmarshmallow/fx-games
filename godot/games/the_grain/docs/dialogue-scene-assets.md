@@ -36,7 +36,7 @@ the stages and the tracks between them, and the fan-out follows the union.
 | `godot/games/the_grain/pipeline/workflow.py` (`scene`) and `pipeline/nodes/scene.py` | The build: one step per plan, image, track and interface sheet, the judges that hold each one, and the package step that writes the bundle. |
 | `godot/games/the_grain/pipeline/src/the_grain_pipeline/dialogue_scene/` | Adult/non-explicit policy, the package reader, prompts, strict models, the briefs and gates the build calls, and bundle assembly. |
 | Grida FX (`third_party/fx`)            | The engine: provider-neutral structured, image and music steps with one six-attempt retry owner, judged redraws, the cache and the run's records. |
-| `src/stage_gen/media/`                  | Shared deterministic image inspection and transforms. |
+| `src/fx_games/media/`                  | Shared deterministic image inspection and transforms. |
 | Scenario and soundtrack owners          | The independent Godot `scenario_authoring` distribution owns narrative compilation and admission, `demo_game_tools.scenario` the production envelope, and the game-owned soundtrack binding authored track intent and the music prompt compiler. |
 | `gameplay/dialogue_scene/` (Godot)      | Strict bundle validation and play. It never imports Python build internals or calls providers. |
 

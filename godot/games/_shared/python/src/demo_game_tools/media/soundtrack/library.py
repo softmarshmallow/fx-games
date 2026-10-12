@@ -11,12 +11,12 @@ from demo_game_tools.media.soundtrack.loader import (
     load_game_soundtrack_bytes,
 )
 from demo_game_tools.media.soundtrack.models import GameSoundtrack, GameSoundtrackBinding
-from stage_gen.components._secure_fs import (
+from fx_games.components._secure_fs import (
     SecurePathError,
     open_absolute_directory,
     read_relative_regular_file,
 )
-from stage_gen.provenance import InputProvenance
+from fx_games.provenance import InputProvenance
 
 GAME_SOUNDTRACK_LIBRARY_RESOLUTION_VERSION = "game-soundtrack-library-resolution-v1"
 

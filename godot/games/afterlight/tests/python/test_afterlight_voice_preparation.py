@@ -19,7 +19,7 @@ from typing import Any
 import pytest
 from grida.fx import Answer, CallFailed, PlanRefused, RunResult, StandInCall, run
 
-from stage_gen.workflows._fx import write_project
+from fx_games.workflows._fx import write_project
 
 AFTERLIGHT = Path(__file__).resolve().parents[2]
 NODES = AFTERLIGHT / "tools/voice_nodes.py"

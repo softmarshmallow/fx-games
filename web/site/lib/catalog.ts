@@ -15,7 +15,7 @@ import { exampleMediaBase } from "./media";
 export function siteRoot(): string {
   const root = path.resolve(process.env.SITE_ROOT || process.cwd());
   const manifest = path.join(root, "package.json");
-  if (existsSync(manifest) && JSON.parse(readFileSync(manifest, "utf8")).name === "@stage-gen/site") {
+  if (existsSync(manifest) && JSON.parse(readFileSync(manifest, "utf8")).name === "@fx-games/site") {
     return root;
   }
   throw new Error(`${root} is not web/site; run from web/site or set SITE_ROOT`);

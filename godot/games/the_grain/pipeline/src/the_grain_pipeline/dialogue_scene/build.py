@@ -15,7 +15,7 @@ from typing import Any, Literal
 
 from PIL import Image
 
-from stage_gen.media import (
+from fx_games.media import (
     NATIVE_ALPHA_OPAQUE_THRESHOLD,
     apply_chroma_transparency,
     decontaminate_magenta_edges,

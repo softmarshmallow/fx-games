@@ -3,7 +3,7 @@
 import pytest
 
 from demo_game_tools.application import resolve_genre
-from stage_gen.application import UsageError
+from fx_games.application import UsageError
 
 
 def test_a_genre_defaults_only_when_the_package_declares_one() -> None:

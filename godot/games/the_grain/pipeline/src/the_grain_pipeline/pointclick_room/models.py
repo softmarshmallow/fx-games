@@ -20,8 +20,8 @@ from typing import Annotated, Literal
 
 from pydantic import Field, StringConstraints, field_validator, model_validator
 
-from stage_gen.contracts import PersistedContractModel
-from stage_gen.provenance import RightsStatus
+from fx_games.contracts import PersistedContractModel
+from fx_games.provenance import RightsStatus
 
 POINTCLICK_ROOM_SCHEMA_VERSION = 1
 POINTCLICK_ROOM_KIND = "pointclick-room-v3"

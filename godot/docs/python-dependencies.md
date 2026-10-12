@@ -1,14 +1,14 @@
 # Python preparation ownership and private dependencies
 
 Reviewed against the maintained Godot Python sources on 2026-10-07. The games
-consume Stage Gen, but some imports still depend on its internal implementation.
+consume FX Games, but some imports still depend on its internal implementation.
 This inventory records those exceptions; it does not declare them public APIs.
 The boundary check is `tests/contract/test_game_private_dependencies.py`.
 
 ## Scenario ownership
 
-`packages/scenario_runtime/authoring` is the independent `stagegen-scenario`
-distribution. Its parser/compiler/admission and content tools import no Stage Gen,
+`packages/scenario_runtime/authoring` is the independent `scenario-authoring`
+distribution. Its parser/compiler/admission and content tools import no FX Games,
 Grida FX or named game. The shared game package
 `demo_game_tools.scenario` owns retained v2 production metadata, file resolution,
 script digests and asset-generation intentions. Bellweather, The Grain and the
@@ -58,11 +58,11 @@ contract review, not a target file length.
 
 | Current dependency | Current users | Decision and next boundary |
 | --- | --- | --- |
-| `stage_gen.components._game_input`: `canonical_contract_json`, `sha256_bytes` | Shared readers and game models among the 31 files below | **Existing surface:** `stage_gen.canonical.canonical_json_bytes` and `content_sha256` already implement these operations. A later import migration must preserve `exclude_none=True`, UTF-8, ordering and all identity goldens. No new SDK API is needed. |
+| `fx_games.components._game_input`: `canonical_contract_json`, `sha256_bytes` | Shared readers and game models among the 31 files below | **Existing surface:** `fx_games.canonical.canonical_json_bytes` and `content_sha256` already implement these operations. A later import migration must preserve `exclude_none=True`, UTF-8, ordering and all identity goldens. No new SDK API is needed. |
 | `_game_input`: identifier patterns and authored format policy | Shared readers, Bellweather, Iron Petal, Ember and The Grain | **Game-owned policy:** the accepted ID shapes, TOML refusal behavior and field meanings remain with the supported game readers. Do not promote the whole helper module as a canonical game schema. Neutral text/path/TOML primitives used by product components need a separate ownership review before moving their shared implementation. |
-| `stage_gen.components._secure_fs` | Eight files: package capture, prepared package reader, authored package reader, character profile files, soundtrack loader/library, dialogue scene reader and collection binding commands | **Separate SDK review:** descriptor-relative reads, regular-file admission and refusal of symlink ancestors are security behavior. No existing lexical path helper is a substitute. Keep the current calls until a bounded authored-input read surface has the same guarantees and platform tests. |
+| `fx_games.components._secure_fs` | Eight files: package capture, prepared package reader, authored package reader, character profile files, soundtrack loader/library, dialogue scene reader and collection binding commands | **Separate SDK review:** descriptor-relative reads, regular-file admission and refusal of symlink ancestors are security behavior. No existing lexical path helper is a substitute. Keep the current calls until a bounded authored-input read surface has the same guarantees and platform tests. |
 | `demo_game_tools.authored_package` | Four The Grain readers and the shared scenario resolver | **Separate SDK review:** these combine portable member names, root handling, confined reads and authored digest checks. They deliberately resolve the operator's root while refusing symlinks below it. Any shared replacement must preserve that distinction; game case/scene schemas stay local. |
-| `stage_gen.workflows._fx`: `declared_outputs`, `instances`, `write_project` | `godot/tools/write_game_graph_contract.py` and the Afterlight voice test | **Shared FX glue:** the graph-contract writer reads a builder's plan instances and declared outputs through the same helpers the workflow catalog uses, and a test writes its scratch `fx.yaml` with the one project writer. They read only public `grida.fx` documents; a game needing more of FX imports `grida.fx` itself. |
+| `fx_games.workflows._fx`: `declared_outputs`, `instances`, `write_project` | `godot/tools/write_game_graph_contract.py` and the Afterlight voice test | **Shared FX glue:** the graph-contract writer reads a builder's plan instances and declared outputs through the same helpers the workflow catalog uses, and a test writes its scratch `fx.yaml` with the one project writer. They read only public `grida.fx` documents; a game needing more of FX imports `grida.fx` itself. |
 
 The effects kit keeps only its pure half (`effects_art/directions.py`, `cut_in.py`,
 `sprite.py`, the models and the manifest block): its graph node types, host and request
@@ -101,7 +101,7 @@ source files, not import statements. Local imports are included.
   `demo_game_tools`, and `case/resolve.py`, `case_binding.py`,
   `dialogue_scene/scene_request.py` and `pointclick_room/room_request.py` in
   `the_grain_pipeline`.
-- `stage_gen.workflows._fx` — two files outside those packages, by repository path:
+- `fx_games.workflows._fx` — two files outside those packages, by repository path:
   `godot/tools/write_game_graph_contract.py` and
   `godot/games/afterlight/tests/python/test_afterlight_voice_preparation.py`.
 

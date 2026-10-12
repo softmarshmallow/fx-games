@@ -1,10 +1,10 @@
 # Provider operations
 
-Grida FX makes every provider call Stage Gen's workflows and games make. FX owns the adapters,
+Grida FX makes every provider call FX Games' workflows and games make. FX owns the adapters,
 the built-in route table, where keys are read, retries, billing, long jobs and downloads. They
 are specified in FX's [providers spec](https://github.com/gridaco/fx/blob/main/spec/providers.md)
 and [capabilities spec](https://github.com/gridaco/fx/blob/main/spec/capabilities.md); the
-copy this repository runs is the one pinned at `third_party/fx`. This page keeps what Stage Gen
+copy this repository runs is the one pinned at `third_party/fx`. This page keeps what FX Games
 decides: which route each workflow and game picks and why, what this repository has measured
 about those routes, and what happens to their output afterwards.
 
@@ -46,19 +46,19 @@ particular binary, else the tool is found on `PATH`. Character-3d declares Blend
 (`GRIDA_FX_TOOL_BLENDER`), and Ember Hollow's opening clips an ffmpeg built with libtheora
 (`GRIDA_FX_TOOL_FFMPEG_THEORA`).
 
-## The routes Stage Gen picks
+## The routes FX Games picks
 
 Routes and their prices come from FX's built-in table, then the tables a project's `fx.yaml`
-lists under `route_tables`. Each Stage Gen project names, under `routes:` in its `fx.yaml`, the
+lists under `route_tables`. Each FX Games project names, under `routes:` in its `fx.yaml`, the
 one route each capability uses:
 
 | Project | Routes | Why |
 | --- | --- | --- |
-| [looping-parallax](../../src/stage_gen/workflows/looping_parallax/fx.yaml) | `image.edit`: `gpt-image-2.5-sunburst@openai` | The seam repaint requires `mask` and `alpha`. |
-| [portrait-motion](../../src/stage_gen/workflows/portrait_motion/fx.yaml) | `structured.generate`: `openai/gpt-6-astra@openrouter`; `image.edit`: `gpt-image-2.5-sunburst@openai` | The face locator and the judges need a vision model that sees each picture as it is; the new states are drawn at the portrait's own exact size, which OpenRouter's fixed sizes do not serve. |
-| [universe](../../src/stage_gen/workflows/universe/fx.yaml) | `structured.generate`: `openai/gpt-5.6-sol@openrouter`; `image.generate`: `openai/gpt-image-2.5-sunburst@openrouter` | Concept images are opaque, at canvases verified live on that route. |
-| [movie-sprite](../../src/stage_gen/workflows/movie_sprite/fx.yaml) | `video.generate`: `google/gemini-omni-flash/v1.1/image-to-video@fal` | The take needs `first_last_frame`. |
-| [character-3d](../../src/stage_gen/workflows/character_3d/fx.yaml) | `agent.turn`: `openai/gpt-6-astra@openrouter`; `image.generate` and `image.edit`: `openai/gpt-image-2.5-sunburst@openrouter`; `mesh.generate`: `P2-20260801@tripo`; `mesh.rig`: `v1.0-20240301@tripo` | Agents design, review and lay out parts; reference views are opaque; Tripo builds and rigs the meshes. |
+| [looping-parallax](../../src/fx_games/workflows/looping_parallax/fx.yaml) | `image.edit`: `gpt-image-2.5-sunburst@openai` | The seam repaint requires `mask` and `alpha`. |
+| [portrait-motion](../../src/fx_games/workflows/portrait_motion/fx.yaml) | `structured.generate`: `openai/gpt-6-astra@openrouter`; `image.edit`: `gpt-image-2.5-sunburst@openai` | The face locator and the judges need a vision model that sees each picture as it is; the new states are drawn at the portrait's own exact size, which OpenRouter's fixed sizes do not serve. |
+| [universe](../../src/fx_games/workflows/universe/fx.yaml) | `structured.generate`: `openai/gpt-5.6-sol@openrouter`; `image.generate`: `openai/gpt-image-2.5-sunburst@openrouter` | Concept images are opaque, at canvases verified live on that route. |
+| [movie-sprite](../../src/fx_games/workflows/movie_sprite/fx.yaml) | `video.generate`: `google/gemini-omni-flash/v1.1/image-to-video@fal` | The take needs `first_last_frame`. |
+| [character-3d](../../src/fx_games/workflows/character_3d/fx.yaml) | `agent.turn`: `openai/gpt-6-astra@openrouter`; `image.generate` and `image.edit`: `openai/gpt-image-2.5-sunburst@openrouter`; `mesh.generate`: `P2-20260801@tripo`; `mesh.rig`: `v1.0-20240301@tripo` | Agents design, review and lay out parts; reference views are opaque; Tripo builds and rigs the meshes. |
 | [Bellweather](../../godot/games/bellweather/fx.yaml), [The Grain](../../godot/games/the_grain/fx.yaml) | `image.generate` and `image.edit`: `gpt-image-2.5-sunburst@openai`; `structured.generate`: `openai/gpt-5.6-sol@openrouter`; `music.generate`: `google/lyria-3-pro-preview@openrouter` | Cut-out art needs native alpha, and Bellweather's seam repaints need a mask. |
 | [Ember Hollow](../../godot/games/ember_hollow/fx.yaml) | as Bellweather, plus `agent.turn`: `openai/gpt-5.6-sol@openrouter`, `sound.generate`: `eleven_text_to_sound_v2@elevenlabs` and `video.generate`: `google/gemini-omni-flash/v1.1/image-to-video@fal` | The prop-anchor agent, sound effects and the opening clips. |
 | [Iron Petal Unit](../../godot/games/iron_petal_unit/fx.yaml) | as Bellweather, plus `agent.turn`: `openai/gpt-5.6-sol@openrouter`, `sound.generate`: `eleven_text_to_sound_v2@elevenlabs` and `speech.generate`: `eleven_v3@elevenlabs` | The cut-in placement agent, sound effects and spoken lines. |
@@ -111,7 +111,7 @@ which matched this repository's OpenAI project; a project whose account allows a
 restates the route in a route table.
 
 **fal.** The same model and envelope as OpenAI, with separate text-to-image and edit endpoints.
-No Stage Gen project picks it today. A paid masked edit on 2026-09-09 landed the editable band
+No FX Games project picks it today. A paid masked edit on 2026-09-09 landed the editable band
 and kept native alpha, but also changed material pixels outside the mask: a mask is a strong
 hint, not a protected region, so a workflow that needs untouched pixels restores them itself.
 
@@ -193,7 +193,7 @@ Primary sources:
 ## Video through fal
 
 The one video route is `google/gemini-omni-flash/v1.1/image-to-video@fal`, which the
-[movie sprite workflow](../../src/stage_gen/workflows/movie_sprite/page.mdx) and Ember Hollow's
+[movie sprite workflow](../../src/fx_games/workflows/movie_sprite/page.mdx) and Ember Hollow's
 opening use. Its
 [official API schema](https://fal.ai/models/google/gemini-omni-flash/v1.1/image-to-video/api)
 was checked on 2026-09-15: `prompt` (at most 20,000 characters), `image_url`, optional
@@ -338,7 +338,7 @@ whole hold that run booked: a later run that collects it, and finds it failed, b
 
 FX has a `background.remove` adapter on fal (`fal-ai/birefnet/v2`, General Use (Light), at a
 1024 by 1024 operating resolution), but its built-in table has no route for it until fal's
-price is recorded, and no Stage Gen project declares one. So nothing removes a background
+price is recorded, and no FX Games project declares one. So nothing removes a background
 today: an `ai` transparency strategy, which would generate on a neutral field and remove it, is
 refused while planning, and `chroma` keys an exact `#FF00FF` field locally (see the
 [prompt contract](../spec/agent-prompts.md)). A removal would never silently replace failed
@@ -362,7 +362,7 @@ FX's engine is the one retry owner for every paid call: at most six sends of one
 request sent again only when it provably was not received or the provider's failure allows a new
 attempt, and a deterministic refusal ending the call. Every attempt is held against the run's
 ceiling and settled from the provider's reported cost, else charged whole (FX protocol §6.1;
-providers §4–6). Stage Gen adds no retry loop around a call. A judge that refuses an answer and
+providers §4–6). FX Games adds no retry loop around a call. A judge that refuses an answer and
 draws again (`on_reject: regenerate`) makes a new, billed take; that is a semantic regeneration,
 never a provider retry.
 

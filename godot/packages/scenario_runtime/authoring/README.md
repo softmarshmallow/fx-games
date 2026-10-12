@@ -1,9 +1,9 @@
 # Scenario authoring
 
-`stagegen-scenario` is the independently installed Python authoring distribution
+`scenario-authoring` is the independently installed Python authoring distribution
 for the Godot-owned Scenario runtime. Its import namespace is
 `scenario_authoring`. Python 3.12 and Pydantic are its runtime dependencies.
-Compilation, admission, inspection and packaging import neither Stage Gen nor
+Compilation, admission, inspection and packaging import neither FX Games nor
 Grida FX, Godot, a game, or a provider.
 
 The game owns a Scenario invocation. Authored content describes its dialogue,

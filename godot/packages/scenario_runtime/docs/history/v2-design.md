@@ -10,7 +10,7 @@
 
 > **Contract maturity: exact-current for the authored contract, the script
 > surface, the admission proof, and the runtime that walks it.** Executable
-> authority: `src/stage_gen/components/scenario/`, `godot/packages/scenario_runtime/addons/scenario_runtime/`, the
+> authority: `src/fx_games/components/scenario/`, `godot/packages/scenario_runtime/addons/scenario_runtime/`, the
 > authored `godot/games/the_grain/inputs/scenarios/e1_way_in.toml` beside its script, and
 > `demo-games scenario check`. The choice recorded under [Decision](#decision) is
 > settled and should not be re-litigated without new evidence.

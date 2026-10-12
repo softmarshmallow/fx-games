@@ -9,11 +9,11 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 from demo_game_collection.game_package import resolve_prepared_package
+from fx_games.canonical import canonical_sha256
 from iron_petal_unit_pipeline.content import declared_motion_states
 from iron_petal_unit_pipeline.manifest import build_manifest
 from iron_petal_unit_pipeline.runner_request import ResolvedRunnerPackage
 from iron_petal_unit_pipeline.validation import ResolvedRunnerMember
-from stage_gen.canonical import canonical_sha256
 from tests.unit._runner_fixture import two_genre_package
 
 

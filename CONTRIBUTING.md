@@ -1,22 +1,22 @@
 # Contributing
 
-Contributions should preserve `stage-gen` as a headless, general asset
+Contributions should preserve `fx-games` as a headless, general asset
 pipeline with optional consumers.
 
 The [Godot example project](godot/README.md) is a separately owned consumer product
 within this repository. Read its [charter](godot/CHARTER.md) before changing its
 organization or shared game systems. Such work stays in that project unless a
-separate, game-independent asset capability belongs in Stage Gen.
+separate, game-independent asset capability belongs in FX Games.
 
 ## Boundaries
 
-- Put reusable asset capabilities in `src/stage_gen/components/`. Modality services
-  and provider adapters belong to Grida FX (`third_party/fx`), not to Stage Gen.
+- Put reusable asset capabilities in `src/fx_games/components/`. Modality services
+  and provider adapters belong to Grida FX (`third_party/fx`), not to FX Games.
 - Put shared workflow-neutral media inspection and transforms in
-  `src/stage_gen/media/`. Keep capability-specific deterministic processing
+  `src/fx_games/media/`. Keep capability-specific deterministic processing
   with its component contract and workflow-specific canonicalization with its
   workflow.
-- Compose them into a workflow under `src/stage_gen/workflows/`: an FX workflow file
+- Compose them into a workflow under `src/fx_games/workflows/`: an FX workflow file
   whose node types call them. Keep sample inputs in the workflow's `inputs/`.
 - Complete games own their preparation packages, input formats, gameplay and
   bindings under `godot/games/<game>/`. Share implementations under
@@ -36,17 +36,17 @@ separate, game-independent asset capability belongs in Stage Gen.
 
 ## Adding a workflow
 
-A workflow is one folder, `src/stage_gen/workflows/<snake_id>/`, whose kebab-case id is the
+A workflow is one folder, `src/fx_games/workflows/<snake_id>/`, whose kebab-case id is the
 id `python -m grida.fx` runs it by (the root `fx.yaml` finds it there), the site slug and the
 docs path. The folder name is the id with `-` written as `_`, and a test holds them equal.
 
 1. Write `workflow.yaml` (`fx: workflow/v1`) beside its own `fx.yaml`, the workflow's home:
    its `routes:`, `sources:` and the shared `out/runs` and `out/fx-cache`. Put its node types
    under `nodes/` with the prompts and schemas they read, and use a built-in (`fx/<type>@1`)
-   wherever one fits. `uv run python -m grida.fx lock src/stage_gen/workflows/<snake_id>` pins
+   wherever one fits. `uv run python -m grida.fx lock src/fx_games/workflows/<snake_id>` pins
    the versioned types in `fx.lock`. A node imports the components it needs and only the
    public names of `grida.fx`.
-2. `workflow.py` exports `CODE`, from `fx_workflow` (`stage_gen.workflows._fx`): the steps
+2. `workflow.py` exports `CODE`, from `fx_workflow` (`fx_games.workflows._fx`): the steps
    and node types are read from the workflow file (each leaf step is one type, under its
    top-level step), with `identity()`, an offline `sample_plan` over committed or drawn
    sample inputs (or a stated reason it has none), and `owns_run`.
@@ -71,7 +71,7 @@ digest and stays in the local store. Committing run media or deploying the site 
 
 Output only a game can make is an example made by that game: its prose, pins and importer
 live with the game, and `demo-games example export <game>` writes it to the store through
-`stage_gen.examples`. It becomes a product workflow once it has product-owned inputs, a
+`fx_games.examples`. It becomes a product workflow once it has product-owned inputs, a
 standalone product graph and a real product run. The UI kit and parallax from a reference
 are the first candidates.
 
@@ -79,8 +79,8 @@ are the first candidates.
 
 Provider adapters, routes, prices and the key loader belong to
 [Grida FX](https://github.com/gridaco/fx); a change to them is made in
-`third_party/fx` under FX's own rules and gates, and reaches gridaco/fx before Stage Gen's
-pointer moves. In Stage Gen, a project picks routes in its `fx.yaml`, and a step's
+`third_party/fx` under FX's own rules and gates, and reaches gridaco/fx before FX Games'
+pointer moves. In FX Games, a project picks routes in its `fx.yaml`, and a step's
 `requires:` names the features its route must have. Use documented env variable names and
 never commit or print credentials. FX's engine is the one retry owner of every paid call,
 with at most six attempts; never retry a call in a node body or a loop around it. Persist

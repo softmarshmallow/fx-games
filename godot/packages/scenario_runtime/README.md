@@ -24,7 +24,7 @@ Copy `addons/scenario_runtime/` and its declared `game_presentation` and
 `content_io` dependencies into a Godot 4.7 project's `addons/`. Preserve each
 payload's license, JSON data and source UIDs. The pure program/session scripts
 load no game or media; the full addon also supplies optional presenters and
-bindings over Game Presentation. Playback needs neither Python nor Stage Gen.
+bindings over Game Presentation. Playback needs neither Python nor FX Games.
 
 For a complete copyable consumer, assemble the [Signal Room starter](../../templates/vn/README.md)
 from the repository root into a fresh directory:

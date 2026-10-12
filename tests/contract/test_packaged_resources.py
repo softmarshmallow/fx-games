@@ -14,16 +14,16 @@ from pathlib import Path, PurePosixPath
 import yaml
 from PIL import Image
 
-from stage_gen.provider_env import PROVIDER_ENV_KEYS
-from stage_gen.resources import terrain_atlas_template_path, terrain_atlas_topology_reference_path
+from fx_games.provider_env import PROVIDER_ENV_KEYS
+from fx_games.resources import terrain_atlas_template_path, terrain_atlas_topology_reference_path
 
 PORTRAIT_FACE_MODULES = {
-    "stage_gen/components/portrait_motion/face_crop.py",
-    "stage_gen/components/portrait_motion/face_location.py",
-    "stage_gen/components/portrait_motion/face_patches.py",
-    "stage_gen/components/portrait_motion/face_playback.py",
+    "fx_games/components/portrait_motion/face_crop.py",
+    "fx_games/components/portrait_motion/face_location.py",
+    "fx_games/components/portrait_motion/face_patches.py",
+    "fx_games/components/portrait_motion/face_playback.py",
     *(
-        f"stage_gen/workflows/portrait_motion/{name}"
+        f"fx_games/workflows/portrait_motion/{name}"
         for name in (
             "workflow.yaml",
             "fx.yaml",
@@ -43,11 +43,11 @@ PORTRAIT_FACE_MODULES = {
     ),
 }
 MOVIE_SPRITE_MODULES = {
-    "stage_gen/components/movie_sprite/__init__.py",
-    "stage_gen/components/movie_sprite/models.py",
-    "stage_gen/workflows/movie_sprite/__init__.py",
+    "fx_games/components/movie_sprite/__init__.py",
+    "fx_games/components/movie_sprite/models.py",
+    "fx_games/workflows/movie_sprite/__init__.py",
     *(
-        f"stage_gen/workflows/movie_sprite/{name}"
+        f"fx_games/workflows/movie_sprite/{name}"
         for name in (
             "workflow.yaml",
             "fx.yaml",
@@ -60,7 +60,7 @@ MOVIE_SPRITE_MODULES = {
     ),
 }
 UNIVERSE_WORKFLOW = {
-    f"stage_gen/workflows/universe/{name}"
+    f"fx_games/workflows/universe/{name}"
     for name in (
         "workflow.yaml",
         "fx.yaml",
@@ -77,7 +77,7 @@ UNIVERSE_WORKFLOW = {
 
 #: Each workflow's non-code facts ship with it; its prose stays in the checkout.
 WORKFLOW_MANIFESTS = {
-    f"stage_gen/workflows/{folder}/workflow.toml"
+    f"fx_games/workflows/{folder}/workflow.toml"
     for folder in (
         "character_3d",
         "looping_parallax",
@@ -90,7 +90,7 @@ WORKFLOW_MANIFESTS = {
 #: A workflow written as a workflow file ships whole: its file, its home, its node types,
 #: prompts, lock and sample inputs.
 PARALLAX_WORKFLOW = {
-    f"stage_gen/workflows/looping_parallax/{name}"
+    f"fx_games/workflows/looping_parallax/{name}"
     for name in (
         "workflow.yaml",
         "fx.yaml",
@@ -103,13 +103,13 @@ PARALLAX_WORKFLOW = {
 }
 
 WHEEL_RESOURCES = {
-    "stage_gen/resources/model_names.toml",
-    "stage_gen/resources/fixtures/image_gen_templates/inventory_template.png",
-    "stage_gen/resources/fixtures/image_gen_templates/terrain_atlas_12x4_template.png",
-    "stage_gen/resources/fixtures/image_gen_templates/terrain_atlas_godot_topology_reference.png",
-    "stage_gen/resources/prompting/image_style_vocabulary_v1.json",
-    "stage_gen/resources/skills/anchor-image-style/SKILL.md",
-    "stage_gen/resources/terrain/godot_3x3_minimal_lookup_v1.json",
+    "fx_games/resources/model_names.toml",
+    "fx_games/resources/fixtures/image_gen_templates/inventory_template.png",
+    "fx_games/resources/fixtures/image_gen_templates/terrain_atlas_12x4_template.png",
+    "fx_games/resources/fixtures/image_gen_templates/terrain_atlas_godot_topology_reference.png",
+    "fx_games/resources/prompting/image_style_vocabulary_v1.json",
+    "fx_games/resources/skills/anchor-image-style/SKILL.md",
+    "fx_games/resources/terrain/godot_3x3_minimal_lookup_v1.json",
 }
 SDIST_RESOURCES = {f"src/{name}" for name in WHEEL_RESOURCES}
 EXPECTED_SDIST_FILES = {
@@ -121,8 +121,8 @@ EXPECTED_SDIST_FILES = {
     "docs/testing.md",
     "pyproject.toml",
     "scripts/check.py",
-    "src/stage_gen/__init__.py",
-    "src/stage_gen/py.typed",
+    "src/fx_games/__init__.py",
+    "src/fx_games/py.typed",
     "tests/contract/fixtures/tag-vectors.json",
     "tests/contract/test_packaged_resources.py",
     "scripts/build_hooks.py",
@@ -248,7 +248,7 @@ def test_built_distributions_are_small_clean_and_resource_complete(tmp_path: Pat
         wheel_entries = {
             entry.filename: entry.file_size for entry in wheel.infolist() if not entry.is_dir()
         }
-        _assert_archive_hygiene(wheel_entries, resource_prefix="stage_gen/resources/")
+        _assert_archive_hygiene(wheel_entries, resource_prefix="fx_games/resources/")
         # Character candidate final-m1-28 (2026-09-13): non-snapshot wheel slice
         # measured 3,727,974 B, of which the character capability is 967,681 B
         # across 85 Python/data files. No new media; the executable model snapshot
@@ -269,20 +269,20 @@ def test_built_distributions_are_small_clean_and_resource_complete(tmp_path: Pat
         assert wheel_entries.keys() >= WORKFLOW_MANIFESTS
         assert wheel_entries.keys() >= PARALLAX_WORKFLOW
         assert not any(
-            name.startswith("stage_gen/workflows/") and name.endswith((".mdx", "/contract.md"))
+            name.startswith("fx_games/workflows/") and name.endswith((".mdx", "/contract.md"))
             for name in wheel_entries
         )
         assert all(wheel_entries[name] > 0 for name in WHEEL_RESOURCES)
         assert {
-            "stage_gen/__init__.py",
-            "stage_gen/py.typed",
-            "stage_gen/resources/__init__.py",
+            "fx_games/__init__.py",
+            "fx_games/py.typed",
+            "fx_games/resources/__init__.py",
         } <= wheel_entries.keys()
         assert any(name.endswith(".dist-info/METADATA") for name in wheel_entries)
         assert not any(name.endswith(".dist-info/entry_points.txt") for name in wheel_entries)
-        # Stage Gen alone: the engine is Grida FX's own distribution.
+        # FX Games alone: the engine is Grida FX's own distribution.
         assert {name.split("/")[0] for name in wheel_entries if ".dist-info/" not in name} == {
-            "stage_gen"
+            "fx_games"
         }
         assert not any(
             name.startswith(
@@ -332,7 +332,7 @@ def test_built_distributions_are_small_clean_and_resource_complete(tmp_path: Pat
         members = sdist.getmembers()
         assert all(member.isfile() or member.isdir() for member in members)
         root, sdist_entries = _sdist_file_entries(members)
-        _assert_archive_hygiene(sdist_entries, resource_prefix="src/stage_gen/resources/")
+        _assert_archive_hygiene(sdist_entries, resource_prefix="src/fx_games/resources/")
         # The size assertions below are what bound the archive. There is deliberately
         # no entry count: a count is a number that has to be re-pinned on every
         # honest addition, and the comment explaining each re-pin was a changelog
@@ -351,7 +351,7 @@ def test_built_distributions_are_small_clean_and_resource_complete(tmp_path: Pat
         assert sum(sdist_entries.values()) < 11_070_000
         assert {
             PurePosixPath(name).parts[1] for name in sdist_entries if name.startswith("src/")
-        } == {"stage_gen"}
+        } == {"fx_games"}
         assert not any(name.startswith("godot/") for name in sdist_entries)
         assert sdist_entries.keys() >= SDIST_RESOURCES | EXPECTED_SDIST_FILES
         assert sdist_entries.keys() >= {f"src/{name}" for name in PORTRAIT_FACE_MODULES}
@@ -421,7 +421,7 @@ class NoConsumerImports(importlib.abc.MetaPathFinder):
 sys.meta_path.insert(0, NoConsumerImports())
 import runpy
 from grida import fx
-from stage_gen.resources import (
+from fx_games.resources import (
     image_style_resource_digests,
     image_style_skill_path,
     image_style_vocabulary_path,
@@ -431,9 +431,9 @@ from stage_gen.resources import (
     terrain_atlas_template_path,
     terrain_atlas_topology_reference_path,
 )
-from stage_gen.image_prompting import load_image_style_resources
-from stage_gen.runview import project_run, verify_run
-from stage_gen.workflows._fx import WORKFLOWS_ROOT, write_project
+from fx_games.image_prompting import load_image_style_resources
+from fx_games.runview import project_run, verify_run
+from fx_games.workflows._fx import WORKFLOWS_ROOT, write_project
 
 installed = Path("installed").resolve()
 assert WORKFLOWS_ROOT.is_relative_to(installed)
@@ -464,24 +464,24 @@ assert image_style_resource_digests() == {
     "vocabulary_sha256": style_resources.vocabulary_sha256,
 }
 face_surfaces = {
-    "stage_gen.components.portrait_motion.face_crop": ("create_working_crop", "restore_feature"),
-    "stage_gen.components.portrait_motion.face_location": (
+    "fx_games.components.portrait_motion.face_crop": ("create_working_crop", "restore_feature"),
+    "fx_games.components.portrait_motion.face_location": (
         "locator_schema", "validate_location"
     ),
-    "stage_gen.components.portrait_motion.face_patches": (
+    "fx_games.components.portrait_motion.face_patches": (
         "make_face_input", "isolate_patch", "apply_offset_patch"
     ),
-    "stage_gen.components.portrait_motion.face_playback": (
+    "fx_games.components.portrait_motion.face_playback": (
         "build_face_combinations", "encode_face_preview"
     ),
-    "stage_gen.workflows.portrait_motion.states": ("combination_key", "reviewed"),
+    "fx_games.workflows.portrait_motion.states": ("combination_key", "reviewed"),
 }
 for name, names in face_surfaces.items():
     module = importlib.import_module(name)
     assert Path(module.__file__).resolve().is_relative_to(installed)
     assert all(callable(getattr(module, name)) for name in names)
 
-parallax = Path(importlib.import_module("stage_gen.workflows.looping_parallax").__file__).parent
+parallax = Path(importlib.import_module("fx_games.workflows.looping_parallax").__file__).parent
 assert parallax.resolve().is_relative_to(installed)
 make_layers = runpy.run_path(str(parallax / "inputs/supplied_layers/make_inputs.py"))
 layers = make_layers["write_inputs"](Path("parallax-inputs"))
@@ -491,7 +491,7 @@ assert parallax_run.ok, parallax_run.failures
 assert verified(parallax_run.run_dir)
 assert set(parallax_run.outputs) == {"manifest", "preview", "layers"}
 
-from stage_gen.workflows.movie_sprite.inputs.supplied_clip import make_inputs as clip
+from fx_games.workflows.movie_sprite.inputs.supplied_clip import make_inputs as clip
 
 assert Path(clip.__file__).resolve().is_relative_to(installed)
 clip.make_inputs(Path("movie-sprite-inputs"))
@@ -520,7 +520,7 @@ assert verified(movie_runs[1].run_dir)
 again = [node.cache for node in project_run(movie_runs[1].run_dir).nodes]
 assert again and set(again) == {"hit"}, again
 
-portrait = Path(importlib.import_module("stage_gen.workflows.portrait_motion").__file__).parent
+portrait = Path(importlib.import_module("fx_games.workflows.portrait_motion").__file__).parent
 assert portrait.resolve().is_relative_to(installed)
 face = runpy.run_path(str(portrait / "inputs/make_inputs.py"))["write_inputs"](
     Path("portrait-inputs")
@@ -632,9 +632,9 @@ def test_repository_media_obeys_git_size_and_location_policy() -> None:
         if is_style_dictionary:
             assert relative.parent == STYLE_DICTIONARY_ROOT / "images"
             assert relative.suffix.lower() == ".webp"
-        if relative.parts[0] == "src" and relative.parts[:3] != ("src", "stage_gen", "resources"):
+        if relative.parts[0] == "src" and relative.parts[:3] != ("src", "fx_games", "resources"):
             assert relative == PurePosixPath(
-                "src/stage_gen/workflows/universe/inputs/lantern_ferry/references/poster.png"
+                "src/fx_games/workflows/universe/inputs/lantern_ferry/references/poster.png"
             )
             example = repository / relative.parent.parent
             inputs = yaml.safe_load((example / "inputs.yaml").read_text())
@@ -836,7 +836,7 @@ def _sdist_file_entries(members: list[tarfile.TarInfo]) -> tuple[str, dict[str, 
     roots = {PurePosixPath(member.name).parts[0] for member in files}
     assert len(roots) == 1
     root = roots.pop()
-    assert root.startswith("stage_gen-")
+    assert root.startswith("fx_games-")
     entries: dict[str, int] = {}
     for member in files:
         parts = PurePosixPath(member.name).parts

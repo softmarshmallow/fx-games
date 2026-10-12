@@ -19,7 +19,7 @@ from demo_game_tools.kits.effects_art.sprite import (
     DUST_ATLAS_LAYOUT,
     DUST_CELL_KINDS,
 )
-from stage_gen.components._game_input import (
+from fx_games.components._game_input import (
     SHA256_PATTERN,
     SNAKE_ID_PATTERN,
     normalized_text,
@@ -27,7 +27,7 @@ from stage_gen.components._game_input import (
     portable_relative_path,
     unique_values,
 )
-from stage_gen.contracts import PersistedContractModel
+from fx_games.contracts import PersistedContractModel
 
 EFFECTS_ART_SCHEMA_VERSION = 1
 EFFECTS_ART_KIND = "effects-art-v1"

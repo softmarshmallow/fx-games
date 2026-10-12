@@ -18,10 +18,10 @@ from typing import Any
 
 from grida.fx import DECLINE, InputFile, Plan, RunResult, StandInCall
 
-from stage_gen.workflows._fx import write_project
+from fx_games.workflows._fx import write_project
 
 REPOSITORY = Path(__file__).resolve().parents[2]
-WORKFLOWS = REPOSITORY / "src/stage_gen/workflows"
+WORKFLOWS = REPOSITORY / "src/fx_games/workflows"
 GAMES = REPOSITORY / "godot/games"
 
 type Handler = Callable[[StandInCall], Any]

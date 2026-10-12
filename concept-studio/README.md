@@ -1,6 +1,6 @@
 # Game Concept Studio
 
-Game Concept Studio is the inexpensive pre-production side of Stage Gen. Start with a short game
+Game Concept Studio is the inexpensive pre-production side of FX Games. Start with a short game
 idea, talk it through with an agent, and leave with a readable concept plus cover art before
 deciding whether to build anything.
 
@@ -20,7 +20,7 @@ images with [Grida FX](https://github.com/gridaco/fx) on the user's own provider
 Install it globally:
 
 ```sh
-npx skills add softmarshmallow/stage-gen --skill game-concept-studio -g
+npx skills add softmarshmallow/fx-games --skill game-concept-studio -g
 ```
 
 Inside this checkout, a project install would land in the repository's own `.agents/skills`

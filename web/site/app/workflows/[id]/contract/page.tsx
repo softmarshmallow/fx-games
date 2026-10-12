@@ -28,7 +28,7 @@ function titleOf(id: string): string {
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { id } = await params;
-  return { title: `${titleOf(id)} contract · Stage Gen` };
+  return { title: `${titleOf(id)} contract · FX Games` };
 }
 
 /** The contract's relative links resolve from where it lives in the checkout. */

@@ -17,8 +17,8 @@ from demo_game_tools.media.ui import (
     inventory_panel_layout_contract,
     load_game_ui_bytes,
 )
-from stage_gen.components._game_input import AuthoredContractLoadError
-from stage_gen.resources import inventory_template_path
+from fx_games.components._game_input import AuthoredContractLoadError
+from fx_games.resources import inventory_template_path
 
 GAMES = Path(__file__).resolve().parents[3] / "godot" / "games"
 PACKAGE = GAMES / "bellweather" / "inputs" / "default"

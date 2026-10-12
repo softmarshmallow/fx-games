@@ -4,13 +4,13 @@ import pytest
 from PIL import Image
 from pydantic import ValidationError
 
-from stage_gen.components.sideview_layers.parallax import (
+from fx_games.components.sideview_layers.parallax import (
     ParallaxLayer,
     ParallaxSpec,
     prepare_parallax_layer,
     render_parallax,
 )
-from stage_gen.media.codec import decode_rgba, encode_png
+from fx_games.media.codec import decode_rgba, encode_png
 
 
 def _source() -> bytes:

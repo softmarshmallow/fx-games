@@ -36,7 +36,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None, *, stdout: TextIO | None = None) -> int:
-    from stage_gen.workflows._catalog import default_examples_dir, export
+    from fx_games.workflows._catalog import default_examples_dir, export
 
     output = stdout or sys.stdout
     args = build_parser().parse_args(argv)

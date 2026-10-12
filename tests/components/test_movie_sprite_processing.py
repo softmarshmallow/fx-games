@@ -15,13 +15,13 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from stage_gen.components.movie_sprite import (
+from fx_games.components.movie_sprite import (
     FinishSettings,
     finish_video,
     inspect_source_video,
     validate_finish_config,
 )
-from stage_gen.components.movie_sprite.geometry import (
+from fx_games.components.movie_sprite.geometry import (
     AttachmentRepair,
     Pixels,
     anchor_rgba,
@@ -29,8 +29,8 @@ from stage_gen.components.movie_sprite.geometry import (
     fixed_masks,
     morph,
 )
-from stage_gen.components.movie_sprite.models import LocalRepair
-from stage_gen.components.movie_sprite.processing import key_frame
+from fx_games.components.movie_sprite.models import LocalRepair
+from fx_games.components.movie_sprite.processing import key_frame
 
 
 def _video(tmp_path: Path, frames: Pixels, fps: int | str = 12) -> bytes:

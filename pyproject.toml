@@ -3,13 +3,13 @@ requires = ["hatchling>=1.27,<2"]
 build-backend = "hatchling.build"
 
 [project]
-name = "stage-gen"
+name = "fx-games"
 version = "0.0.0"
 description = "Headless, reproducible 2D game-asset generation pipeline"
 readme = "README.md"
 requires-python = ">=3.12"
 license = { file = "LICENSE" }
-authors = [{ name = "stage-gen contributors" }]
+authors = [{ name = "fx-games contributors" }]
 dependencies = [
   "jsonschema>=4.26,<5",
   "pillow>=11,<13",
@@ -18,7 +18,7 @@ dependencies = [
   "scipy>=1.15,<2",
   "opencv-python-headless>=4.13,<5",
   "pyyaml>=6.0.2,<7",
-  # Grida FX, the engine stage-gen runs on, from the submodule at third_party/fx.
+  # Grida FX, the engine FX Games runs on, from the submodule at third_party/fx.
   "grida",
 ]
 
@@ -52,24 +52,24 @@ grida = { path = "third_party/fx/python", editable = true }
 
 [tool.hatch.build]
 exclude = [
-  "/src/stage_gen/**/inputs/**/references/**",
-  "/src/stage_gen/workflows/universe/inputs/lantern_ferry/**",
+  "/src/fx_games/**/inputs/**/references/**",
+  "/src/fx_games/workflows/universe/inputs/lantern_ferry/**",
 ]
 
 [tool.hatch.build.hooks.custom]
 path = "scripts/build_hooks.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/stage_gen"]
+packages = ["src/fx_games"]
 # A target's exclude replaces the build-wide list, so the wheel repeats it. Workflow prose
 # (page.mdx, contract.md) is read from the checkout by the site, never by installed code, and
 # a takes file holds someone's personal picks.
 exclude = [
-  "/src/stage_gen/**/inputs/**/references/**",
-  "/src/stage_gen/workflows/universe/inputs/lantern_ferry/**",
-  "/src/stage_gen/workflows/**/*.mdx",
-  "/src/stage_gen/workflows/**/contract.md",
-  "/src/stage_gen/workflows/**/*.takes.yaml",
+  "/src/fx_games/**/inputs/**/references/**",
+  "/src/fx_games/workflows/universe/inputs/lantern_ferry/**",
+  "/src/fx_games/workflows/**/*.mdx",
+  "/src/fx_games/workflows/**/contract.md",
+  "/src/fx_games/workflows/**/*.takes.yaml",
 ]
 
 [tool.hatch.build.targets.sdist]
@@ -82,13 +82,13 @@ include = [
   "/docs/**/*.json",
   "/docs/**/*.md",
   "/scripts/**/*.py",
-  "/src/stage_gen/**",
+  "/src/fx_games/**",
   "/tests/**/*.json",
   "/tests/**/*.py",
 ]
 exclude = [
-  "/src/stage_gen/**/inputs/**/references/**",
-  "/src/stage_gen/workflows/universe/inputs/lantern_ferry/**",
+  "/src/fx_games/**/inputs/**/references/**",
+  "/src/fx_games/workflows/universe/inputs/lantern_ferry/**",
   "/.env",
   "/.git/**",
   "/.mypy_cache/**",
@@ -126,7 +126,7 @@ select = ["E", "F", "I", "UP", "B", "SIM", "ASYNC", "RUF"]
 ignore = ["RUF022"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["stage_gen", "scenario_authoring", "demo_game_tools", "demo_game_collection", "bellweather_pipeline", "iron_petal_unit_pipeline", "ember_hollow_pipeline", "the_grain_pipeline"]
+known-first-party = ["fx_games", "scenario_authoring", "demo_game_tools", "demo_game_collection", "bellweather_pipeline", "iron_petal_unit_pipeline", "ember_hollow_pipeline", "the_grain_pipeline"]
 
 [tool.mypy]
 python_version = "3.12"

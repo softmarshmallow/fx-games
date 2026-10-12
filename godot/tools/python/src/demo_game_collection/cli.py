@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from typing import TextIO
 
 from demo_game_collection.parser import build_parser as build_parser
-from stage_gen.application import (
+from fx_games.application import (
     UsageError as CliUsageError,
 )
 

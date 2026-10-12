@@ -14,7 +14,7 @@ Status (2026-10-07): the "current implementation" below describes the layout of
 August 2026, and its executor, services and identifiers are named as they were then.
 Structured generation has since moved to Grida FX's built-in `structured.generate`
 step and its OpenRouter adapter, and the recipe modules named here were folded into
-`src/stage_gen/media/` and the game's `motion_contract.py`. Bellweather's build now
+`src/fx_games/media/` and the game's `motion_contract.py`. Bellweather's build now
 reviews each actor from a board of what was made, with a `structured.generate` step
 whose verdict is recorded as evidence and never gates the build
 ([its builder](../../godot/games/bellweather/pipeline/workflow.py)). There is still no
@@ -76,7 +76,7 @@ consumer adapters own runtime assumptions.
 ### Current implementation
 
 ```
-src/stage_gen/media/images.py
+src/fx_games/media/images.py
   apply_chroma_transparency            soft matte and despill
 
 fx/structured.generate@1              Grida FX's strict structured output
@@ -105,7 +105,7 @@ If several recipes need shared review orchestration beyond strict structured gen
 proposed ownership is:
 
 ```
-src/stage_gen/components/semantic_review/       proposed; absent
+src/fx_games/components/semantic_review/       proposed; absent
 a Grida FX adapter for vision.review            proposed; absent (FX declares the capability, ships no adapter)
 ```
 
@@ -121,7 +121,7 @@ Two rules constrain that proposal:
 ### Current state
 
 The deterministic boundary pipeline was implemented in the recipe's former
-`raster_contracts.py`; its functions now live in `src/stage_gen/media/`:
+`raster_contracts.py`; its functions now live in `src/fx_games/media/`:
 
 | function | role |
 |---|---|
@@ -133,7 +133,7 @@ The deterministic boundary pipeline was implemented in the recipe's former
 | `contract_for_stage` | selects the exact producer grid contract for a side-view platformer stage |
 
 Prepared-package actor sheets take a separate current path through
-`src/stage_gen/media/sprite_sheets.py`. Their provider `*.source.png` is preserved, and the local
+`src/fx_games/media/sprite_sheets.py`. Their provider `*.source.png` is preserved, and the local
 validation node publishes an `alpha-component-repack-v3` canonical sheet. That operation selects
 large native-alpha components and repacks them with transparent gutters instead of slicing equal
 XY cells. Its fused-component fallback additionally requires one principal higher-alpha core in
@@ -167,7 +167,7 @@ still owns runtime scaling, alpha-frame measurement, world placement, and ground
 
 ### Current chroma matte
 
-The former hard-key limitation is fixed in `src/stage_gen/media/images.py`.
+The former hard-key limitation is fixed in `src/fx_games/media/images.py`.
 `apply_chroma_transparency` now implements the current matte identified by
 `CHROMA_MATTE_VERSION = "chroma-soft-key-despill-floor-v3"`:
 

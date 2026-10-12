@@ -11,8 +11,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from stage_gen.workflows.universe import models
-from stage_gen.workflows.universe.medium import ANIME_2D, LIVE_ACTION
+from fx_games.workflows.universe import models
+from fx_games.workflows.universe.medium import ANIME_2D, LIVE_ACTION
 from tests.unit.workflows.universe._universe_fixture import (
     entity_direction,
     evaluate,

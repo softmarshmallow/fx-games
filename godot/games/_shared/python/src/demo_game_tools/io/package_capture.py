@@ -25,19 +25,19 @@ from typing import Literal, Protocol
 from PIL import Image, UnidentifiedImageError
 
 from demo_game_tools.input_formats.game_contract import PreparedGameContract
-from stage_gen.components._game_input import (
+from fx_games.components._game_input import (
     AuthoredContractLoadError,
     portable_relative_path,
     sha256_bytes,
 )
-from stage_gen.components._secure_fs import (
+from fx_games.components._secure_fs import (
     SecurePathError,
     open_absolute_directory,
     read_absolute_regular_file,
     read_relative_regular_file,
 )
-from stage_gen.media import assert_audio_signature
-from stage_gen.provenance import ArtifactProvenance
+from fx_games.media import assert_audio_signature
+from fx_games.provenance import ArtifactProvenance
 
 GAME_PACKAGE_VALIDATION_SCHEMA_VERSION = 6
 #: The resolved package document and its validation report carry the same schema

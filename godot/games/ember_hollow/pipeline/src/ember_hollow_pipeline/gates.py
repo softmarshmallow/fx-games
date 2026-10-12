@@ -25,13 +25,13 @@ from typing import Final, Protocol, cast
 
 from PIL import Image, ImageChops, ImageFilter, ImageOps, ImageStat
 
-from stage_gen.media.guide_lattice import (
+from fx_games.media.guide_lattice import (
     GuideLattice,
     detect_guide_lattice,
     extract_guided_cells,
 )
-from stage_gen.media.loop_construction import mirror_repeat
-from stage_gen.media.sprite_sheets import (
+from fx_games.media.loop_construction import mirror_repeat
+from fx_games.media.sprite_sheets import (
     AlphaComponentRepackContract,
     measure_alpha_ground_contact,
     measure_alpha_subjects,

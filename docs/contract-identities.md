@@ -111,9 +111,9 @@ field or constant. Game versioning follows [the game contract](../godot/games/_s
 | `portal-pair-1x2-v1` | `mode` | `bellweather_pipeline.maps.prepared:PreparedMapPortal.mode` |
 | `runner-structural-ground-v1` | `mode` | `iron_petal_unit_pipeline.track.models:RunnerStructuralGround.mode` |
 | `terrain-atlas-3x3-minimal-v1` | `mode` | `demo_game_tools.input_formats.sideview_stage.models:PreparedMapGround.mode` |
-| `generated_clip_v1` | `realization` | `stage_gen.components.sound_effect.models:GENERATED_CLIP_REALIZATION_KIND` |
+| `generated_clip_v1` | `realization` | `fx_games.components.sound_effect.models:GENERATED_CLIP_REALIZATION_KIND` |
 | `oscillator_sweep_v1` | `realization` | `iron_petal_unit_pipeline.audio.models:OscillatorSweepRealization.kind` |
-| `spoken_line_v1` | `realization` | `stage_gen.components.speech.models:SPOKEN_LINE_REALIZATION_KIND` |
+| `spoken_line_v1` | `realization` | `fx_games.components.speech.models:SPOKEN_LINE_REALIZATION_KIND` |
 | `dialogue-scene-v8` | `recipe` | `the_grain_pipeline.dialogue_scene.models:DialogueScenePlan.recipe_version` |
 
 ## Retired identities

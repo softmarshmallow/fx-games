@@ -39,7 +39,7 @@ from typing import Final, Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from stage_gen.components._game_input import (
+from fx_games.components._game_input import (
     GAME_ID_PATTERN,
     KEBAB_ID_PATTERN,
     SNAKE_ID_PATTERN,
@@ -47,7 +47,7 @@ from stage_gen.components._game_input import (
     parse_toml_contract,
     sha256_bytes,
 )
-from stage_gen.contracts import PersistedContractModel
+from fx_games.contracts import PersistedContractModel
 
 RUNNER_GAMEPLAY_SCHEMA_VERSION = 4
 

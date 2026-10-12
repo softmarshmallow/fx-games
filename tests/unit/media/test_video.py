@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from stage_gen.media import (
+from fx_games.media import (
     AudioProcessResult,
     AudioProcessRunner,
     LumaMeasurement,
@@ -24,7 +24,7 @@ from stage_gen.media import (
     signature_distance,
     theora_transcode_args,
 )
-from stage_gen.media.codec import encode_png
+from fx_games.media.codec import encode_png
 
 _STREAMS = {
     "streams": [

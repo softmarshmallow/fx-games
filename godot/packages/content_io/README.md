@@ -1,7 +1,7 @@
 # Content I/O
 
 An independent Godot addon for local, explicitly rooted content access and media
-decoding. It accepts supplied files without a game manifest, Stage Gen package,
+decoding. It accepts supplied files without a game manifest, FX Games package,
 provider, network service or presentation controller.
 
 Copy `addons/content_io` into a consuming project's `addons` directory. The addon

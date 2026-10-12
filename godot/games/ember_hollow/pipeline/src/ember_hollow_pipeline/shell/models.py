@@ -57,14 +57,14 @@ from demo_game_tools.kits.screen_art.models import (
     ShellReference,
     ShellTypeface,
 )
-from stage_gen.components._game_input import (
+from fx_games.components._game_input import (
     PACKAGE_ID_PATTERN,
     SNAKE_ID_PATTERN,
     normalized_text,
     parse_toml_contract,
     unique_values,
 )
-from stage_gen.contracts import PersistedContractModel
+from fx_games.contracts import PersistedContractModel
 
 GAME_SHELL_SCHEMA_VERSION = 3
 GAME_SHELL_KIND = "game-shell-v3"

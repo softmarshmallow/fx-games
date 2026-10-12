@@ -6,13 +6,13 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from stage_gen.image_prompting import (
+from fx_games.image_prompting import (
     image_style_question,
     load_image_style_resources,
     materialize_style_anchor,
 )
-from stage_gen.image_style import StyleModeSelection
-from stage_gen.resources import image_style_resource_digests
+from fx_games.image_style import StyleModeSelection
+from fx_games.resources import image_style_resource_digests
 
 
 def test_resources_cover_every_recognized_mode_and_exact_asset_treatments() -> None:

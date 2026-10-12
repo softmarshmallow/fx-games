@@ -57,7 +57,7 @@ from demo_game_tools.scenario import (
     load_scenario_catalog_bytes,
     resolve_scenario_bytes,
 )
-from stage_gen.components._game_input import AuthoredContractLoadError
+from fx_games.components._game_input import AuthoredContractLoadError
 
 
 @dataclass(frozen=True, slots=True)

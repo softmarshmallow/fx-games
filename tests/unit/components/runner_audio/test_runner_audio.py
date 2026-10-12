@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from fx_games.components._game_input import AuthoredContractLoadError
 from iron_petal_unit_pipeline.audio import (
     GeneratedClipRealization,
     RunnerAudioContract,
@@ -12,7 +13,6 @@ from iron_petal_unit_pipeline.audio import (
     load_runner_audio_bytes,
     runner_audio_sha256,
 )
-from stage_gen.components._game_input import AuthoredContractLoadError
 
 
 def _source(*, reverse: bool = False) -> str:

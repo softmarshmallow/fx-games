@@ -14,9 +14,9 @@ from demo_game_tools.kits.character_profile import (
     CharacterProfile,
     canonical_character_profile_json,
 )
-from stage_gen.contracts import BinaryArtifact
-from stage_gen.fs import atomic_write_bytes, resolve_relative_path_within_root
-from stage_gen.provenance import (
+from fx_games.contracts import BinaryArtifact
+from fx_games.fs import atomic_write_bytes, resolve_relative_path_within_root
+from fx_games.provenance import (
     ArtifactRights,
     InputProvenance,
     ProvenanceInput,

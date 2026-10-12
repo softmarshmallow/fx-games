@@ -38,7 +38,7 @@ from demo_game_tools.kits.sideview_terrain.atlas import (
     terrain_atlas_generation_prompt,
     terrain_atlas_paint_target,
 )
-from stage_gen.resources import terrain_atlas_lookup_path, terrain_atlas_template_path
+from fx_games.resources import terrain_atlas_lookup_path, terrain_atlas_template_path
 
 
 def _template() -> bytes:

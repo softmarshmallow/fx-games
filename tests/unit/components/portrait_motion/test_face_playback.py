@@ -10,17 +10,17 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from stage_gen.components.portrait_motion.face_crop import (
+from fx_games.components.portrait_motion.face_crop import (
     FloatArray,
     Transform,
     create_working_crop,
 )
-from stage_gen.components.portrait_motion.face_patches import apply_offset_patch
-from stage_gen.components.portrait_motion.face_playback import (
+from fx_games.components.portrait_motion.face_patches import apply_offset_patch
+from fx_games.components.portrait_motion.face_playback import (
     build_face_combinations,
     encode_face_preview,
 )
-from stage_gen.components.portrait_motion.models import (
+from fx_games.components.portrait_motion.models import (
     MotionState,
     PlaybackSegment,
     PortraitMotionSpec,

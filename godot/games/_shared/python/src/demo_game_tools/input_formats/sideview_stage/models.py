@@ -17,23 +17,23 @@ from typing import Literal
 
 from pydantic import Field, field_validator
 
-from stage_gen.components._game_input import (
+from fx_games.components._game_input import (
     normalized_text,
     unique_values,
 )
-from stage_gen.components.sideview_layers.models import (
+from fx_games.components.sideview_layers.models import (
     LayerContinuity as PreparedMapContinuity,
 )
-from stage_gen.components.sideview_layers.models import (
+from fx_games.components.sideview_layers.models import (
     LayerPresentation as PreparedMapLayerPresentation,
 )
-from stage_gen.components.sideview_layers.models import (
+from fx_games.components.sideview_layers.models import (
     LayerReference as PreparedMapReference,
 )
-from stage_gen.components.sideview_layers.models import (
+from fx_games.components.sideview_layers.models import (
     LayerRequest as PreparedMapLayer,
 )
-from stage_gen.contracts import PersistedContractModel
+from fx_games.contracts import PersistedContractModel
 
 
 class PreparedMapView(PersistedContractModel):

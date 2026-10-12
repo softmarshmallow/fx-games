@@ -115,8 +115,8 @@ from ember_hollow_pipeline.models import (
 )
 from ember_hollow_pipeline.shell import GameShell, load_game_shell_bytes
 from ember_hollow_pipeline.shell.nodes import document_clip_roles
-from stage_gen.canonical import content_sha256
-from stage_gen.components._game_input import AuthoredContractLoadError
+from fx_games.canonical import content_sha256
+from fx_games.components._game_input import AuthoredContractLoadError
 
 SURVIVAL_DOCUMENT_NAME: Final = "survival.toml"
 #: The shared ``game-ui-v5`` document, optional like music.toml: the interface

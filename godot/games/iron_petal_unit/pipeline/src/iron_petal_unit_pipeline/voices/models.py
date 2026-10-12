@@ -20,14 +20,14 @@ from pydantic import Field, model_validator
 
 from demo_game_tools.kits.voice_profile import VoiceProfile as GameVoice
 from demo_game_tools.kits.voice_profile import VoiceProviderBinding
-from stage_gen.components._game_input import (
+from fx_games.components._game_input import (
     GAME_ID_PATTERN,
     canonical_contract_json,
     parse_toml_contract,
     sha256_bytes,
     unique_values,
 )
-from stage_gen.contracts import PersistedContractModel
+from fx_games.contracts import PersistedContractModel
 
 GAME_VOICES_SCHEMA_VERSION = 1
 GAME_VOICES_KIND = "game-voices-v1"

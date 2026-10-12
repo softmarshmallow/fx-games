@@ -60,7 +60,7 @@ numbers supply a direct layer-local X/Y offset. Target and offset forms are
 mutually exclusive. Numeric arrays are converted to Godot vectors at this host
 boundary. Catalog names are referenced by timed `.scenario` cues. Their parameter
 schema is the installed `presentation/front_types.json`; these game presets do
-not add a Stage Gen asset contract.
+not add an FX Games asset contract.
 
 ## Lifecycle and demonstration
 

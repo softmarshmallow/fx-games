@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from stage_gen.components.video_clip import (
+from fx_games.components.video_clip import (
     CLIP_MOTION_FLOOR_MEAN,
     ClipAdmissionError,
     clip_admission_facts,
 )
-from stage_gen.media import ClipAudioTrack, LumaMeasurement, MotionMeasurement, VideoProbe
+from fx_games.media import ClipAudioTrack, LumaMeasurement, MotionMeasurement, VideoProbe
 
 
 def _probe(**overrides: object) -> VideoProbe:

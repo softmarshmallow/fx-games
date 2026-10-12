@@ -6,12 +6,12 @@ from hashlib import sha256
 import pytest
 from PIL import Image, ImageDraw
 
-from stage_gen.media import (
+from fx_games.media import (
     AlphaComponentRepackContract,
     measure_alpha_ground_contact,
     repack_alpha_components,
 )
-from stage_gen.media.sprite_sheets import measure_alpha_subjects
+from fx_games.media.sprite_sheets import measure_alpha_subjects
 
 
 def _png(image: Image.Image) -> bytes:

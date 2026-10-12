@@ -81,7 +81,7 @@ from demo_game_tools.kits.ui_art.models import (
 from demo_game_tools.kits.ui_art.models import (
     inventory_panel_layout_contract as inventory_panel_layout_contract,
 )
-from stage_gen.components._game_input import (
+from fx_games.components._game_input import (
     PACKAGE_ID_PATTERN,
     parse_toml_contract,
     unique_values,

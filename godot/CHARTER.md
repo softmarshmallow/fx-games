@@ -1,6 +1,6 @@
 # Godot project charter
 
-This repository contains two separately owned products. **Stage Gen is the main
+This repository contains two separately owned products. **FX Games is the main
 asset-generation product. The Godot example project demonstrates how to consume
 it in playable applications.** They share a repository, not a single application
 architecture or mandatory game contract.
@@ -15,12 +15,12 @@ one implementation of the boundary; it is not the permanent shape of this projec
 
 | Product | Purpose and responsibility |
 | --- | --- |
-| Stage Gen | The primary product: author, execute and inspect user-owned asset pipelines through the SDK, components, workflows and supporting tools. Its Grida FX engine and application layers remain defined by the [root architecture](../ARCHITECTURE.md). |
+| FX Games | The primary product: author, execute and inspect user-owned asset pipelines through the SDK, components, workflows and supporting tools. Its Grida FX engine and application layers remain defined by the [root architecture](../ARCHITECTURE.md). |
 | Godot example project | The consumer product: turn selected assets into playable demonstrations, reusable Godot runtime packages and copyable starting projects. Own its gameplay, presentation, integration, tooling and development direction. |
 
-In relation to Stage Gen, `godot/` is an examples directory with an engine-specific
+In relation to FX Games, `godot/` is an examples directory with an engine-specific
 name. Its games show ways to use the asset product; they do not define what every
-Stage Gen user must build. An asset pipeline may serve another engine, a custom
+FX Games user must build. An asset pipeline may serve another engine, a custom
 application or a purpose unrelated to games.
 
 Within its own scope, Godot is a maintained project. Example status does not make
@@ -41,23 +41,23 @@ contribution, verification, media and publication policies continue to apply.
 - Maintain the retained games and their working preparation and playback paths.
 - Develop Godot runtime and presentation capabilities where they have clear users,
   responsibilities and independently reviewable behavior.
-- Let this project improve its own architecture without making Stage Gen depend
+- Let this project improve its own architecture without making FX Games depend
   on the internal arrangement of its examples.
 
 ## Ownership boundary
 
-Stage Gen owns generation, validated artifacts, cache, provenance and asset
+FX Games owns generation, validated artifacts, cache, provenance and asset
 inspection. Godot preparation scripts consume those public APIs and artifacts;
 the Godot project owns how assets become scenes, controls, cameras, animation,
 story, combat, audio playback and a complete player experience.
 
-Dependencies point from Godot consumers to Stage Gen. The asset product must
+Dependencies point from Godot consumers to FX Games. The asset product must
 install, run and be useful without Godot or its game packages. Godot's internal
 game formats must not become required inputs to public components or workflows.
 The example project can also consume supplied assets and other asset sources.
 
 Bounded asset contracts, such as sprite locomotion assets and looping parallax,
-retain their scope in Stage Gen. Their existence does not imply a universal
+retain their scope in FX Games. Their existence does not imply a universal
 gameplay schema. Scenario authoring and execution belong to this Godot project;
 they are not asset-product contracts.
 
@@ -129,9 +129,9 @@ framework does not require every game to share a whole-game format or save model
 promotion and the historical decisions it supersedes.
 
 Sharing a mechanism between games is not sufficient reason to move it into
-Stage Gen. A candidate for the main product needs a separate asset-pipeline use
+FX Games. A candidate for the main product needs a separate asset-pipeline use
 case and a bounded contract that works without a selected game or Godot runtime.
-Changes to that public boundary are reviewed as Stage Gen work, independently of
+Changes to that public boundary are reviewed as FX Games work, independently of
 the internal Godot refactor.
 
 This charter defines the goal and review criteria. It does not select the next

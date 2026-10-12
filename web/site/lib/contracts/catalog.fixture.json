@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
-  "kind": "stage-gen-catalog-v1",
+  "kind": "fx-games-catalog-v1",
   "workflows": [
     {
       "id": "swatch-sheet",
       "folder": "swatch_sheet",
-      "source_folder": "src/stage_gen/workflows/swatch_sheet",
+      "source_folder": "src/fx_games/workflows/swatch_sheet",
       "manifest": {
         "schema_version": 1,
-        "kind": "stage-gen-workflow-v1",
+        "kind": "fx-games-workflow-v1",
         "id": "swatch-sheet",
         "title": "Swatch sheet",
         "promise": "One brief in. A checked sheet of material swatches out.",
@@ -28,10 +28,10 @@
           }
         ],
         "try": {
-          "input": "src/stage_gen/workflows/swatch_sheet/inputs/slate",
+          "input": "src/fx_games/workflows/swatch_sheet/inputs/slate",
           "commands": [
-            "uv run python -m grida.fx plan swatch-sheet --inputs src/stage_gen/workflows/swatch_sheet/inputs/slate.yaml",
-            "uv run python -m grida.fx run swatch-sheet --inputs src/stage_gen/workflows/swatch_sheet/inputs/slate.yaml"
+            "uv run python -m grida.fx plan swatch-sheet --inputs src/fx_games/workflows/swatch_sheet/inputs/slate.yaml",
+            "uv run python -m grida.fx run swatch-sheet --inputs src/fx_games/workflows/swatch_sheet/inputs/slate.yaml"
           ]
         },
         "examples": [

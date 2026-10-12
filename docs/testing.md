@@ -1,4 +1,4 @@
-# Testing stage-gen
+# Testing FX Games
 
 All verification is credential-free, and no test calls a provider. A test that runs a
 workflow or a game build runs it whole on Grida FX with a stand-in
@@ -98,7 +98,7 @@ reader can act on rather than a pointer that rotted.
 duration measurement). Component tests inject process runners where possible, but a
 real music pipeline should fail clearly when those tools are unavailable.
 
-The core wheel includes immutable layout templates under `stage_gen.resources`.
+The core wheel includes immutable layout templates under `fx_games.resources`.
 Game-only music and its provenance belong to the optional game tooling distribution. The contract test builds a
 wheel in isolation, inspects its entries, extracts it away from the checkout,
 and resolves every required resource through the installed helper API. Do not

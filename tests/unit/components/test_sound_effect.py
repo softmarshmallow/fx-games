@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from iron_petal_unit_pipeline.audio.realizations import GeneratedClipRealization
-from stage_gen.components.sound_effect import (
+from fx_games.components.sound_effect import (
     SOUND_EFFECT_CLIPPING_PEAK_DBFS,
     SOUND_EFFECT_MINIMUM_PEAK_DBFS,
     admission_facts,
 )
-from stage_gen.media import MINIMUM_SOUND_EFFECT_PAYLOAD_BYTES
+from fx_games.media import MINIMUM_SOUND_EFFECT_PAYLOAD_BYTES
+from iron_petal_unit_pipeline.audio.realizations import GeneratedClipRealization
 
 PAYLOAD = b"\xff\xfb" + b"\x00" * MINIMUM_SOUND_EFFECT_PAYLOAD_BYTES
 

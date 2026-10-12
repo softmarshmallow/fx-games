@@ -50,7 +50,7 @@ choose how to expose that refusal. Bellweather's dialogue snapshot is one
 explicit game save slice and does not replay rewards.
 
 The [historical v2 design](history/v2-design.md) records the original decisions.
-Its former Stage Gen ownership, universal sequence authority and finishability
+Its former FX Games ownership, universal sequence authority and finishability
 claims are superseded by this reference and [decision 0070](../../../../docs/decisions/0070-the-game-invokes-scenario.md).
 
 ## Content updates

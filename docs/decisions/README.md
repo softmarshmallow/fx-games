@@ -28,7 +28,7 @@ Studio is no longer an application but a skill users install.
 [0074](0074-stage-gen-runs-on-grida-fx.md) moves the engine out of this repository: Stage Gen
 runs on Grida FX, gnode is deleted, and 0072's R9, R9b and `gnode-*` documents are superseded.
 [0075](0075-runs-are-seen-in-fx.md) retires the viewer 0071 split out: runs are seen in FX's
-viewer.
+viewer. [0076](0076-stage-gen-is-fx-games.md) renames Stage Gen to FX Games.
 
 | # | Title | In one line |
 | --- | --- | --- |
@@ -107,3 +107,4 @@ viewer.
 | [0073](0073-concept-studio-is-a-skill-not-an-application.md) | Concept Studio is a skill, not an application | The `stage-gen-concept` distribution goes; concept work is an installable skill that stands alone in any folder and draws through Grida FX |
 | [0074](0074-stage-gen-runs-on-grida-fx.md) | Stage Gen runs on Grida FX | gnode becomes a standalone product consumed as a submodule; no cache replay, stand-ins replace injected services, and the run view moves into Stage Gen |
 | [0075](0075-runs-are-seen-in-fx.md) | Runs are seen in FX | Stage Gen's viewer goes; FX's viewer draws every run, and the run view stays only for the examples store |
+| [0076](0076-stage-gen-is-fx-games.md) | Stage Gen is FX Games | The repository, distribution, package and contract kinds take the new name; persisted provenance names and digest domains keep the old one |

@@ -458,7 +458,7 @@ export function findDoc(slug: readonly string[], catalog: Catalog = loadCatalog(
  * Where a relative link of a staged doc, page body or contract leads on the site: the route
  * of the doc, workflow page or workflow contract it names, with its fragment, or null when
  * the site does not publish its target. `from` is the source's checkout path
- * ("docs/site.md", "src/stage_gen/workflows/movie_sprite/contract.md").
+ * ("docs/site.md", "src/fx_games/workflows/movie_sprite/contract.md").
  */
 export function docLink(from: string, target: string, catalog: Catalog = loadCatalog()): string | null {
   const [file, fragment] = target.split("#", 2) as [string, string | undefined];

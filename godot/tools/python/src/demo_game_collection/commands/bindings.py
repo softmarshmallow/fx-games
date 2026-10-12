@@ -17,7 +17,7 @@ from demo_game_tools.media.soundtrack import (
     ResolvedGameSoundtrack,
     resolve_game_soundtrack_binding,
 )
-from stage_gen.components._secure_fs import SecurePathError, read_absolute_regular_file
+from fx_games.components._secure_fs import SecurePathError, read_absolute_regular_file
 
 
 def _parse_input_document(text: str, *, suffix: str) -> object:

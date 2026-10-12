@@ -5,7 +5,7 @@ from io import BytesIO
 import pytest
 from PIL import Image
 
-from stage_gen.media.comparison_plate import (
+from fx_games.media.comparison_plate import (
     TALLEST_TARGET_PX,
     ComparisonPlateError,
     PlateGroup,

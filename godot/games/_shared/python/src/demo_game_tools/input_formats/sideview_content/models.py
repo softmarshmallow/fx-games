@@ -16,7 +16,7 @@ from demo_game_tools.kits.actor_content import (
 from demo_game_tools.kits.actor_content import (
     validate_reference_closure as _validate_reference_closure,
 )
-from stage_gen.components._game_input import (
+from fx_games.components._game_input import (
     GAME_ID_PATTERN,
     SNAKE_ID_PATTERN,
     canonical_contract_json,
@@ -24,7 +24,7 @@ from stage_gen.components._game_input import (
     parse_toml_contract,
     unique_values,
 )
-from stage_gen.contracts import PersistedContractModel
+from fx_games.contracts import PersistedContractModel
 
 GAME_CONTENT_SCHEMA_VERSION = 2
 NPC_CONTENT_SCHEMA_VERSION = 3

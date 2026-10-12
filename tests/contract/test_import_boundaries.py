@@ -24,8 +24,8 @@ GAME_MODULES = (
     "ember_hollow_pipeline",
     "the_grain_pipeline",
 )
-COMPONENT_ROOT = SOURCE_ROOT / "stage_gen" / "components"
-FORBIDDEN_COMPONENT_DEPENDENCIES = ("stage_gen.workflows",)
+COMPONENT_ROOT = SOURCE_ROOT / "fx_games" / "components"
+FORBIDDEN_COMPONENT_DEPENDENCIES = ("fx_games.workflows",)
 
 
 def _package_for(path: Path) -> str:
@@ -69,7 +69,7 @@ def test_components_do_not_import_application_or_provider_layers() -> None:
     assert not violations, "component import boundary violations:\n" + "\n".join(violations)
 
 
-WORKFLOW_ROOT = SOURCE_ROOT / "stage_gen" / "workflows"
+WORKFLOW_ROOT = SOURCE_ROOT / "fx_games" / "workflows"
 
 _ACTIVE_IMAGE_MODEL_ID = re.compile(r"^(?:(?:openai|fal-ai)/)?gpt-image-[0-9][A-Za-z0-9._/-]*$")
 
@@ -83,7 +83,7 @@ def test_active_image_routes_have_one_application_authority() -> None:
     """
 
     violations: list[str] = []
-    for path in _python_sources(SOURCE_ROOT / "stage_gen"):
+    for path in _python_sources(SOURCE_ROOT / "fx_games"):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         relative = path.relative_to(SOURCE_ROOT.parent)
         for node in ast.walk(tree):
@@ -114,9 +114,9 @@ def _workflow_roots() -> dict[str, tuple[Path, ...]]:
 
 #: The registry's declarations (Step, WorkflowCode, run readers) every workflow states
 #: itself with. It is not a workflow, and it imports none.
-WORKFLOW_DECLARATIONS = "stage_gen.workflows._registry"
+WORKFLOW_DECLARATIONS = "fx_games.workflows._registry"
 #: How a workflow written as a workflow file declares itself to the registry.
-WORKFLOW_FILE_DECLARATIONS = "stage_gen.workflows._fx"
+WORKFLOW_FILE_DECLARATIONS = "fx_games.workflows._fx"
 #: Modules at the workflows root that read every workflow; they load one only on demand,
 #: through ``load_code``, and import none statically.
 WORKFLOW_REGISTRY_MODULES = ("_registry.py", "_catalog.py", "_checks.py", "_fx.py")
@@ -124,7 +124,7 @@ WORKFLOW_REGISTRY_MODULES = ("_registry.py", "_catalog.py", "_checks.py", "_fx.p
 
 def test_workflows_do_not_import_each_other() -> None:
     """Workflows share code through declared homes (canonical, media, components, the
-    example contract in stage_gen.examples), never through another workflow's modules. A
+    example contract in fx_games.examples), never through another workflow's modules. A
     workflow imports only its own package and the registry's declarations."""
 
     workflows = _workflow_roots()
@@ -132,7 +132,7 @@ def test_workflows_do_not_import_each_other() -> None:
     violations: list[str] = []
     for name, roots in workflows.items():
         own = (
-            f"stage_gen.workflows.{name}",
+            f"fx_games.workflows.{name}",
             *(_module_of(root) for root in roots),
             WORKFLOW_DECLARATIONS,
             WORKFLOW_FILE_DECLARATIONS,
@@ -142,7 +142,7 @@ def test_workflows_do_not_import_each_other() -> None:
                 violations.extend(
                     violation
                     for violation, imported in _import_violation_pairs(
-                        path, ("stage_gen.workflows",)
+                        path, ("fx_games.workflows",)
                     )
                     if not any(_matches(imported, allowed) for allowed in own)
                 )
@@ -153,15 +153,15 @@ def test_registry_and_example_contract_import_no_workflow() -> None:
     """The registry reads workflows lazily, and the public example contract knows none."""
 
     paths = [WORKFLOW_ROOT / name for name in WORKFLOW_REGISTRY_MODULES]
-    paths.append(SOURCE_ROOT / "stage_gen" / "examples.py")
+    paths.append(SOURCE_ROOT / "fx_games" / "examples.py")
     missing = sorted(str(path.relative_to(SOURCE_ROOT)) for path in paths if not path.is_file())
     assert not missing, f"registry modules moved; update this rule: {missing}"
     violations = [
         violation
         for path in paths
-        for violation, imported in _import_violation_pairs(path, ("stage_gen.workflows",))
+        for violation, imported in _import_violation_pairs(path, ("fx_games.workflows",))
         if not _matches(imported, WORKFLOW_DECLARATIONS)
-        and not imported.startswith("stage_gen.workflows._")
+        and not imported.startswith("fx_games.workflows._")
     ]
     assert not violations, "a registry module imports a workflow:\n" + "\n".join(violations)
 
@@ -189,7 +189,7 @@ def _import_violations(path: Path, forbidden: tuple[str, ...]) -> list[str]:
 
 
 CONSUMER_ROOTS = (
-    SOURCE_ROOT / "stage_gen",
+    SOURCE_ROOT / "fx_games",
     SOURCE_ROOT.parent / "tests",
     SOURCE_ROOT.parent / "scripts",
     *GAME_SOURCE_ROOTS,
@@ -208,9 +208,9 @@ APPLICATION_UTILITY_MODULES = ("contracts", "fs", "provenance", "canonical", "me
 
 
 def test_application_utilities_import_no_engine() -> None:
-    """Stage Gen's own utilities are engine-free, so none of them may import FX."""
+    """FX Games' own utilities are engine-free, so none of them may import FX."""
 
-    root = SOURCE_ROOT / "stage_gen"
+    root = SOURCE_ROOT / "fx_games"
     violations: list[str] = []
     for name in APPLICATION_UTILITY_MODULES:
         module = root / f"{name}.py"
@@ -281,7 +281,7 @@ def test_fx_is_imported_only_through_its_declared_surface() -> None:
 def test_product_source_never_statically_imports_optional_consumers() -> None:
     violations: list[str] = []
     for root in (
-        SOURCE_ROOT / "stage_gen",
+        SOURCE_ROOT / "fx_games",
         SOURCE_ROOT.parent / "scripts",
     ):
         for path in _python_sources(root):
@@ -308,28 +308,28 @@ def test_game_pipelines_do_not_import_other_games_or_collection_tooling() -> Non
 #: Modules earlier refactors and the move onto FX retired, the old engine's packages included:
 #: each is gone, and nothing imports it.
 RETIRED_MODULES = (
-    "stage_gen.interfaces",
-    "stage_gen.runs",
-    "stage_gen.pipeline",
-    "stage_gen.application.runs",
-    "stage_gen.components._node_kit",
-    "stage_gen.capabilities",
+    "fx_games.interfaces",
+    "fx_games.runs",
+    "fx_games.pipeline",
+    "fx_games.application.runs",
+    "fx_games.components._node_kit",
+    "fx_games.capabilities",
     "demo_game_tools.preparation",
     "gnode",
     "gnode_std",
-    "stage_gen.orchestration",
-    "stage_gen.model_routes",
-    "stage_gen.model_policy_maintenance",
-    "stage_gen.image_binding",
-    "stage_gen.image_product",
-    "stage_gen.config",
-    "stage_gen.identity",
-    "stage_gen.workflows._gnode",
-    "stage_gen.workflows._reference",
-    "stage_gen.viewer",
-    "stage_gen.runview.contexts",
-    "stage_gen.runview.facts",
-    "stage_gen.runview.refresh",
+    "fx_games.orchestration",
+    "fx_games.model_routes",
+    "fx_games.model_policy_maintenance",
+    "fx_games.image_binding",
+    "fx_games.image_product",
+    "fx_games.config",
+    "fx_games.identity",
+    "fx_games.workflows._gnode",
+    "fx_games.workflows._reference",
+    "fx_games.viewer",
+    "fx_games.runview.contexts",
+    "fx_games.runview.facts",
+    "fx_games.runview.refresh",
 )
 
 

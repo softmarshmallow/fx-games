@@ -52,7 +52,7 @@ from demo_game_tools.kits.painted_terrain.silhouette import (
     painted_silhouette_band,
     painted_silhouette_report,
 )
-from stage_gen.media.codec import encode_png
+from fx_games.media.codec import encode_png
 
 PAINTED_TERRAIN_CANONICALIZER_ID: Final = "painted-terrain-canonicalization-v1"
 PAINTED_TERRAIN_VALIDATION_ID: Final = "painted-terrain-validation-v1"

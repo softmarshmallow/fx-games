@@ -6,7 +6,7 @@ from typing import Any, cast
 import pytest
 from PIL import Image, ImageDraw
 
-from stage_gen.media import (
+from fx_games.media import (
     LOOP_METHODS,
     LoopConstruction,
     RegistrationError,

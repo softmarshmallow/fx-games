@@ -18,6 +18,7 @@ from demo_game_tools.input_formats.game_contract.asset_scale import (
 )
 from demo_game_tools.kits.sideview_actor.motion_geometry import DEFAULT_MOTION_ATLAS_GEOMETRY
 from demo_game_tools.manifest_blocks import present_blocks
+from fx_games.canonical import content_sha256
 from iron_petal_unit_pipeline.audio import RunnerAudioContract
 from iron_petal_unit_pipeline.audio.realizations import (
     GeneratedClipRealization,
@@ -45,7 +46,6 @@ from iron_petal_unit_pipeline.track import (
     validate_structural_ground_canonical,
     validate_structural_ground_seam_bridge,
 )
-from stage_gen.canonical import content_sha256
 
 if TYPE_CHECKING:
     from collections.abc import Callable

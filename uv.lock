@@ -12,9 +12,9 @@ members = [
     "demo-game-collection",
     "demo-game-tools",
     "ember-hollow-pipeline",
+    "fx-games",
     "iron-petal-unit-pipeline",
-    "stage-gen",
-    "stagegen-scenario",
+    "scenario-authoring",
     "the-grain-pipeline",
 ]
 
@@ -42,13 +42,13 @@ version = "0.0.0"
 source = { editable = "godot/games/bellweather/pipeline" }
 dependencies = [
     { name = "demo-game-tools" },
-    { name = "stage-gen" },
+    { name = "fx-games" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "demo-game-tools", editable = "godot/games/_shared/python" },
-    { name = "stage-gen", editable = "." },
+    { name = "fx-games", editable = "." },
 ]
 
 [[package]]
@@ -82,8 +82,8 @@ dependencies = [
     { name = "bellweather-pipeline" },
     { name = "demo-game-tools" },
     { name = "ember-hollow-pipeline" },
+    { name = "fx-games" },
     { name = "iron-petal-unit-pipeline" },
-    { name = "stage-gen" },
     { name = "the-grain-pipeline" },
 ]
 
@@ -92,8 +92,8 @@ requires-dist = [
     { name = "bellweather-pipeline", editable = "godot/games/bellweather/pipeline" },
     { name = "demo-game-tools", editable = "godot/games/_shared/python" },
     { name = "ember-hollow-pipeline", editable = "godot/games/ember_hollow/pipeline" },
+    { name = "fx-games", editable = "." },
     { name = "iron-petal-unit-pipeline", editable = "godot/games/iron_petal_unit/pipeline" },
-    { name = "stage-gen", editable = "." },
     { name = "the-grain-pipeline", editable = "godot/games/the_grain/pipeline" },
 ]
 
@@ -102,14 +102,14 @@ name = "demo-game-tools"
 version = "0.0.0"
 source = { editable = "godot/games/_shared/python" }
 dependencies = [
-    { name = "stage-gen" },
-    { name = "stagegen-scenario" },
+    { name = "fx-games" },
+    { name = "scenario-authoring" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "stage-gen", editable = "." },
-    { name = "stagegen-scenario", editable = "godot/packages/scenario_runtime/authoring" },
+    { name = "fx-games", editable = "." },
+    { name = "scenario-authoring", editable = "godot/packages/scenario_runtime/authoring" },
 ]
 
 [[package]]
@@ -118,14 +118,69 @@ version = "0.0.0"
 source = { editable = "godot/games/ember_hollow/pipeline" }
 dependencies = [
     { name = "demo-game-tools" },
-    { name = "stage-gen" },
+    { name = "fx-games" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "demo-game-tools", editable = "godot/games/_shared/python" },
-    { name = "stage-gen", editable = "." },
+    { name = "fx-games", editable = "." },
 ]
+
+[[package]]
+name = "fx-games"
+version = "0.0.0"
+source = { editable = "." }
+dependencies = [
+    { name = "grida" },
+    { name = "jsonschema" },
+    { name = "numpy" },
+    { name = "opencv-python-headless" },
+    { name = "pillow" },
+    { name = "pydantic" },
+    { name = "pyyaml" },
+    { name = "scipy" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "build" },
+    { name = "hatchling" },
+    { name = "mypy" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "ruff" },
+    { name = "types-jsonschema" },
+    { name = "types-pyyaml" },
+]
+games = [
+    { name = "demo-game-collection" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "grida", editable = "third_party/fx/python" },
+    { name = "jsonschema", specifier = ">=4.26,<5" },
+    { name = "numpy", specifier = ">=2.2,<3" },
+    { name = "opencv-python-headless", specifier = ">=4.13,<5" },
+    { name = "pillow", specifier = ">=11,<13" },
+    { name = "pydantic", specifier = ">=2.11,<3" },
+    { name = "pyyaml", specifier = ">=6.0.2,<7" },
+    { name = "scipy", specifier = ">=1.15,<2" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "build", specifier = ">=1.2,<2" },
+    { name = "hatchling", specifier = ">=1.27,<2" },
+    { name = "mypy", specifier = ">=1.15,<2" },
+    { name = "pytest", specifier = ">=8.3,<9" },
+    { name = "pytest-asyncio", specifier = ">=0.26,<1" },
+    { name = "ruff", specifier = ">=0.11,<1" },
+    { name = "types-jsonschema", specifier = ">=4.26,<5" },
+    { name = "types-pyyaml", specifier = ">=6.0.12,<7" },
+]
+games = [{ name = "demo-game-collection", editable = "godot/tools/python" }]
 
 [[package]]
 name = "grida"
@@ -178,13 +233,13 @@ version = "0.0.0"
 source = { editable = "godot/games/iron_petal_unit/pipeline" }
 dependencies = [
     { name = "demo-game-tools" },
-    { name = "stage-gen" },
+    { name = "fx-games" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "demo-game-tools", editable = "godot/games/_shared/python" },
-    { name = "stage-gen", editable = "." },
+    { name = "fx-games", editable = "." },
 ]
 
 [[package]]
@@ -875,6 +930,31 @@ wheels = [
 ]
 
 [[package]]
+name = "scenario-authoring"
+version = "0.0.0"
+source = { editable = "godot/packages/scenario_runtime/authoring" }
+dependencies = [
+    { name = "pydantic" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "build" },
+    { name = "hatchling" },
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pydantic", specifier = ">=2.11,<3" }]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "build", specifier = ">=1.2,<2" },
+    { name = "hatchling", specifier = ">=1.27,<2" },
+    { name = "pytest", specifier = ">=8.3,<9" },
+]
+
+[[package]]
 name = "scipy"
 version = "1.18.1"
 source = { registry = "https://pypi.org/simple" }
@@ -946,98 +1026,18 @@ wheels = [
 ]
 
 [[package]]
-name = "stage-gen"
-version = "0.0.0"
-source = { editable = "." }
-dependencies = [
-    { name = "grida" },
-    { name = "jsonschema" },
-    { name = "numpy" },
-    { name = "opencv-python-headless" },
-    { name = "pillow" },
-    { name = "pydantic" },
-    { name = "pyyaml" },
-    { name = "scipy" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "build" },
-    { name = "hatchling" },
-    { name = "mypy" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "ruff" },
-    { name = "types-jsonschema" },
-    { name = "types-pyyaml" },
-]
-games = [
-    { name = "demo-game-collection" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "grida", editable = "third_party/fx/python" },
-    { name = "jsonschema", specifier = ">=4.26,<5" },
-    { name = "numpy", specifier = ">=2.2,<3" },
-    { name = "opencv-python-headless", specifier = ">=4.13,<5" },
-    { name = "pillow", specifier = ">=11,<13" },
-    { name = "pydantic", specifier = ">=2.11,<3" },
-    { name = "pyyaml", specifier = ">=6.0.2,<7" },
-    { name = "scipy", specifier = ">=1.15,<2" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "build", specifier = ">=1.2,<2" },
-    { name = "hatchling", specifier = ">=1.27,<2" },
-    { name = "mypy", specifier = ">=1.15,<2" },
-    { name = "pytest", specifier = ">=8.3,<9" },
-    { name = "pytest-asyncio", specifier = ">=0.26,<1" },
-    { name = "ruff", specifier = ">=0.11,<1" },
-    { name = "types-jsonschema", specifier = ">=4.26,<5" },
-    { name = "types-pyyaml", specifier = ">=6.0.12,<7" },
-]
-games = [{ name = "demo-game-collection", editable = "godot/tools/python" }]
-
-[[package]]
-name = "stagegen-scenario"
-version = "0.0.0"
-source = { editable = "godot/packages/scenario_runtime/authoring" }
-dependencies = [
-    { name = "pydantic" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "build" },
-    { name = "hatchling" },
-    { name = "pytest" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "pydantic", specifier = ">=2.11,<3" }]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "build", specifier = ">=1.2,<2" },
-    { name = "hatchling", specifier = ">=1.27,<2" },
-    { name = "pytest", specifier = ">=8.3,<9" },
-]
-
-[[package]]
 name = "the-grain-pipeline"
 version = "0.0.0"
 source = { editable = "godot/games/the_grain/pipeline" }
 dependencies = [
     { name = "demo-game-tools" },
-    { name = "stage-gen" },
+    { name = "fx-games" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "demo-game-tools", editable = "godot/games/_shared/python" },
-    { name = "stage-gen", editable = "." },
+    { name = "fx-games", editable = "." },
 ]
 
 [[package]]

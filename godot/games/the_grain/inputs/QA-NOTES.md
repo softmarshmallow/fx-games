@@ -345,7 +345,7 @@ went"), or is unmissable and therefore never needs testing. Those are correct.
 ## Cleared and closed
 
 - **Escaped quotes at `e1_statements.scenario:696`.** Checked against the parser
-  (`src/stage_gen/components/scenario/parser.py:449–456`): `\"` decodes to a literal
+  (`src/fx_games/components/scenario/parser.py:449–456`): `\"` decodes to a literal
   `"`, so Ruth's Sc13 speech renders exactly as the novel has it. The curly-quote sites
   at `e1_office.scenario:157` and `e1_table.scenario:1129` also match their novel
   sources, which use curly quotes in those two places. All three correct.
@@ -1286,7 +1286,7 @@ Played end to end on `the-grain-scene-5`, `the-grain-motor-court-3`,
 ## The board — 54 facts, read from the result record
 
 ```
-stage_gen.case_result.the-grain-episode-one
+fx_games.case_result.the-grain-episode-one
   run_tag      the-grain-episode-one
   outcome      left_alone
   finished_at  2026-09-02T23:05:36.522Z

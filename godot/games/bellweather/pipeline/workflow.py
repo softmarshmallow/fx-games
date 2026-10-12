@@ -87,7 +87,7 @@ from demo_game_tools.steps.rebase import add_rebase_steps
 from demo_game_tools.steps.soundtrack import add_track_steps
 from demo_game_tools.steps.terrain_atlas import add_atlas_steps
 from demo_game_tools.steps.ui_atlas import add_ui_sheet_steps
-from stage_gen.components.sideview_layers.publish import LayerGate
+from fx_games.components.sideview_layers.publish import LayerGate
 
 #: The game's node modules, as project paths.
 MAPS = "./pipeline/nodes/maps.py"

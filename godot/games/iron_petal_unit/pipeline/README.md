@@ -40,4 +40,4 @@ not import another named game or the collection's developer CLI.
 
 See the [runner doc](../docs/runner.md) for the steps and the checked plan contract, and the
 [Python dependency review](../../../docs/python-dependencies.md) for the remaining private
-Stage Gen calls.
+FX Games calls.

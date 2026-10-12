@@ -26,8 +26,8 @@ if __package__ in {None, ""}:
 
 from grida.fx import plan
 
+from fx_games.workflows._fx import declared_outputs, instances
 from scripts.graph_contracts import document_contract, write_contract
-from stage_gen.workflows._fx import declared_outputs, instances
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 #: Every game's builder, planned from its own folder.

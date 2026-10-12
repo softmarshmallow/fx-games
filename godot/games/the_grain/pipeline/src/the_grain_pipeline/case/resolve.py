@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from demo_game_tools.authored_package import read_package_member
-from stage_gen.components._game_input import parse_toml_contract, sha256_bytes
+from fx_games.components._game_input import parse_toml_contract, sha256_bytes
 from the_grain_pipeline.case.models import (
     CASE_CATALOG_NAME,
     CaseAdmissionReport,

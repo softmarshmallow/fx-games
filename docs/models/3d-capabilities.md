@@ -2,10 +2,10 @@
 
 Checked **2026-09-09**. This is a research inventory of public contracts, released
 code and product features relevant to editable character assets. It is not a
-quality leaderboard or a declaration of Stage Gen runtime bindings. No inference,
+quality leaderboard or a declaration of FX Games runtime bindings. No inference,
 upload or paid operation was run for this survey. Recheck the exact route and
 account access before a trial; [provider operations](providers.md) names the
-routes Stage Gen uses, and Grida FX owns how they are called.
+routes FX Games uses, and Grida FX owns how they are called.
 
 The main finding: **existing 3D + instructions → revised 3D is available**, but
 texture generation, geometry resynthesis, local editing and remeshing are

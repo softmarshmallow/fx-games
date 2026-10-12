@@ -8,9 +8,9 @@ already has an end-to-end generation example.
 ## The whole repository
 
 ```text
-stage-gen/
+fx-games/
 ├── src/
-│   └── stage_gen/                     # Components, workflows, run view
+│   └── fx_games/                     # Components, workflows, run view
 ├── third_party/
 │   └── fx/                            # Grida FX, the engine (gridaco/fx), a pinned submodule
 ├── fx.yaml                            # Root FX project: workflows by id, runs and store in out/
@@ -49,7 +49,7 @@ alone: it names no path in this repository and no command of it. `.agents/skills
 ## Product implementation
 
 ```text
-src/stage_gen/
+src/fx_games/
 ├── components/                        # Reusable components and bounded formats
 ├── workflows/                         # One folder per product deliverable
 ├── runview/                           # FX run folders projected to run views, for examples
@@ -67,12 +67,12 @@ third_party/fx/                        # Grida FX: its own AGENTS.md, gates and 
 └── tools/build_engine.py              # Builds the engine where grida.fx finds it
 ```
 
-Stage Gen adds no graph engine: every workflow, game build and user project is an FX
+FX Games adds no graph engine: every workflow, game build and user project is an FX
 workflow file or Python builder, planned and run by Grida FX. Routes, provider adapters,
 retries and provider keys belong to FX; a project's `fx.yaml` picks its routes, and no
 workflow takes ownership of credentials or provider selection.
 
-The wheel contains `stage_gen` and depends on `grida`, which `uv sync` installs from the
+The wheel contains `fx_games` and depends on `grida`, which `uv sync` installs from the
 submodule. Optional demo packages have their own project metadata. The core source
 distribution removes workspace-only metadata, so installing it does not require absent
 demo directories.
@@ -80,7 +80,7 @@ demo directories.
 ## Components: where reusable work belongs
 
 ```text
-src/stage_gen/components/
+src/fx_games/components/
 ├── character_3d/                      # Character rules, studios and the Blender worker
 ├── portrait_motion/                   # Portrait prompts, schemas, validators and pixel work
 ├── movie_sprite/                      # Transparent body-loop finishing and spatial controls
@@ -124,7 +124,7 @@ portrait animation and movie sprite assets retain their own bounded roles.
 ## Workflows and inputs
 
 ```text
-src/stage_gen/workflows/
+src/fx_games/workflows/
 ├── _registry.py, _catalog.py, _checks.py   # Discovery, catalog export, drift checks
 ├── _fx.py                             # How a workflow file declares itself to the registry,
 │                                      # and the scratch-project writer
@@ -311,7 +311,7 @@ remains in `docs/spec/`; its former Scenario page points to the Godot owner. His
 | Scheduling, graph state, the store, run records, prices, retries | Grida FX (`third_party/fx`, under its own rules) |
 | A capability, route or provider request/response adaptation | Grida FX |
 | A project's choice of routes | That project's `fx.yaml` |
-| Reading FX runs for examples | `stage_gen.runview` |
+| Reading FX runs for examples | `fx_games.runview` |
 | Asset-specific processing and admission | Component |
 | Several asset stages with a bounded output | Workflow |
 | User-specific graph composition | The user's own FX workflow file or Python builder |

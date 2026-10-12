@@ -60,7 +60,7 @@ evidence; it does not duplicate or silently mutate the global reference list.
 ## Repository boundary and lifecycle
 
 This directory is tracked pre-production research under `concept-studio/`. It does not extend
-`src/stage_gen/components/`, define a recipe, or alter the implemented
+`src/fx_games/components/`, define a recipe, or alter the implemented
 [image style anchor](../../docs/image-style-anchor.md). The current runtime anchor has
 three coarse modes. This lab may provide evidence for a future vocabulary
 revision, but no result changes runtime behavior automatically.

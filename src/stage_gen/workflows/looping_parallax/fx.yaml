@@ -1,8 +1,0 @@
-# The looping-parallax workflow's home. Its node modules import Stage Gen's components, so
-# those count as its source: fx.lock notices when they change under a version.
-fx: project/v1
-runs: ../../../../out/runs
-cache: ../../../../out/fx-cache
-sources: [stage_gen]
-routes:
-  image.edit: gpt-image-2.5-sunburst@openai

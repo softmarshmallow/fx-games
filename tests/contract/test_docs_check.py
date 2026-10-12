@@ -12,7 +12,7 @@ from demo_game_collection.identities import current_versions
 
 def _load_docs_checker() -> ModuleType:
     path = Path(__file__).parents[2] / "scripts/check_docs.py"
-    spec = importlib.util.spec_from_file_location("stage_gen_docs_check", path)
+    spec = importlib.util.spec_from_file_location("fx_games_docs_check", path)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
@@ -66,7 +66,7 @@ def test_character_library_documentation_rejects_missing_links(tmp_path: Path) -
 
 
 def test_retired_terms_are_read_in_site_strings_but_not_comments(tmp_path: Path) -> None:
-    workflow = tmp_path / "src/stage_gen/workflows/example"
+    workflow = tmp_path / "src/fx_games/workflows/example"
     workflow.mkdir(parents=True)
     (workflow / "page.mdx").write_text("A workflow.\n", encoding="utf-8")
     components = tmp_path / "web/site/components"
@@ -95,7 +95,7 @@ def test_a_user_skill_names_nothing_in_this_repository(tmp_path: Path) -> None:
         "---\nname: game-concept-studio\n---\n"
         "Draw with `grida-fx run workflows/concept-image.yaml`.\n"
         "Read `docs/models/providers.md`, then run `stage-gen-concept check`.\n"
-        "Import stage_gen.media.\n",
+        "Import fx_games.media.\n",
         encoding="utf-8",
     )
     (skill / "agents/openai.yaml").write_text(
@@ -109,7 +109,7 @@ def test_a_user_skill_names_nothing_in_this_repository(tmp_path: Path) -> None:
         "skills/example/SKILL.md:5: a user skill names this repository "
         "(`docs/models/providers.md`)",
         "skills/example/SKILL.md:5: a user skill names this repository (stage-gen)",
-        "skills/example/SKILL.md:6: a user skill names this repository (stage_gen)",
+        "skills/example/SKILL.md:6: a user skill names this repository (fx_games)",
         "skills/example/agents/openai.yaml:1: a user skill names this repository "
         "(`.agents/skills/asset-pipeline/SKILL.md`)",
     ]
@@ -157,7 +157,7 @@ def test_every_spec_names_a_true_checker(tmp_path: Path) -> None:
     spec("honest", "none.")
     spec("missing", "`tests/contract/test_absent.py`.")
     spec("borrowed", "`tests/contract/test_silent.py`.")
-    spec("source", "`src/stage_gen/fs.py`.")
+    spec("source", "`src/fx_games/fs.py`.")
     (spec_dir / "silent.md").write_text("# silent\n\nNo line at all.\n", encoding="utf-8")
 
     failures = checker.check_spec_checkers(tmp_path)
@@ -166,7 +166,7 @@ def test_every_spec_names_a_true_checker(tmp_path: Path) -> None:
         "which never names the spec",
         "docs/spec/game/missing.md: Checked by names missing test `tests/contract/test_absent.py`",
         "docs/spec/game/silent.md: no `> **Checked by:**` line",
-        "docs/spec/game/source.md: Checked by names a non-test `src/stage_gen/fs.py`",
+        "docs/spec/game/source.md: Checked by names a non-test `src/fx_games/fs.py`",
     ]
 
 

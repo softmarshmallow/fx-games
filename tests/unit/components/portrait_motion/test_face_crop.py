@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from stage_gen.components.portrait_motion import face_crop as processing
+from fx_games.components.portrait_motion import face_crop as processing
 
 
 def test_off_center_edge_crop_records_padding_and_flattens_only_local_pixels() -> None:

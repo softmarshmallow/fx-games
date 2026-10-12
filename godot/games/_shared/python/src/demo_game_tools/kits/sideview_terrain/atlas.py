@@ -31,8 +31,8 @@ from typing import Final, cast
 
 from PIL import Image, ImageChops, ImageDraw
 
-from stage_gen.media.guide_lattice import detect_guide_lattice, png_bytes
-from stage_gen.resources import terrain_atlas_lookup_path, terrain_atlas_template_path
+from fx_games.media.guide_lattice import detect_guide_lattice, png_bytes
+from fx_games.resources import terrain_atlas_lookup_path, terrain_atlas_template_path
 
 GRID_COLUMNS: Final = 12
 GRID_ROWS: Final = 4

@@ -43,8 +43,8 @@ from demo_game_tools.kits.painted_terrain.segments import (
     PaintedTerrainSegment,
     painted_terrain_row_window,
 )
-from stage_gen.media.codec import decode_rgba as _decode_rgba
-from stage_gen.media.guide_lattice import png_bytes
+from fx_games.media.codec import decode_rgba as _decode_rgba
+from fx_games.media.guide_lattice import png_bytes
 
 RGB = tuple[int, int, int]
 

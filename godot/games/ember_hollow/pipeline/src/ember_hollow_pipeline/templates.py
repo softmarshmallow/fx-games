@@ -18,7 +18,7 @@ from typing import Final
 
 from PIL import Image, ImageDraw
 
-#: Must satisfy stage_gen.media.guide_lattice.CYAN_GUIDES: red < 80, green > 170,
+#: Must satisfy fx_games.media.guide_lattice.CYAN_GUIDES: red < 80, green > 170,
 #: blue > 170. Anything else and the lattice detector will not see the lines.
 GUIDE_RGB: Final = (0, 214, 224)
 #: The colour magenta_chroma_alpha keys to transparency.

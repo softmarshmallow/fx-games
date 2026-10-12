@@ -13,7 +13,7 @@ from bellweather_pipeline.maps.prepared import (
     PreparedMapTerrain,
     validate_generated_terrain,
 )
-from stage_gen.components._game_input import AuthoredContractLoadError
+from fx_games.components._game_input import AuthoredContractLoadError
 
 
 def _terrain(

@@ -71,7 +71,7 @@ build_engine() {
 
 gate() {
 	local sha="$1" ref="$2" scratch status=0
-	scratch="$(mktemp -d "${TMPDIR:-/tmp}/stage-gen-prepush.XXXXXX")"
+	scratch="$(mktemp -d "${TMPDIR:-/tmp}/fx-games-prepush.XXXXXX")"
 	# shellcheck disable=SC2064
 	trap "cleanup '$scratch'" EXIT
 

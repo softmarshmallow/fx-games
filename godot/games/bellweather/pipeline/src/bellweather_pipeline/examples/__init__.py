@@ -6,7 +6,7 @@ whole game package to make, so none is a product workflow. The game owns everyth
 them: ``godot/games/bellweather/examples.toml`` declares each one (title, promise, run
 command, steps over its node ids, the runs it was made from, and the pins of its frozen
 export), ``examples/<id>/page.mdx`` holds its prose, and the importers in this package turn
-the runs into ``workflow-example-v1`` documents with ``stage_gen.examples``.
+the runs into ``workflow-example-v1`` documents with ``fx_games.examples``.
 
 ``demo-games example export bellweather`` writes them into the local example store. The
 dependency runs from the game to the product: the product lists whatever a game wrote into
@@ -24,7 +24,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from stage_gen.examples import (
+from fx_games.examples import (
     ENTRY_FILE,
     EXAMPLE_FILE,
     PAGE_FILE,
@@ -44,7 +44,7 @@ from stage_gen.examples import (
     store_directory,
     verify,
 )
-from stage_gen.fs import atomic_write_bytes
+from fx_games.fs import atomic_write_bytes
 
 from . import parallax_layers, sprite_set, terrain_atlas, ui_kit
 from ._common import Imported, ImporterOptions

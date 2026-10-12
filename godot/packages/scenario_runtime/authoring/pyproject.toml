@@ -3,7 +3,7 @@ requires = ["hatchling>=1.27,<2"]
 build-backend = "hatchling.build"
 
 [project]
-name = "stagegen-scenario"
+name = "scenario-authoring"
 version = "0.0.0"
 description = "Standalone authoring tools for the Godot Scenario runtime"
 readme = "README.md"

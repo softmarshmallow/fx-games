@@ -24,9 +24,9 @@ from demo_game_tools.scenario import (
     StageDeclaration,
     TrackDeclaration,
 )
-from stage_gen.fs import resolve_relative_path_within_root
-from stage_gen.image_style import CanonicalStyleAnchor, canonical_style_anchor_digest
-from stage_gen.media import inspect_image, probe_audio
+from fx_games.fs import resolve_relative_path_within_root
+from fx_games.image_style import CanonicalStyleAnchor, canonical_style_anchor_digest
+from fx_games.media import inspect_image, probe_audio
 from the_grain_pipeline.dialogue_scene.identity import (
     canonical_sha256,
     content_sha256,

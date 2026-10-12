@@ -24,7 +24,7 @@ from demo_game_tools.kits.ui_art.inventory_panel import (
 from demo_game_tools.kits.ui_art.models import UiArtwork, inventory_panel_layout_contract
 from demo_game_tools.kits.ui_art.nodes import ui_atlas_review_schema
 from demo_game_tools.steps.ui_atlas import REVIEW_MAX_TOKENS, REVIEW_SYSTEM
-from stage_gen.resources import inventory_template_path
+from fx_games.resources import inventory_template_path
 
 #: Paintings a panel gets before the run stops on it.
 PANEL_TAKES = 6

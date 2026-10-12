@@ -8,18 +8,18 @@ and [IP](docs/oss-ip.md). This file controls applicability; focused docs control
 ## Architecture
 
 - Keep identifiers, comments, logs, tests, and user-facing source strings in English.
-- This repository has two separately owned products: the main Stage Gen asset product and the maintained Godot
+- This repository has two separately owned products: the main FX Games asset product and the maintained Godot
   example project. [The Godot charter](godot/CHARTER.md) owns the latter's purpose and internal evolution.
   Further runtime, shared game-system or visual-novel refactors belong within Godot; reuse by multiple games
   does not by itself justify moving them into the asset product.
-- Python is the headless implementation. Grida FX (`third_party/fx`) is the engine; `src/stage_gen/` is the
+- Python is the headless implementation. Grida FX (`third_party/fx`) is the engine; `src/fx_games/` is the
   application. FX owns the workflow file, planning and prices, the store, the run record, the spending ceiling,
-  retries, the built-in node types (`fx/<type>@1`) and the provider adapters. Stage Gen owns components,
-  workflows, the catalog and the run view (`stage_gen.runview`) the examples store reads, and adds no engine
+  retries, the built-in node types (`fx/<type>@1`) and the provider adapters. FX Games owns components,
+  workflows, the catalog and the run view (`fx_games.runview`) the examples store reads, and adds no engine
   or viewer of its own: runs are seen in FX's viewer.
-  Stage Gen and the game code import FX only as `from grida.fx import X`, with `X` in `grida.fx.__all__`:
-  never a private module and never `grida.fx.std`. FX knows no Stage Gen package, workflow, game or brand;
-  provenance identities come from the application. Stage Gen's utilities (`contracts`, `fs`, `provenance`,
+  FX Games and the game code import FX only as `from grida.fx import X`, with `X` in `grida.fx.__all__`:
+  never a private module and never `grida.fx.std`. FX knows no FX Games package, workflow, game or brand;
+  provenance identities come from the application. FX Games' utilities (`contracts`, `fs`, `provenance`,
   `canonical`, `media`) import no engine, and the retired modules, the old engine's included, stay gone;
   `tests/contract/test_import_boundaries.py` enforces all of it. Shared workflow-neutral media inspection
   and transforms belong in `media`; capability-specific processing stays with its component, and
@@ -45,17 +45,17 @@ and [IP](docs/oss-ip.md). This file controls applicability; focused docs control
 ## Grida FX submodule
 
 - `third_party/fx` is [gridaco/fx](https://github.com/gridaco/fx), a separate public product, pinned as a
-  submodule. Stage Gen uses it only through `grida.fx` imports and `uv run python -m grida.fx`, as a path
+  submodule. FX Games uses it only through `grida.fx` imports and `uv run python -m grida.fx`, as a path
   dependency on `third_party/fx/python`; its Rust engine is built from the pin with
   `uv run python third_party/fx/tools/build_engine.py` (cargo). Changes to FX follow its own `AGENTS.md` and
-  gates, make sense without Stage Gen, are committed in the submodule, and reach gridaco/fx before Stage Gen's
+  gates, make sense without FX Games, are committed in the submodule, and reach gridaco/fx before FX Games'
   pointer moves (`push.recurseSubmodules=check` refuses a push that would pin an unpushed FX commit). Stage
   Gen's own linters skip `third_party/`.
 
 ## Skills
 
 - `skills/<name>/` holds skills users install (`npx skills add`). Each stands alone in any folder: no path into this
-  repository and no Stage Gen command. A skill that calls a provider itself does so through the public Grida FX
+  repository and no FX Games command. A skill that calls a provider itself does so through the public Grida FX
   command. `.agents/skills/` (`.claude/skills` links to it) holds only the skills for working on this repository.
 
 ## Schema naming
@@ -75,11 +75,11 @@ and [IP](docs/oss-ip.md). This file controls applicability; focused docs control
   belong to that call. Never retry a call in a node body, an adapter or a loop around it.
 - Mark artifacts successful only after validation and atomic persistence. FX places a step's files and records it
   before the step finishes, and reuses a stored result only under its exact identity with every file present;
-  Stage Gen's own writers (`stage_gen.fs`) write an artifact and any sidecar rollback-safe. Cache reuse must
+  FX Games' own writers (`fx_games.fs`) write an artifact and any sidecar rollback-safe. Cache reuse must
   validate content and lineage, not merely path existence.
 - Provider keys are read only by FX's allowlisted loader (`OPENAI_API_KEY`, `OPENROUTER_API_KEY`, `FAL_KEY`,
   `TRIPO_API_KEY`, `ELEVENLABS_API_KEY` and the base URLs `.env.example` names), from the environment or the
-  planning project's `.env`. Stage Gen reads no key's value; its launchers strip the keys from a child's
+  planning project's `.env`. FX Games reads no key's value; its launchers strip the keys from a child's
   environment. Treat `.env` as optional and local; never assume it is populated, overwrite, print, or commit it,
   or copy provider secrets into the site (`web/site`). `.env.example` owns non-secret defaults.
 - Offline operation is the default. Planning never spends; a provider call needs `--live`, a ceiling

@@ -15,7 +15,7 @@ from demo_game_tools.kits.sideview_terrain.atlas import (
     assemble_terrain_atlas,
     compose_canonical_terrain,
 )
-from stage_gen.resources import terrain_atlas_template_path
+from fx_games.resources import terrain_atlas_template_path
 
 MAPS = {
     "solid-ground": ("1111111111", "1111111111", "1111111111", "1111111111"),

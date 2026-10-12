@@ -8,11 +8,11 @@ import pytest
 from PIL import Image, ImageDraw
 
 from demo_game_tools.input_formats.sideview_stage import PreparedMapLayer
-from stage_gen.components.sideview_layers.contract import (
+from fx_games.components.sideview_layers.contract import (
     NON_GENERATIVE_LAYER_FIELDS,
     RUNTIME_ONLY_LAYER_FIELDS,
 )
-from stage_gen.components.sideview_layers.publish import (
+from fx_games.components.sideview_layers.publish import (
     LAYER_VALIDATION_KIND,
     LayerGate,
     admit_layer_candidate,

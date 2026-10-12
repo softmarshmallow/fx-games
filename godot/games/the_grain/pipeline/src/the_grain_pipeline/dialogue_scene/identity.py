@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from stage_gen.canonical import canonical_json_bytes, canonical_sha256, content_sha256
+from fx_games.canonical import canonical_json_bytes, canonical_sha256, content_sha256
 
 __all__ = [
     "RECIPE_VERSION",

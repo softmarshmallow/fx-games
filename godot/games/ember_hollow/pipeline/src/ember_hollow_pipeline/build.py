@@ -22,8 +22,8 @@ from demo_game_tools.kits.effects_art.sprite import (
 )
 from ember_hollow_pipeline import gates
 from ember_hollow_pipeline.preparation_media import _look_drift, _normalise_look
-from stage_gen.components.sound_effect import admit_sound_effect_bytes_sync
-from stage_gen.media import measure_level_and_duration_sync, validate_music_payload
+from fx_games.components.sound_effect import admit_sound_effect_bytes_sync
+from fx_games.media import measure_level_and_duration_sync, validate_music_payload
 
 #: The canvases: a sprite or a sheet cell's look, an actor strip, a ground plate.
 SPRITE_CANVAS: Final = (1024, 1024)

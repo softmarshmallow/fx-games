@@ -7,7 +7,7 @@ the profile-specific name so the error type callers already catch is unchanged.
 
 from __future__ import annotations
 
-from stage_gen.components._secure_fs import (
+from fx_games.components._secure_fs import (
     SecurePathError,
     open_absolute_directory,
     read_absolute_regular_file,

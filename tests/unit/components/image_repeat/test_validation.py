@@ -7,7 +7,7 @@ from typing import Literal, cast
 import pytest
 from PIL import Image
 
-from stage_gen.components.image_repeat import (
+from fx_games.components.image_repeat import (
     ImageRepeatDeterministicReport,
     ImageRepeatStitch,
     ImageRepeatValidationPolicy,

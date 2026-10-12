@@ -3,7 +3,7 @@
 Current scope: The Grain owns this case graph, room ordering, durable facts and
 save policy. Its supported v2 narrative leaves use the [Scenario compatibility
 reader](../../../packages/scenario_runtime/docs/compatibility.md) and current
-Session executor. This case format is not a Scenario requirement or a Stage Gen
+Session executor. This case format is not a Scenario requirement or an FX Games
 asset contract. New dialogue snapshots are fingerprinted; old raw saves have
 structural admission only, and invalid saved state is explicitly refused.
 

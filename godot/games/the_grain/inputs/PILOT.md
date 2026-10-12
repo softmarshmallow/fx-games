@@ -182,15 +182,15 @@ at the end.
 ### 05:56 — The CLI is broken by work that is not ours, and we route around it rather than repair it
 
 `uv run stage-gen <anything>` dies with
-`ModuleNotFoundError: No module named 'stage_gen.recipes.universe.universe_prompts'`.
+`ModuleNotFoundError: No module named 'fx_games.recipes.universe.universe_prompts'`.
 A different agent, outside this pilot, is mid-refactor on the untracked directory
-`src/stage_gen/recipes/universe/` (files touched at 05:50 and 05:51 while this was being
+`src/fx_games/recipes/universe/` (files touched at 05:50 and 05:51 while this was being
 diagnosed), and `stage_gen_legacy.interfaces.cli` imports that recipe at module load — so a
 half-written universe package breaks every unrelated subcommand: `scenario check`,
 `generate-image`, `dialogue-scene generate`, `pointclick-room generate`, `generate-music`.
 Every gate in this pilot runs through that entrypoint.
 
-Verified that only the entrypoint is poisoned: `stage_gen.components.scenario`,
+Verified that only the entrypoint is poisoned: `fx_games.components.scenario`,
 `stage_gen_legacy.recipes.dialogue_scene`, `stage_gen_legacy.recipes.pointclick_room`,
 `stage_gen_legacy.orchestration.game_package` and `gnode` all import cleanly.
 
@@ -200,7 +200,7 @@ scratchpad — `scratchpad/sg.py`, no repository file touched — inserts a perm
 stand-in for that one module *only if it is genuinely absent*, then hands off to the real
 `entrypoint()` unchanged. Provider calls, outputs and provenance are the genuine article.
 All five lanes were told, in the same minute, to use the shim and **not** to touch
-`src/stage_gen/recipes/universe/`.
+`src/fx_games/recipes/universe/`.
 
 *Consequence for the report:* `uv run python scripts/check.py` may fail for reasons that
 belong to the other agent. Gate 5 must therefore separate their failures from ours, and
@@ -273,7 +273,7 @@ source of truth for the words, and this repository does not do that.
 
 The file sets were checked before deciding: the scene work lives in
 `godot/legacy/python/stage_gen_legacy/recipes/dialogue_scene/` and `godot/legacy/inputs/larkfield/scene.toml`; the
-contract lane's remaining work is in `src/stage_gen/components/scenario/` and
+contract lane's remaining work is in `src/fx_games/components/scenario/` and
 `components/case/`. Disjoint. So a **sixth lane** was spawned to take item (3) alone, with a
 09:00 deadline and an instruction to say NO early. Both lanes were told explicitly to stay
 out of the other's directories, and to report immediately if they find each other there.
@@ -1316,7 +1316,7 @@ carried board — a count and the sorted facts — which is also the only way a 
 that what they chose to watch is what they left with. Three tests; 1382 web tests pass.
 
 **And a hazard the lead created.** The dev server is one origin, so every tab shares
-`localStorage`. The lead cleared `stage_gen.*` three times while testing the loading layer,
+`localStorage`. The lead cleared `fx_games.*` three times while testing the loading layer,
 in the same store QA was playing in. No evidence it corrupted a pass, but it could have, and
 QA was told to discount anything that looks like it. The lead is out of the browser until
 pass 2 reports.

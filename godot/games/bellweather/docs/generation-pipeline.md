@@ -14,7 +14,7 @@
 > [dialogue scene](../../the_grain/docs/dialogue-scene-assets.md), the
 > [point-and-click room](../../the_grain/docs/pointclick-room.md) and
 > [oblique survival](../../ember_hollow/docs/generation-v1.md) build the same way, each from
-> its own game folder. [Universe](../../../../src/stage_gen/workflows/universe/contract.md) is not a
+> its own game folder. [Universe](../../../../src/fx_games/workflows/universe/contract.md) is not a
 > game at all: it builds a storyworld package to read rather than one to play.
 
 The game's folder is an FX project. `fx.yaml` names the routes, the node folder and the

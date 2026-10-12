@@ -5,7 +5,7 @@ to `content/preview.png`, and its scene owns how that image is displayed. It imp
 builder, runtime family, or canonical game contract. Copy this directory into a project you own
 and replace the scene behavior as needed.
 
-From the repository root, using the Python environment that contains Stage Gen and Pillow:
+From the repository root, using the Python environment that contains FX Games and Pillow:
 
 ```sh
 python godot/templates/asset_consumer/prepare.py --asset out/my-run/parallax/preview.png
@@ -18,7 +18,7 @@ and media type before copying both unchanged across this consumer boundary. It r
 script-owned `content/` directory as one rollback-safe operation. That directory is ignored;
 preparing a local image does not publish or approve it.
 
-The output path and scene binding are local choices of this template. They are not a Stage Gen
+The output path and scene binding are local choices of this template. They are not an FX Games
 input schema or a promise that the asset pipeline will construct a game. The template does not
 perform semantic review or generation.
 

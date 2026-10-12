@@ -1,13 +1,13 @@
 # The Grain's asset builds. The builders (pipeline/workflow.py: room and scene) read the
 # game's own room and scene packages with the game's readers and write one step per asset;
 # the node modules under pipeline/nodes/ import the game's pipeline package, the shared
-# game tools and Stage Gen, so those count as their source: fx.lock notices when they
+# game tools and FX Games, so those count as their source: fx.lock notices when they
 # change under a version.
 fx: project/v1
 runs: ../../../out/runs
 cache: ../../../out/fx-cache
 nodes: pipeline/nodes
-sources: [the_grain_pipeline, demo_game_tools, stage_gen]
+sources: [the_grain_pipeline, demo_game_tools, fx_games]
 routes:
   # Cut-out art needs native alpha: the direct route has it.
   image.generate: gpt-image-2.5-sunburst@openai

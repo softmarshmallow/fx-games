@@ -6,7 +6,7 @@ Then start with the [repository directory preview](repository-layout.md) and the
 The product is the asset pipeline; complete games are consumers.
 
 This folder holds only what crosses workflows. Each workflow's guide and exact contract
-live beside its code, in `src/stage_gen/workflows/<id>/page.mdx` and `contract.md`, and
+live beside its code, in `src/fx_games/workflows/<id>/page.mdx` and `contract.md`, and
 `uv run python -m grida.fx schema <id>` prints the inputs it takes.
 
 ## Workflows
@@ -16,7 +16,7 @@ is checked against its `workflow.toml`.
 
 The universe vocabulary is ratified separately in [taxonomy V0](spec/universe/taxonomy-v0.md),
 beside the [world vocabulary](research/world-generation-vocabulary.md) research; the
-[universe contract](../src/stage_gen/workflows/universe/contract.md) holds its source roles,
+[universe contract](../src/fx_games/workflows/universe/contract.md) holds its source roles,
 both phases and their graphs.
 
 ## Authoring and inspection
@@ -24,7 +24,7 @@ both phases and their graphs.
 - [The FX guide](https://github.com/gridaco/fx/blob/main/docs/guide/README.md): write, plan,
   run and inspect your own workflows and node types, with example projects. Grida FX is the
   engine every workflow runs on, a submodule at `third_party/fx`.
-- [Components](../src/stage_gen/components/README.md): the component table and the component contract.
+- [Components](../src/fx_games/components/README.md): the component table and the component contract.
 - [Site](site.md): the static landing and documentation site, built by `scripts/site.py` from the catalog and the example store.
 - [Providers](models/providers.md): routes, credentials and live-operation boundaries.
 - [Character library](character-library.md): the committed character profiles and approved 3D examples.
@@ -34,7 +34,7 @@ both phases and their graphs.
 - [Scenario](../godot/packages/scenario_runtime/README.md): Godot-owned narrative framework, compiler and game-owned invocation.
 - [Scenario directory preview](../godot/packages/scenario_runtime/docs/layout.md): execution, authoring, bindings, content and game responsibilities.
 - [Asset consumer template](../godot/templates/asset_consumer/README.md): explicit file import and GDScript display.
-- [Game concept studio](../skills/game-concept-studio/SKILL.md) and [movie poster](../skills/movie-poster/SKILL.md): agent skills users install into any folder (`npx skills add softmarshmallow/stage-gen --skill <name>`).
+- [Game concept studio](../skills/game-concept-studio/SKILL.md) and [movie poster](../skills/movie-poster/SKILL.md): agent skills users install into any folder (`npx skills add softmarshmallow/fx-games --skill <name>`).
 - [Verification](../VERIFICATION.md): owned gates and aggregate checks.
 
 Sample inputs belong next to the workflow, SDK or component they demonstrate. The directory
@@ -58,7 +58,7 @@ of module names. Scenario's current contract is maintained under the Godot packa
 current architecture controls new work.
 [Decision 0071](decisions/0071-workflows-are-the-product-unit-and-the-web-splits-into-site-and-viewer.md)
 records how workflows became the product unit, and
-[decision 0074](decisions/0074-stage-gen-runs-on-grida-fx.md) how Stage Gen moved onto Grida FX.
+[decision 0074](decisions/0074-stage-gen-runs-on-grida-fx.md) how FX Games moved onto Grida FX.
 
 ## Repository policy
 

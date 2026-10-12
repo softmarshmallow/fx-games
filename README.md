@@ -1,38 +1,38 @@
-# Stage Gen
+# FX Games
 
-Stage Gen is a general asset generation toolkit. Each workflow turns a small input into a
-named deliverable, such as a transparent idle loop, a rigged 3D character or a set of
-repeating parallax layers, and every workflow is a [Grida FX](https://github.com/gridaco/fx)
-workflow you can plan, run and inspect. Every workflow plans offline, with its price, before
-any spend, and most reuse a node cache across runs. Inspect runs in FX's viewer, which
+FX Games makes game assets with [Grida FX](https://github.com/gridaco/fx). Its workflows are
+general: each turns a small input into a named deliverable, such as a transparent idle loop, a
+rigged 3D character or a set of repeating parallax layers, and is an FX workflow you can plan,
+run and inspect. Every workflow plans offline, with its price, before any spend, and most reuse
+a node cache across runs. Inspect runs in FX's viewer, which
 `uv run python -m grida.fx start --open` opens. Your application decides how the assets become
 a game, an animation or a tool.
 
 ![Iron Petal Unit key art: a young mechanic-pilot riding a rescue robot through an orbital greenhouse](godot/games/iron_petal_unit/inputs/references/cover.png)
 
-_[Iron Petal Unit](godot/games/iron_petal_unit/README.md), one of the example games built with Stage Gen assets._
+_[Iron Petal Unit](godot/games/iron_petal_unit/README.md), one of the example games built with FX Games assets._
 
 ## Workflows
 
-Each workflow is one folder under `src/stage_gen/workflows/` with its declaration, page,
+Each workflow is one folder under `src/fx_games/workflows/` with its declaration, page,
 contract and examples. This table is checked against each folder's `workflow.toml`.
 
 <!-- workflows:begin -->
 | Workflow | Id | Promise |
 | --- | --- | --- |
-| [3D character](src/stage_gen/workflows/character_3d/page.mdx) | `character-3d` | One written brief in. One rigged, reviewed character out. |
-| [Looping parallax](src/stage_gen/workflows/looping_parallax/page.mdx) | `looping-parallax` | Layer pictures in. Repeating layers and their scroll placement out. |
-| [Movie sprite](src/stage_gen/workflows/movie_sprite/page.mdx) | `movie-sprite` | One character picture in. A transparent idle loop out. |
-| [Portrait motion](src/stage_gen/workflows/portrait_motion/page.mdx) | `portrait-motion` | One finished sprite in. Eyes and mouth a game can drive separately out. |
-| [Universe](src/stage_gen/workflows/universe/page.mdx) | `universe` | A poster, a synopsis and a direction in. A reviewed storyworld and one concept image per entity out. |
+| [3D character](src/fx_games/workflows/character_3d/page.mdx) | `character-3d` | One written brief in. One rigged, reviewed character out. |
+| [Looping parallax](src/fx_games/workflows/looping_parallax/page.mdx) | `looping-parallax` | Layer pictures in. Repeating layers and their scroll placement out. |
+| [Movie sprite](src/fx_games/workflows/movie_sprite/page.mdx) | `movie-sprite` | One character picture in. A transparent idle loop out. |
+| [Portrait motion](src/fx_games/workflows/portrait_motion/page.mdx) | `portrait-motion` | One finished sprite in. Eyes and mouth a game can drive separately out. |
+| [Universe](src/fx_games/workflows/universe/page.mdx) | `universe` | A poster, a synopsis and a direction in. A reviewed storyworld and one concept image per entity out. |
 <!-- workflows:end -->
 
-![Three reference illustrations above their rigged 3D characters dancing with retargeted Samba motion](.github/assets/readme/stagegen-3d-characters.gif)
+![Three reference illustrations above their rigged 3D characters dancing with retargeted Samba motion](.github/assets/readme/fx-games-3d-characters.gif)
 
 ![Yuzu and Riko gently moving, blinking or winking, and changing mouth shapes over an Afterlight background](.github/assets/readme/movie-sprite.gif)
 
-The [3D character](src/stage_gen/workflows/character_3d/page.mdx) and
-[movie sprite](src/stage_gen/workflows/movie_sprite/page.mdx) workflows made these; the
+The [3D character](src/fx_games/workflows/character_3d/page.mdx) and
+[movie sprite](src/fx_games/workflows/movie_sprite/page.mdx) workflows made these; the
 [preview notes](.github/assets/readme/README.md) say how.
 
 ## Install and try it
@@ -48,7 +48,7 @@ git submodule update --init
 uv sync --frozen
 uv run python third_party/fx/tools/build_engine.py
 uv run python -m grida.fx schema looping-parallax
-uv run python src/stage_gen/workflows/looping_parallax/inputs/supplied_layers/make_inputs.py out/looping-parallax-input
+uv run python src/fx_games/workflows/looping_parallax/inputs/supplied_layers/make_inputs.py out/looping-parallax-input
 uv run python -m grida.fx plan looping-parallax --inputs out/looping-parallax-input/inputs.yaml
 uv run python -m grida.fx run looping-parallax --inputs out/looping-parallax-input/inputs.yaml
 uv run python -m grida.fx inspect looping-parallax --verify
@@ -77,12 +77,12 @@ builder, which `python -m grida.fx plan` and `run` take the same way; the
   [media publication](docs/generated-media-publication.md).
 - Agent skills: [game concept studio](skills/game-concept-studio/SKILL.md) and
   [movie poster](skills/movie-poster/SKILL.md), installed with
-  `npx skills add softmarshmallow/stage-gen --skill <name>`.
+  `npx skills add softmarshmallow/fx-games --skill <name>`.
 
 ## Godot example project
 
 The repository also houses a separately owned consumer product, the
 [Godot example project](godot/README.md): its [example games](godot/games/README.md),
-runtime packages, templates and tools show ways to use Stage Gen assets, under its own
+runtime packages, templates and tools show ways to use FX Games assets, under its own
 [charter](godot/CHARTER.md). Games own their scenes, controls, narrative and asset wiring;
-Stage Gen requires no game or gameplay contract.
+FX Games requires no game or gameplay contract.

@@ -13,8 +13,8 @@ from io import BytesIO
 from PIL import Image
 
 from demo_game_tools.kits.ui_art.nodes import document_roles, ui_atlas_manifest_block
-from stage_gen.canonical import content_sha256
-from stage_gen.media import inspect_image
+from fx_games.canonical import content_sha256
+from fx_games.media import inspect_image
 from the_grain_pipeline.pointclick_room.room_prompts import narration_ids
 from the_grain_pipeline.pointclick_room.room_request import ResolvedPointClickRoom
 

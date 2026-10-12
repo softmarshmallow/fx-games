@@ -27,7 +27,7 @@ from demo_game_tools.input_formats.sideview_content import (
     projectile_silhouette_art,
 )
 from demo_game_tools.kits.sideview_actor.motion_geometry import dialogue_atlas_grid
-from stage_gen.media import LoopConstruction
+from fx_games.media import LoopConstruction
 
 ActorContent = PlayerContent | MobContent | NpcContent
 CatalogFamily = Literal["prop", "item", "projectile"]

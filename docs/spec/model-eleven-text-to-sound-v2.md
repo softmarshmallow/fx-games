@@ -10,7 +10,7 @@ sizes are given because most of them are small.
 
 This page records the model-specific boundary. General provider procedure lives
 in [../models/providers.md](../models/providers.md); the component contract lives in the
-[components README](../../src/stage_gen/components/README.md); the authored contract that
+[components README](../../src/fx_games/components/README.md); the authored contract that
 consumes this route, and the gates it applies, is
 [../game-sound-effects.md](../../godot/games/iron_petal_unit/docs/audio.md).
 

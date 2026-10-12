@@ -21,7 +21,7 @@ from demo_game_tools.kits.sideview_terrain import (
     require_terrain_atlas_source,
     terrain_atlas_paint_target,
 )
-from stage_gen.resources import terrain_atlas_lookup_path, terrain_atlas_template_path
+from fx_games.resources import terrain_atlas_lookup_path, terrain_atlas_template_path
 
 #: Paintings an atlas sheet gets before the run stops on it.
 ATLAS_TAKES = 6

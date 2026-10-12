@@ -30,8 +30,8 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from fx_games.workflows._fx import SamplePlan
 from scripts.graph_contracts import document_contract, write_contract
-from stage_gen.workflows._fx import SamplePlan
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 
@@ -49,13 +49,13 @@ class ContractBlock:
         return self.workflow_id if self.label is None else f"{self.workflow_id}:{self.label}"
 
     def document(self, repo: Path = REPOSITORY_ROOT) -> Path:
-        return repo / "src/stage_gen/workflows" / self.workflow_id.replace("-", "_") / "contract.md"
+        return repo / "src/fx_games/workflows" / self.workflow_id.replace("-", "_") / "contract.md"
 
 
 def _sample_plan(workflow_id: str) -> Callable[[Path, Path], SamplePlan]:
     def planned(scratch: Path, repo: Path) -> SamplePlan:
         del repo
-        from stage_gen.workflows._registry import load_code
+        from fx_games.workflows._registry import load_code
 
         graph = load_code(workflow_id).sample_plan(scratch)
         if graph is None:

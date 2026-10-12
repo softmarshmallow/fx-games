@@ -15,7 +15,7 @@ from typing import Final, Literal
 from PIL import Image
 from pydantic import Field, field_validator, model_validator
 
-from stage_gen.contracts import PersistedContractModel
+from fx_games.contracts import PersistedContractModel
 
 ASSET_UNIT_ERROR_CODE: Final = "scrolling-asset-unit-v1"
 

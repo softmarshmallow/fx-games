@@ -25,7 +25,7 @@ godot --headless --path godot/packages/scenario_runtime --script res://tests/run
 
 The [Python distribution](../authoring/README.md#verification) can be tested and
 built independently. Its tests include a real wheel consumer that cannot import
-Stage Gen, Grida FX or the game collection. Shared conformance source/program/catalog
+FX Games, Grida FX or the game collection. Shared conformance source/program/catalog
 fixtures are compiled by Python and executed by Godot. The production adapter's
 tests live under `games/_shared/python/tests/scenario_production_tests`.
 

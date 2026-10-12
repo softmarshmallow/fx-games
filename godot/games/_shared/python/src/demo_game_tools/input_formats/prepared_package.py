@@ -32,11 +32,11 @@ from demo_game_tools.io.package_capture import (
     validate_json_object,
     validate_utf8_text,
 )
-from stage_gen.components._game_input import (
+from fx_games.components._game_input import (
     AuthoredContractLoadError,
     sha256_bytes,
 )
-from stage_gen.components._secure_fs import (
+from fx_games.components._secure_fs import (
     SecurePathError,
     open_absolute_directory,
     read_relative_regular_file,

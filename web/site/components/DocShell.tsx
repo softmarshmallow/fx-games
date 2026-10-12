@@ -16,7 +16,7 @@ export default function DocShell({ crumbs, children }: { crumbs: readonly Crumb[
         <div className="mx-auto flex h-14 max-w-6xl items-center px-6">
           <nav className="flex items-center gap-2 text-sm text-zinc-500">
             <a className="hover:text-zinc-900 dark:hover:text-zinc-100" href={href("/")}>
-              Stage Gen
+              FX Games
             </a>
             {crumbs.map((crumb) => (
               <span key={crumb.title} className="flex items-center gap-2">

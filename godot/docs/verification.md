@@ -8,7 +8,7 @@ cd godot
 ../.venv/bin/python tools/check.py
 ```
 
-The repository development environment supplies Python, the Stage Gen SDK,
+The repository development environment supplies Python, the FX Games SDK,
 Grida FX, Pillow and pytest. Afterlight's synthetic voice preparation checks run an FX
 workflow, so FX's engine must be built once
 (`uv run python third_party/fx/tools/build_engine.py`); they also use FFmpeg. Set

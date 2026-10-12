@@ -12,10 +12,10 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from stage_gen.components.movie_sprite import processing
-from stage_gen.components.movie_sprite.frame_store import FrameStore
-from stage_gen.components.movie_sprite.models import MAX_OUTPUT_BYTES
-from stage_gen.workflows.movie_sprite.inputs.supplied_clip.make_inputs import make_inputs
+from fx_games.components.movie_sprite import processing
+from fx_games.components.movie_sprite.frame_store import FrameStore
+from fx_games.components.movie_sprite.models import MAX_OUTPUT_BYTES
+from fx_games.workflows.movie_sprite.inputs.supplied_clip.make_inputs import make_inputs
 
 
 def test_frame_store_roundtrip_preserves_order_and_independent_reads(tmp_path: Path) -> None:
@@ -132,7 +132,7 @@ def test_disk_preflight_includes_preview_storage(
     facts = {"width": 96, "height": 160, "fps": 6, "duration_seconds": 2}
     old_incomplete_reservation = 96 * 160 * 4 * 14 * 2 + MAX_OUTPUT_BYTES
     monkeypatch.setattr(
-        "stage_gen.components.movie_sprite.processing.shutil.disk_usage",
+        "fx_games.components.movie_sprite.processing.shutil.disk_usage",
         lambda _: SimpleNamespace(free=old_incomplete_reservation),
     )
     with pytest.raises(ValueError, match="Insufficient temporary disk"):

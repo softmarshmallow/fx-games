@@ -1,6 +1,6 @@
 # GPT Image 2 adapter contract
 
-> **Integration status:** legacy. Stage Gen's active defaults and bindings moved
+> **Integration status:** legacy. FX Games' active defaults and bindings moved
 > to GPT Image 2.5 Sunburst on 2026-09-09. The measurements below remain the
 > record of the bytes and provider behavior observed with GPT Image 2.
 
@@ -11,7 +11,7 @@ OpenAI released transparent backgrounds for GPT Image 2 in preview on
 documentation on 2026-08-25. The fal and OpenRouter routes were rechecked on
 2026-09-07. This page records the model-specific boundary formerly used by the
 image recipes. The general component contract lives in the
-[components README](../../src/stage_gen/components/README.md).
+[components README](../../src/fx_games/components/README.md).
 
 ## Direct OpenAI route
 
@@ -53,7 +53,7 @@ not establish the exact transparency release date.
 
 The exposed fal schema proves transparent text-to-image generation only. It
 does not expose reference-image or masked-edit inputs required by the current
-recipe image nodes. At the time this predecessor record was written, Stage Gen
+recipe image nodes. At the time this predecessor record was written, FX Games
 therefore had no fal image-generation adapter or binding, direct OpenAI was the
 native route, and separate background removal remained available. That status
 is historical: Grida FX's built-in route table now has fal generation and edit
@@ -146,6 +146,6 @@ executable graph contract in the same implementation change. Also review the
 [repository overview](../../README.md), [architecture](../../ARCHITECTURE.md),
 [asset contracts](../spec/asset-contracts.md), and the
 [survival](../../godot/games/ember_hollow/docs/generation-v1.md) and
-[universe](../../src/stage_gen/workflows/universe/contract.md) contracts. The
+[universe](../../src/fx_games/workflows/universe/contract.md) contracts. The
 Sunburst successor migration updated those current-route documents without
 changing their declared topology.

@@ -1,0 +1,31 @@
+# Only what the workflow file cannot say. Steps, titles and the sample plan come from
+# workflow.yaml through FX.
+schema_version = 1
+kind = "fx-games-workflow-v1"
+id = "universe"
+title = "Universe"
+promise = "A poster, a synopsis and a direction in. A reviewed storyworld and one concept image per entity out."
+summary = """
+A semantic phase proposes typed entities, their relationships and open questions, which an \
+independent reviewer must admit; a gallery phase then draws exactly one reviewed concept image \
+for each admitted entity."""
+
+[try]
+input = "The committed lantern_ferry world in inputs/lantern_ferry: a poster, a synopsis, an expansion direction and the inputs.yaml that names them"
+commands = [
+  "uv run python -m grida.fx plan universe --inputs src/fx_games/workflows/universe/inputs/lantern_ferry/inputs.yaml",
+  "uv run python -m grida.fx run universe --inputs src/fx_games/workflows/universe/inputs/lantern_ferry/inputs.yaml --live --max-usd 1",
+  "uv run python -m grida.fx inspect universe --verify",
+]
+
+[[outputs]]
+artifact_ref = "outputs/universe.json"
+description = "The admitted storyworld: entities, relationships and open questions, with the review it passed"
+
+[[outputs]]
+artifact_ref = "outputs/gallery/"
+description = "Each entity's concept image, record and readable page"
+
+[[outputs]]
+artifact_ref = "outputs/manifest.json"
+description = "Every entity's status and class, and the rights the run was given"

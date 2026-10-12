@@ -20,11 +20,11 @@ from typing import cast
 
 import pytest
 
-from stage_gen.examples import ExamplePin, WorkflowExample, display_names, verify
-from stage_gen.workflows import _checks as checks
-from stage_gen.workflows._catalog import build, load_workflow
-from stage_gen.workflows._checks import CheckContext, LoadedWorkflow
-from stage_gen.workflows._registry import (
+from fx_games.examples import ExamplePin, WorkflowExample, display_names, verify
+from fx_games.workflows import _checks as checks
+from fx_games.workflows._catalog import build, load_workflow
+from fx_games.workflows._checks import CheckContext, LoadedWorkflow
+from fx_games.workflows._registry import (
     OutputNote,
     Step,
     TryIt,
@@ -40,7 +40,7 @@ STORE = REPOSITORY / "out" / "examples"
 def _script(name: str) -> ModuleType:
     """One of the repository's maintainer scripts, loaded as a module."""
     path = REPOSITORY / "scripts" / f"{name}.py"
-    spec = importlib.util.spec_from_file_location(f"stage_gen_script_{name}", path)
+    spec = importlib.util.spec_from_file_location(f"fx_games_script_{name}", path)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
@@ -93,7 +93,7 @@ def test_the_installed_workflows_have_no_drift() -> None:
     catalog, problems = build(examples_dir=None, allow_missing_examples=True)
     assert problems == []
     assert {w["id"] for w in catalog["workflows"]} == WORKFLOWS
-    assert catalog["kind"] == "stage-gen-catalog-v1"
+    assert catalog["kind"] == "fx-games-catalog-v1"
     assert [card["order"] for card in catalog["cards"]] == [5, 6, 7, 8]
     library = {
         e["id"]: e["currency"]
@@ -167,7 +167,7 @@ def test_a_page_that_restates_the_manifest_fails(loaded: dict[str, LoadedWorkflo
     movie = loaded["movie-sprite"]
     copied = _with_manifest(
         movie,
-        summary="Stage Gen holds that as one graph",
+        summary="FX Games holds that as one graph",
         outputs=[OutputNote(artifact_ref="body/source.mp4", description="The take you chose")],
     )
     assert checks.structure(copied) == [
@@ -223,8 +223,8 @@ def test_related_must_name_a_known_workflow(loaded: dict[str, LoadedWorkflow]) -
 def test_a_store_example_that_differs_from_its_pin_fails(
     loaded: dict[str, LoadedWorkflow], tmp_path: Path
 ) -> None:
-    from stage_gen.examples import MadeBy, Media, WorkflowExample, write_example
-    from stage_gen.workflows._catalog import load_example
+    from fx_games.examples import MadeBy, Media, WorkflowExample, write_example
+    from fx_games.workflows._catalog import load_example
 
     movie = loaded["movie-sprite"]
     entry = movie.discovered.manifest.examples[0]
@@ -284,7 +284,7 @@ def test_a_store_example_that_differs_from_its_pin_fails(
 
 
 def test_a_library_pin_that_differs_from_the_build_fails(loaded: dict[str, LoadedWorkflow]) -> None:
-    from stage_gen.workflows._catalog import load_example
+    from fx_games.workflows._catalog import load_example
 
     character = loaded["character-3d"]
     [nami] = [e for e in character.discovered.manifest.examples if e.id == "nami"]
@@ -376,7 +376,7 @@ def test_a_built_in_is_pinned_by_the_identity_fx_resolves(
 
     from grida.fx import plan
 
-    from stage_gen.workflows._fx import FxWorkflow, write_project
+    from fx_games.workflows._fx import FxWorkflow, write_project
 
     built_ins = [
         node_type.contract_version
@@ -389,7 +389,7 @@ def test_a_built_in_is_pinned_by_the_identity_fx_resolves(
     assert all(re.fullmatch(r"fx/[a-z_.]+@\d+\.\d+", identity) for identity in built_ins)
     pinned = {str(entry[1]) for entry in GOLDEN["identities"]["node_types"]}
 
-    character = FxWorkflow.read("stage_gen.workflows.character_3d")
+    character = FxWorkflow.read("fx_games.workflows.character_3d")
     sample = character.root / "inputs/sample/inputs.yaml"
     monkeypatch.setenv("GRIDA_FX_DISABLE_DOTENV", "1")
     monkeypatch.setenv("GRIDA_FX_NETWORK", "off")
@@ -476,7 +476,7 @@ def test_the_script_exports_and_checks_the_catalog(tmp_path: Path) -> None:
     output = io.StringIO()
     assert main(argv, stdout=output) == 0
     written = json.loads((tmp_path / "site/catalog.json").read_text(encoding="utf-8"))
-    assert written["kind"] == "stage-gen-catalog-v1" and len(written["workflows"]) == 5
+    assert written["kind"] == "fx-games-catalog-v1" and len(written["workflows"]) == 5
     assert sorted(path.name for path in (tmp_path / "site").iterdir()) == ["catalog.json"]
     strict = ["--out", str(tmp_path / "strict")]
     strict += ["--examples", str(tmp_path / "absent")]
@@ -521,7 +521,7 @@ def test_the_script_verifies_library_examples_without_a_store(tmp_path: Path) ->
 
 def _game_store(tmp_path: Path, **entry: object) -> Path:
     """A store holding one example a game made, exported with its entry and page."""
-    from stage_gen.examples import (
+    from fx_games.examples import (
         FiguresLedger,
         GameExampleEntry,
         MadeBy,

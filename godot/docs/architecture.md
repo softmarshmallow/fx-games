@@ -1,7 +1,7 @@
 # Godot architecture
 
 The [charter](../CHARTER.md) defines this maintained example project's scope.
-Stage Gen owns asset generation; this project owns the playable consumers and
+FX Games owns asset generation; this project owns the playable consumers and
 their runtime integration. Neither side requires one universal gameplay schema.
 
 ```text

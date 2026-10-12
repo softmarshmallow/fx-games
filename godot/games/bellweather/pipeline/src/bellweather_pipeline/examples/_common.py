@@ -12,7 +12,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from stage_gen.examples import (
+from fx_games.examples import (
     FiguresLedger,
     ImportRequest,
     Lineage,

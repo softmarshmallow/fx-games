@@ -61,9 +61,9 @@ def verify(args: argparse.Namespace, output: TextIO) -> int:
     Examples a game wrote into the store are checked against the pins the game wrote beside
     them in ``entry.json``, or only against their own ledger before the game exported them.
     """
-    from stage_gen.examples import EXAMPLE_FILE, verify_game_example
-    from stage_gen.workflows._catalog import default_examples_dir, load_example
-    from stage_gen.workflows._registry import discover, load_code, repository_root
+    from fx_games.examples import EXAMPLE_FILE, verify_game_example
+    from fx_games.workflows._catalog import default_examples_dir, load_example
+    from fx_games.workflows._registry import discover, load_code, repository_root
 
     store = args.examples_dir or default_examples_dir()
     repository = repository_root()
@@ -102,10 +102,10 @@ def verify(args: argparse.Namespace, output: TextIO) -> int:
 
 def promote(args: argparse.Namespace, output: TextIO) -> int:
     """Export runs as a draft example in the store and pin it in the workflow's manifest."""
-    from stage_gen.examples import ImportRequest, MadeBy, store_directory, write_example
-    from stage_gen.runview import is_fx_run, is_stand_in
-    from stage_gen.workflows._catalog import default_examples_dir
-    from stage_gen.workflows._registry import (
+    from fx_games.examples import ImportRequest, MadeBy, store_directory, write_example
+    from fx_games.runview import is_fx_run, is_stand_in
+    from fx_games.workflows._catalog import default_examples_dir
+    from fx_games.workflows._registry import (
         MANIFEST_FILE,
         find,
         load_code,

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from stage_gen.components.video_clip import (
+from fx_games.components.video_clip import (
     CLIP_REVIEW_FRAME_MAX,
     CLIP_REVIEW_FRAME_MIN,
     clip_review_frame_count,

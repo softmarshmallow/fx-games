@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from stage_gen.media import (
+from fx_games.media import (
     AudioProcessResult,
     assert_audio_signature,
     normalize_audio_media_type,
@@ -114,7 +114,7 @@ async def test_audio_subprocess_outer_cancellation_kills_and_reaps_child(
 
 
 def test_peak_parser_reads_the_last_volumedetect_line_and_refuses_its_absence() -> None:
-    from stage_gen.media import parse_peak_dbfs
+    from fx_games.media import parse_peak_dbfs
 
     stderr = (
         "[Parsed_volumedetect_0 @ 0x1] n_samples: 44100\n"
@@ -129,7 +129,7 @@ def test_peak_parser_reads_the_last_volumedetect_line_and_refuses_its_absence() 
 
 @pytest.mark.asyncio
 async def test_peak_measurement_feeds_the_payload_on_stdin() -> None:
-    from stage_gen.media import measure_peak_dbfs, peak_measurement_args, run_process
+    from fx_games.media import measure_peak_dbfs, peak_measurement_args, run_process
 
     seen: dict[str, object] = {}
 
@@ -156,7 +156,7 @@ async def test_peak_measurement_feeds_the_payload_on_stdin() -> None:
 @pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg is not on PATH")
 @pytest.mark.asyncio
 async def test_peak_measurement_agrees_between_the_live_and_sync_paths(tmp_path: Path) -> None:
-    from stage_gen.media import measure_peak_dbfs, measure_peak_dbfs_sync
+    from fx_games.media import measure_peak_dbfs, measure_peak_dbfs_sync
 
     clip = tmp_path / "tone.mp3"
     await run_process(

@@ -1,13 +1,13 @@
 # Godot example project
 
-This repository contains two separately owned products: **Stage Gen**, the main
+This repository contains two separately owned products: **FX Games**, the main
 asset-generation SDK and authoring toolkit, and **this Godot example project**,
 which demonstrates how those assets become playable applications.
 
-Relative to Stage Gen, `godot/` is an examples directory named for its engine.
+Relative to FX Games, `godot/` is an examples directory named for its engine.
 Within that scope it is its own maintained project, with runtime packages, games,
 templates and tools. Each game owns its gameplay and asset integration. Users can
-adopt an example or package without making its game contract part of Stage Gen.
+adopt an example or package without making its game contract part of FX Games.
 
 The [project charter](CHARTER.md) defines the continuing goals, responsibilities
 and boundaries. Future work on shared gameplay, presentation or visual-novel

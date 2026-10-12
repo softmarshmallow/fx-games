@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run the explicit climbable band-atlas layout, extraction, and rhythm-admission proof.
 
-This is an exploration harness, not a recipe or component API. Nothing in `src/stage_gen`
+This is an exploration harness, not a recipe or component API. Nothing in `src/fx_games`
 selects it and no manifest or runtime consumes its output. It preserves the accepted spike
 baseline so the layout arithmetic, the guide template, the extraction rules, and the admission
 measurement stay reproducible. `TODO.md` carries the open work under **Climbable band atlas**.

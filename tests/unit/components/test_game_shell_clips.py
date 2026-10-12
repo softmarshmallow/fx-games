@@ -13,7 +13,7 @@ from ember_hollow_pipeline.shell.clips import (
     match_title_verdict,
     shell_clip_record,
 )
-from stage_gen.media.codec import encode_png
+from fx_games.media.codec import encode_png
 
 
 def _picture(colour: tuple[int, int, int], *, size: tuple[int, int] = (320, 180)) -> bytes:

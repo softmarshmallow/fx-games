@@ -7,7 +7,7 @@ images that help a person decide what game they want before full generation.
   concept requests.
 - Keep drafts under `workspaces/<concept_id>/`; this directory is gitignored. The skill's FX
   project files (`fx.yaml`, `workflows/`, `inputs/`, `runs/`, `.fx/`) stay inside that draft.
-- Do not create or modify `game.toml`, maps, runtime manifests, Stage Gen workflows, source code,
+- Do not create or modify `game.toml`, maps, runtime manifests, FX Games workflows, source code,
   fixtures, library packages, web files, or engine assets as part of concept work.
 - Draw images only through the skill's Grida FX workflow (`grida-fx`, or `python -m grida.fx`). A
   live run needs explicit user intent and a `--max-usd` ceiling. Never read, print, copy or write

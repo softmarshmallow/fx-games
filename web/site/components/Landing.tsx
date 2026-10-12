@@ -1,4 +1,4 @@
-// The landing: what Stage Gen is, how to install it and where to start, then one ordered
+// The landing: what FX Games is, how to install it and where to start, then one ordered
 // grid of the catalog's cards (amendment A1). A game-made card carries one quiet line naming
 // the game it was made inside. A card whose example is absent (a clean clone) is drawn faded,
 // without a link, as a planned page was.
@@ -54,7 +54,7 @@ export default function Landing({ cards }: { cards: readonly Card[] }): ReactEle
     <>
       <header className="border-b border-zinc-200 dark:border-zinc-800">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6 text-sm text-zinc-900 dark:text-zinc-100">
-          Stage Gen
+          FX Games
           <a className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100" href={href("/docs/")}>
             Docs
           </a>
@@ -65,12 +65,12 @@ export default function Landing({ cards }: { cards: readonly Card[] }): ReactEle
           Asset workflows you can plan offline, run, inspect and cache.
         </h1>
         <p className="mt-3 max-w-2xl text-lg text-zinc-600 dark:text-zinc-400">
-          Stage Gen is a set of asset workflows that run on Grida FX, a workflow engine with a command line and a Python SDK. Each workflow is a long chain of models,
+          FX Games is a set of asset workflows that run on Grida FX, a workflow engine with a command line and a Python SDK. Each workflow is a long chain of models,
           local tools and checks, held as one graph that turns a small input into a named deliverable. Every picture
           below is from a real run.
         </p>
         <pre className="mt-6 max-w-2xl overflow-x-auto rounded-md border border-zinc-200 bg-zinc-50 p-4 font-mono text-[13px] leading-relaxed text-zinc-800 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
-          {"uv sync --frozen\nuv run python third_party/fx/tools/build_engine.py\nuv run python -m grida.fx plan universe \\\n  --inputs src/stage_gen/workflows/universe/inputs/lantern_ferry/inputs.yaml"}
+          {"uv sync --frozen\nuv run python third_party/fx/tools/build_engine.py\nuv run python -m grida.fx plan universe \\\n  --inputs src/fx_games/workflows/universe/inputs/lantern_ferry/inputs.yaml"}
         </pre>
         <p className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-sm">
           <a className={LINK} href={href("/docs/getting-started/")}>

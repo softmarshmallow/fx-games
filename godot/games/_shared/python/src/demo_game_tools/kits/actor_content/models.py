@@ -8,14 +8,14 @@ from typing import Annotated, Literal, Protocol
 
 from pydantic import Field, field_validator, model_validator
 
-from stage_gen.components._game_input import (
+from fx_games.components._game_input import (
     SHA256_PATTERN,
     SNAKE_ID_PATTERN,
     normalized_text,
     portable_relative_path,
     unique_values,
 )
-from stage_gen.contracts import PersistedContractModel
+from fx_games.contracts import PersistedContractModel
 
 MotionPlaybackMode = Literal["hold", "loop", "once", "gameplay_driven"]
 CanonicalFrameIndex = Annotated[int, Field(ge=0, le=63)]

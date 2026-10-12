@@ -10,8 +10,8 @@ from typing import Any
 import yaml
 from grida.fx import Answer, RunResult, StandInCall, plan_async, run_async
 
-from stage_gen.workflows.movie_sprite.inputs.supplied_clip.make_inputs import make_inputs
-from stage_gen.workflows.movie_sprite.nodes.take import QUIET_IDLE
+from fx_games.workflows.movie_sprite.inputs.supplied_clip.make_inputs import make_inputs
+from fx_games.workflows.movie_sprite.nodes.take import QUIET_IDLE
 from tests.unit._fx import caches, dispatch, problems, scratch_project, verify
 
 

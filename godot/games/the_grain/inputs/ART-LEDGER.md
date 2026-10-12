@@ -54,12 +54,12 @@ the statements.
   actual cost is available from the trace. The operation count is the authoritative
   figure; the dollar amount is an estimate and is marked as such.
 - Zero-cost failures: 3 process aborts (`candidate-5` twice, `candidate-6` once) with
-  `ModuleNotFoundError: stage_gen.recipes.universe.universe_prompts`. A concurrent
+  `ModuleNotFoundError: fx_games.recipes.universe.universe_prompts`. A concurrent
   agent's untracked in-progress recipe is imported by `stage_gen_legacy.interfaces.cli` at
   module load, so the CLI dies before the provider client is constructed. **No provider
-  call, no spend.** Worked around by driving `stage_gen.capabilities.generate_image_artifact`
+  call, no spend.** Worked around by driving `fx_games.capabilities.generate_image_artifact`
   through the same `load_config()` from a scratchpad script; identical request, identical
-  provenance. Nothing under `src/stage_gen/recipes/universe/` was read into, written, or
+  provenance. Nothing under `src/fx_games/recipes/universe/` was read into, written, or
   repaired.
 - Artifacts: `out/the-grain-cover/candidate-1.png` … `candidate-6.png`, each with its
   `.png.meta.json` provenance sidecar.

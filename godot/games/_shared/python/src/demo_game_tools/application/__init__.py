@@ -2,7 +2,7 @@
 
 from collections.abc import Sequence
 
-from stage_gen.application import UsageError
+from fx_games.application import UsageError
 
 
 def resolve_genre(declared: Sequence[str], requested: str | None) -> str:

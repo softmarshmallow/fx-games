@@ -4,7 +4,7 @@
 
 > **Status: alpha-component instance recovery is implemented and is the prepared-game default;
 > broader geometry and ownership recovery remain planned.**
-> `src/stage_gen/media/sprite_sheets.py` implements the deterministic
+> `src/fx_games/media/sprite_sheets.py` implements the deterministic
 > `alpha-component-repack-v3` subset used by prepared-game actor assets. Uniform-grid and
 > padding-derived geometry, normalized per-cell artifacts, and ambiguous-instance ownership below
 > remain the normative target rather than shipped behavior.
@@ -130,7 +130,7 @@ reliably, retain deterministic lineage, and remain cheap enough for every genera
 
 The Python core provides image inspection, exact-dimension PNG normalization,
 chroma-to-alpha conversion, alpha composition, and native-alpha connected-component repacking
-under `src/stage_gen/media/`. Prepared-game actor generation retains each provider sheet, then its
+under `src/fx_games/media/`. Prepared-game actor generation retains each provider sheet, then its
 local validation node calls `repack_alpha_components` to publish the runtime-facing sheet.
 
 The shipped v3 repacker uses 8-connectivity, `alpha > 16`, a candidate area of at least 2% of
@@ -153,7 +153,7 @@ The Python core does **not** currently implement:
 - semantic ownership of compound instances or a reusable sprite-sheet artifact manifest.
 
 If implemented, pure detection, cropping, and packing belong under
-`src/stage_gen/media/`. A provider-neutral component or recipe wrapper may own
+`src/fx_games/media/`. A provider-neutral component or recipe wrapper may own
 typed requests, rollback-safe artifact persistence, provenance, and manifest
 projection. Consumers receive completed artifacts; they do not define or
 validate this core contract.

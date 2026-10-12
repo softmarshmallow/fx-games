@@ -58,7 +58,7 @@ from demo_game_tools.kits.effects_art.models import (
     EffectArtwork,
 )
 from demo_game_tools.kits.effects_art.sprite import SPRITE_CANVAS, validate_dust_atlas
-from stage_gen.canonical import content_sha256
+from fx_games.canonical import content_sha256
 
 #: Draws a plate gets before the run stops on it.
 PLATE_TAKES = 6

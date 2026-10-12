@@ -26,7 +26,7 @@ from demo_game_tools.kits.sideview_actor.motion_rebase import (
     motion_rebase_verification_prompt,
     parse_motion_rebase,
 )
-from stage_gen.media.sprite_sheets import split_atlas_columns
+from fx_games.media.sprite_sheets import split_atlas_columns
 
 #: Readings a pass gets before the run stops on it.
 REBASE_TAKES = 6

@@ -9,8 +9,8 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from stage_gen.components.portrait_motion import face_crop as processing
-from stage_gen.components.portrait_motion import face_patches as boundary
+from fx_games.components.portrait_motion import face_crop as processing
+from fx_games.components.portrait_motion import face_patches as boundary
 
 
 def source_image(mode: str = "RGBA") -> Image.Image:

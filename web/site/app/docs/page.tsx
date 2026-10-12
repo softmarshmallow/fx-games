@@ -4,7 +4,7 @@ import DocShell from "@/components/DocShell";
 import { href } from "@/lib/media";
 import { docPages, docRoute } from "@/lib/pages";
 
-export const metadata = { title: "Stage Gen docs" };
+export const metadata = { title: "FX Games docs" };
 
 export default function DocsIndex() {
   const docs = docPages();

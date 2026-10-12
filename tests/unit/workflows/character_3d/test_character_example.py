@@ -7,7 +7,7 @@ from typing import cast
 
 import pytest
 
-from stage_gen.examples import (
+from fx_games.examples import (
     ImportRequest,
     MadeBy,
     currency,
@@ -16,8 +16,8 @@ from stage_gen.examples import (
     verify,
     write_example,
 )
-from stage_gen.workflows._registry import load_code
-from stage_gen.workflows.character_3d.example import read_library
+from fx_games.workflows._registry import load_code
+from fx_games.workflows.character_3d.example import read_library
 from tests.unit._fx import failures
 from tests.unit.workflows.character_3d.test_workflow import StandIn, _run
 

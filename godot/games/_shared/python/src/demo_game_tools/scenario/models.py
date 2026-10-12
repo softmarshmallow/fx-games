@@ -11,6 +11,13 @@ from typing import Literal
 from pydantic import Field, field_validator, model_validator
 
 from demo_game_tools.kits.music import TrackGenerationIntent
+from fx_games.components._game_input import (
+    SHA256_PATTERN,
+    SNAKE_ID_PATTERN,
+    normalized_text,
+    portable_relative_path,
+    unique_values,
+)
 from scenario_authoring.compatibility.v2 import models as narrative
 from scenario_authoring.compatibility.v2.models import (
     Block,
@@ -19,13 +26,6 @@ from scenario_authoring.compatibility.v2.models import (
     FlagDeclaration,
     ScenarioAdmissionReport,
     ScenarioModel,
-)
-from stage_gen.components._game_input import (
-    SHA256_PATTERN,
-    SNAKE_ID_PATTERN,
-    normalized_text,
-    portable_relative_path,
-    unique_values,
 )
 
 SCENARIO_SCHEMA_VERSION = 2

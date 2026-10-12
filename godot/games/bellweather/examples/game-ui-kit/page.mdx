@@ -8,7 +8,7 @@
 Every 2D game needs the same few pieces of interface: a panel for dialogue and menus, a button in its
 four states, and a set of system icons. Made by hand, each one has to be cut so it
 stretches without smearing its corners, lined up so the pressed state does not jump, and kept in the
-game's style. Stage Gen makes each sheet as a short chain in the game's graph. The image model paints
+game's style. FX Games makes each sheet as a short chain in the game's graph. The image model paints
 over a geometry template, with the game's cover as its style reference. A local gate then measures
 what came back: where the corners end, where text can sit and in which colour, where each icon
 is. A reviewer that did not draw the sheet judges its style. The measurements travel with the
@@ -19,7 +19,7 @@ sheet, so an engine lays it out without guessing.
 <Try>
 <Agent>
 
-Make a game UI kit in the style of <Ref input="cover">this picture</Ref>: a panel frame, a button in four states and the 16 system icons, using Stage Gen's UI sheets described in `godot/games/_shared/docs/formats/ui.md`. Start from a copy of the Bellweather package in `godot/games/bellweather/inputs/default`, use the picture as its style reference, and give each sheet a one-sentence direction in `ui.toml`.
+Make a game UI kit in the style of <Ref input="cover">this picture</Ref>: a panel frame, a button in four states and the 16 system icons, using FX Games' UI sheets described in `godot/games/_shared/docs/formats/ui.md`. Start from a copy of the Bellweather package in `godot/games/bellweather/inputs/default`, use the picture as its style reference, and give each sheet a one-sentence direction in `ui.toml`.
 
 Plan it first. Then build the content part live, reviews included, and show me each sheet with the reviewer's verdict.
 

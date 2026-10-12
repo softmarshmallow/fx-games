@@ -5,7 +5,7 @@
 > is the sole current semantic authority. [Decision 0070](../../../../../docs/decisions/0070-the-game-invokes-scenario.md)
 > replaces this proposed universal game-sequence model with game-owned invocation.
 > Mandatory language, proposed fields and implementation status below belong to
-> the earlier proposal; they are not requirements for current games or Stage Gen.
+> the earlier proposal; they are not requirements for current games or FX Games.
 
 > **Scope: game consumers.** This document describes the formats used by these Godot games.
 > The public asset SDK and new games do not require this authoring format.

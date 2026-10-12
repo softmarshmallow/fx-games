@@ -237,7 +237,7 @@ panel contract is specified in [Authored game UI](formats/ui.md).
 ## Not a game package
 
 The independent universe workflow takes its own inputs. Its
-[example](../../../../src/stage_gen/workflows/universe/inputs/lantern_ferry/inputs.yaml)
+[example](../../../../src/fx_games/workflows/universe/inputs/lantern_ferry/inputs.yaml)
 lives beside the workflow and is not a member of a game input closure. A game may
 consume universe output through its own preparation script without making the
 two input formats one contract.

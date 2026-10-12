@@ -10,7 +10,7 @@ as the baseline? - and answers it as a ratio. It deliberately does not answer ho
 character is; that is a magnitude, it is authored, and it belongs to the asset unit.
 
 The contract is `docs/spec/motion-rebase.md`. Plate composition is provider-neutral and lives in
-`stage_gen.media.comparison_plate`; what a group means is decided here.
+`fx_games.media.comparison_plate`; what a group means is decided here.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from typing import Final, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from stage_gen.media.comparison_plate import (
+from fx_games.media.comparison_plate import (
     BandedComparisonPlate,
     PlateGroup,
     compose_banded_comparison_plate,

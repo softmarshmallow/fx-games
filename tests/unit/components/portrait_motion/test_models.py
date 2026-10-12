@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from stage_gen.components.portrait_motion.models import PortraitMotionResult, PortraitMotionSpec
+from fx_games.components.portrait_motion.models import PortraitMotionResult, PortraitMotionSpec
 
 
 def specification() -> dict[str, Any]:
@@ -42,10 +42,10 @@ def test_valid_spec_keeps_declared_source_and_state_layout() -> None:
 
 
 def test_documented_four_card_example_keeps_independent_blink_and_mouth_states() -> None:
-    """Bind src/stage_gen/workflows/portrait_motion/contract.md to its four-card input."""
+    """Bind src/fx_games/workflows/portrait_motion/contract.md to its four-card input."""
     repository = Path(__file__).resolve().parents[4]
     spec = PortraitMotionSpec.model_validate_json(
-        (repository / "src/stage_gen/workflows/portrait_motion/inputs/four-card.json").read_bytes()
+        (repository / "src/fx_games/workflows/portrait_motion/inputs/four-card.json").read_bytes()
     )
     assert spec.panel_size == (512, 768)
     assert (spec.columns, spec.rows) == (2, 2)

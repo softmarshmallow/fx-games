@@ -28,7 +28,7 @@ from grida.fx import Group, StepRef, Workflow
 from demo_game_tools.kits.ui_art.nodes import document_roles
 from demo_game_tools.media.ui import GameUi
 from demo_game_tools.steps.ui_atlas import add_ui_sheet_steps
-from stage_gen.image_style import ImageAssetKind
+from fx_games.image_style import ImageAssetKind
 from the_grain_pipeline.dialogue_scene.build import (
     PLAN_SYSTEM,
     PROVIDER_BACKGROUND_HEIGHT,

@@ -9,7 +9,7 @@ A side-scrolling level is drawn in layers: a sky, a far horizon, a midground, an
 the player. The camera moves each one at its own speed, and that difference is what reads as depth.
 Every layer has to repeat without end, and a strip whose two ends do not meet shows a seam once
 every period. Mirroring the strip hides the seam and shows every landmark twice, facing itself.
-Stage Gen draws each layer from the map's reference picture and tests it as it came back. A layer
+FX Games draws each layer from the map's reference picture and tests it as it came back. A layer
 that does not loop has its own wrap moved to the middle of a canvas the image model repaints, and
 the repaint is cut back in along the path where it agrees with the drawing. The wrap and both cuts
 are measured against the layer's own columns, and the layer is trimmed and placed for the game.
@@ -19,7 +19,7 @@ are measured against the layer's own columns, and the layer is trimmed and place
 <Try>
 <Agent>
 
-Make the scrolling backgrounds for a side-view platformer map from <Ref input="reference">this picture</Ref>, with Stage Gen's map layers described in `godot/games/bellweather/docs/map-generation-contract.md`. Start from a copy of the Bellweather package in `godot/games/bellweather/inputs/default`, put the picture in `references/`, and describe the map's layers far to near in its file under `maps/`, as `maps/sunpetal-crossing.toml` does, with `loop_construction = "seam_repaint"`.
+Make the scrolling backgrounds for a side-view platformer map from <Ref input="reference">this picture</Ref>, with FX Games' map layers described in `godot/games/bellweather/docs/map-generation-contract.md`. Start from a copy of the Bellweather package in `godot/games/bellweather/inputs/default`, put the picture in `references/`, and describe the map's layers far to near in its file under `maps/`, as `maps/sunpetal-crossing.toml` does, with `loop_construction = "seam_repaint"`.
 
 Plan it first. Then build the world part live, and show me every layer tiled across its wrap, with the path where each repaint was cut in.
 

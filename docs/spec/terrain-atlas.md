@@ -8,7 +8,7 @@ atlas. It is not a 9-slice and it does not encode true smooth slopes.
 
 ## Ownership
 
-- `stage_gen.media.guide_lattice` owns reusable guide detection, used once to
+- `fx_games.media.guide_lattice` owns reusable guide detection, used once to
   read the attributed template's own cells when the paint target is packed.
 - `demo_game_tools.kits.sideview_terrain.atlas` owns the paint target, strict
   paintover prompting and admission, fixed-pitch slicing and connector
@@ -112,7 +112,7 @@ The current deterministic assembly identity is
 change must advance that identity so cached paintovers cannot mask stale atlases.
 
 The machine-readable lookup in
-`stage_gen/resources/terrain/godot_3x3_minimal_lookup_v1.json` is authoritative.
+`fx_games/resources/terrain/godot_3x3_minimal_lookup_v1.json` is authoritative.
 The tracked companion
 [`docs/spec/terrain-atlas-topology-reference.md`](terrain-atlas-topology-reference.md)
 explains every atlas coordinate and mask beside the attributed reference image;

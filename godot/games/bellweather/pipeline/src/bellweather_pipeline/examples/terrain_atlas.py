@@ -18,7 +18,7 @@ from PIL import Image, ImageDraw
 from pydantic import BaseModel, ConfigDict
 
 from demo_game_tools.kits.sideview_terrain.atlas import terrain_atlas_paint_target
-from stage_gen.examples import (
+from fx_games.examples import (
     ImportRequest,
     index,
     models_of,
@@ -26,7 +26,7 @@ from stage_gen.examples import (
     relative_to_base,
     source_run,
 )
-from stage_gen.resources import terrain_atlas_lookup_path, terrain_atlas_template_path
+from fx_games.resources import terrain_atlas_lookup_path, terrain_atlas_template_path
 
 from ._common import (
     Imported,

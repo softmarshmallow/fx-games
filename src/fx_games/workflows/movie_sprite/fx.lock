@@ -1,0 +1,6 @@
+# fx.lock: the source behind each versioned node type; commit it
+fx: lock/v1
+nodes:
+  nodes/finish.py#finish@1: 30bef9a661186debda33ae14812266744c25c22829674b4dcfafb3ff735d6b37
+  nodes/take.py#green_plate@1: b0e0bc10536832a456086f243f6e5c28f2938b8f0d048412b6c4438b8b5ff14e
+  nodes/take.py#idle_brief@1: 7ce60b2ee090663047f7b1bcefc72a9d909e6ff04a6e57d67e3742f8aa82d4f4

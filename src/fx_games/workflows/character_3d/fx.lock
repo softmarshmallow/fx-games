@@ -1,0 +1,16 @@
+# fx.lock: the source behind each versioned node type; commit it
+fx: lock/v1
+nodes:
+  nodes/assembly.py#assemble@1: b79a5af9b347f50b440b97d9c464500cb8041f661f96eac1b6a50988d30224db
+  nodes/assembly.py#review@1: 1b4bb90e5d2ec3acd52017563d407b4dbe6af2f017fe44382bf15fff1f910b3e
+  nodes/calibration.py#subject@1: c9cd86cecb6f0197769036344a6a7039f33916c0433fd82ac4dcd03406477c2f
+  nodes/parts.py#normalize@1: 3230c82d9edcf0559080b1d7468251701f3d520ab3b3335a4de048d84784e4b4
+  nodes/parts.py#review@1: 6f03649793c9fb625da2ec9ce0a5c858f0dbea9d108576fd15eee1198f406bdd
+  nodes/references.py#draw@1: 7fa143ec5df5bac1ad8357bc739537738d7c9e5151cce0671189d145e96aadc1
+  nodes/references.py#review@1: 79fbe39fb3d0e7a0c07722d0e980ed9be7b727988b08d84e58c6c5cfa8906a5f
+  nodes/references.py#role_views@2: 63dce34396393d38f866844323317350af4ce962cad2acdd48533271d06cbfe0
+  nodes/result.py#result@1: 1f5d684a5bdcc3251a85ca20a257f7857acf811f84d30da9cf925ccc9247dd6f
+  nodes/rig.py#agent@1: 3dbcaa80e21d18c0035eddff3b82466b7521bf3b1f42360585423f85a1020d8f
+  nodes/rig.py#finish@1: ffa955de26b6079c146c1855304bdec036c9ea72bcac2ce6f1fa26aa18bc107c
+  nodes/rig.py#review@3: 14f1792fc57347c299a0afa94d492c6ea589aec6cbe9e4f01f3b1fe063e30283
+  nodes/setup.py#setup@3: a44ed51d322aef21b470999af84d7a30da55dad66e98149d2d7e2327a6cc5c30

@@ -31,12 +31,12 @@ from demo_game_tools.kits.screen_art.layouts import (
     Rect,
     ShellLayout,
 )
-from stage_gen.media import (
+from fx_games.media import (
     REGION_CONTRAST_MIN,
     REGION_LUMA_STD_MAX,
     region_contrast_stats,
 )
-from stage_gen.media.codec import decode_rgba, encode_png
+from fx_games.media.codec import decode_rgba, encode_png
 
 #: The gate's own identity. Bumping it re-runs the local admission over cached plates
 #: without re-billing the image above it.

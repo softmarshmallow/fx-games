@@ -6,9 +6,9 @@ from pathlib import Path
 
 from grida.fx import run_async
 
-from stage_gen.examples import ImportRequest, MadeBy, currency, verify, write_example
-from stage_gen.workflows._registry import load_code
-from stage_gen.workflows.movie_sprite.inputs.supplied_clip.make_inputs import make_inputs
+from fx_games.examples import ImportRequest, MadeBy, currency, verify, write_example
+from fx_games.workflows._registry import load_code
+from fx_games.workflows.movie_sprite.inputs.supplied_clip.make_inputs import make_inputs
 from tests.unit._fx import scratch_project
 
 

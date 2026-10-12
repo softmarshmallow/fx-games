@@ -2,7 +2,7 @@
 
 The site's TypeScript parsers read these fixtures in their Bun tests. Here the same
 files are held to the Python side of each contract, so neither half can drift unseen: the
-example and its ledger against ``stage_gen.examples``, and the catalog against the structure
+example and its ledger against ``fx_games.examples``, and the catalog against the structure
 ``scripts/catalog.py`` actually writes, built here over a store holding the fixture's
 game example.
 """
@@ -16,7 +16,7 @@ from typing import Any
 
 import pytest
 
-from stage_gen.examples import (
+from fx_games.examples import (
     ENTRY_FILE,
     EXAMPLE_FILE,
     FIGURES_FILE,
@@ -24,8 +24,8 @@ from stage_gen.examples import (
     GameExampleEntry,
     WorkflowExample,
 )
-from stage_gen.workflows._catalog import CATALOG_KIND, build
-from stage_gen.workflows._registry import ExampleEntry, WorkflowManifest
+from fx_games.workflows._catalog import CATALOG_KIND, build
+from fx_games.workflows._registry import ExampleEntry, WorkflowManifest
 
 CONTRACTS = Path(__file__).resolve().parents[2] / "web" / "site" / "lib" / "contracts"
 

@@ -9,7 +9,7 @@ import sys
 import zipfile
 from pathlib import Path
 
-from stage_gen.provider_env import PROVIDER_ENV_KEYS
+from fx_games.provider_env import PROVIDER_ENV_KEYS
 
 
 def _install_wheel(repository: Path, tmp_path: Path, environment: dict[str, str]) -> Path:
@@ -58,12 +58,12 @@ class NoConsumers(importlib.abc.MetaPathFinder):
         }:
             raise AssertionError('Public surface imported optional consumer: ' + fullname)
 sys.meta_path.insert(0, NoConsumers())
-import stage_gen.runview
-import stage_gen.application
-import stage_gen.components
-for module in pkgutil.iter_modules(stage_gen.components.__path__):
+import fx_games.runview
+import fx_games.application
+import fx_games.components
+for module in pkgutil.iter_modules(fx_games.components.__path__):
     if module.ispkg and not module.name.startswith('_'):
-        importlib.import_module('stage_gen.components.' + module.name)
+        importlib.import_module('fx_games.components.' + module.name)
 assert not any(
     name.split('.')[0] in {
         'stage_gen_legacy', 'demo_game_tools', 'demo_game_collection',
@@ -109,8 +109,8 @@ class NoConsumers(importlib.abc.MetaPathFinder):
             raise AssertionError('Product collection attempted an optional import: ' + fullname)
 sys.meta_path.insert(0, NoConsumers())
 from scripts.test_ownership import paths_for
-import stage_gen
-assert Path(stage_gen.__file__).is_relative_to(installed)
+import fx_games
+assert Path(fx_games.__file__).is_relative_to(installed)
 import pytest
 status = pytest.main(['--collect-only', '-q', *paths_for(repository, 'product')])
 assert not attempted, sorted(attempted)

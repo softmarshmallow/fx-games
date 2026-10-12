@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from stage_gen.components import portrait_motion
+from fx_games.components import portrait_motion
 
 REQUIRED = {
     "MotionState",
@@ -52,15 +52,15 @@ def test_public_component_surface_is_complete_without_loading_experiments() -> N
     ],
 )
 def test_capability_modules_are_ordinary_package_imports(module: str) -> None:
-    loaded = importlib.import_module(f"stage_gen.components.portrait_motion.{module}")
+    loaded = importlib.import_module(f"fx_games.components.portrait_motion.{module}")
     assert loaded.__file__ is not None
     assert Path(loaded.__file__).resolve().parent == component_root()
-    assert loaded.__package__ == "stage_gen.components.portrait_motion"
+    assert loaded.__package__ == "fx_games.components.portrait_motion"
 
 
 def test_component_imports_respect_provider_and_composition_boundaries() -> None:
     forbidden = (
-        "stage_gen.recipes",
+        "fx_games.recipes",
         "repainting",
         "native_preview",
         "four_panel",

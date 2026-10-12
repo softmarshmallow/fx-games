@@ -12,7 +12,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any, cast
 from urllib.parse import parse_qsl, urlsplit
 
-from stage_gen.media import inspect_image
+from fx_games.media import inspect_image
 
 JsonObject = dict[str, Any]
 

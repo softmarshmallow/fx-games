@@ -14,7 +14,7 @@ from demo_game_tools.kits.ui_art.atlas import (
 )
 from demo_game_tools.kits.ui_art.cursors import CURSOR_ALPHA_POLICY, CURSOR_SET_LAYOUT
 from demo_game_tools.kits.ui_art.icons import ICON_ALPHA_POLICY, PREVIEW_ICONS_LAYOUT
-from stage_gen.components._game_input import (
+from fx_games.components._game_input import (
     SHA256_PATTERN,
     SNAKE_ID_PATTERN,
     normalized_text,
@@ -22,7 +22,7 @@ from stage_gen.components._game_input import (
     portable_relative_path,
     unique_values,
 )
-from stage_gen.contracts import PersistedContractModel
+from fx_games.contracts import PersistedContractModel
 
 UI_ART_SCHEMA_VERSION = 1
 

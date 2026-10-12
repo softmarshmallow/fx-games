@@ -6,7 +6,7 @@ sprite bursts and emitters, text sets and intertitles, voice playback and
 processing, fingertip contact, and a compatibility facade for confined content loading.
 
 This is an independently usable package within the [Godot example project](../../CHARTER.md).
-Its presentation contract is local to this package. It does not define Stage Gen's
+Its presentation contract is local to this package. It does not define FX Games'
 asset contract or require other Godot frameworks to have the same scope.
 
 The payload is [addons/game_presentation](addons/game_presentation/README.md):

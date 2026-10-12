@@ -11,7 +11,7 @@ from pathlib import Path
 from types import ModuleType
 
 REPOSITORY = Path(__file__).resolve().parents[3]
-MANIFEST = REPOSITORY / "src/stage_gen/workflows/movie_sprite/workflow.toml"
+MANIFEST = REPOSITORY / "src/fx_games/workflows/movie_sprite/workflow.toml"
 
 
 def _load_script() -> ModuleType:

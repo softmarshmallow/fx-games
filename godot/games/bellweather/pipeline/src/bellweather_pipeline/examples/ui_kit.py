@@ -28,7 +28,7 @@ from demo_game_tools.kits.ui_art import (
     render_atlas_template,
 )
 from demo_game_tools.kits.ui_art.icons import render_icon_template
-from stage_gen.examples import (
+from fx_games.examples import (
     ImportRequest,
     Media,
     RecordingReader,

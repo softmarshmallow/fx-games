@@ -62,7 +62,7 @@ alone. Lanes never wait on the director; they decide, record, and continue.
 | Lane | Owns | Delivers |
 |---|---|---|
 | **Story** | `godot/legacy/inputs/the_grain/scenarios/`, `characters/`, room documents' narration | The episode as movement scenarios and two rooms, in the closed vocabularies, from the outline and the novel |
-| **Contract** | `src/stage_gen/components/`, `src/stage_gen/recipes/`, `docs/spec/game/` | The case container, five-slot staging, movement chaining with a shared fact namespace, proofs and tests |
+| **Contract** | `src/fx_games/components/`, `src/fx_games/recipes/`, `docs/spec/game/` | The case container, five-slot staging, movement chaining with a shared fact namespace, proofs and tests |
 | **Art** | `godot/legacy/inputs/the_grain/references/`, stage and cast briefs, `ui.toml`, runs under `out/the-grain-*` | Cover, cast plates and expressions, stages, room backdrops and hotspots, UI atlas, music |
 | **Consumer** | `web/lib/scenario/`, `web/lib/dialogue-scene/`, `web/lib/pointclick/`, `web/lib/shell/`, `web/app/` | Case playback (scene → room → scene), five slots and speaker composition, resume and backlog, music |
 | **QA** | `godot/legacy/inputs/the_grain/PILOT.md`, screenshots, gates | Plays every build in the browser, files defects to the owning lane, keeps the evidence |

@@ -1,6 +1,6 @@
 # Bellweather
 
-A maintained side-scrolling platformer that consumes Stage Gen asset runs.
+A maintained side-scrolling platformer that consumes FX Games asset runs.
 This project owns its gameplay, content interpretation and Godot composition.
 
 From the repository root, import the project once after cloning or moving scripts,
@@ -33,7 +33,7 @@ game's configuration.
   the examples this game made: its parallax backgrounds, terrain tiles, UI kit and animation set.
   Each needs the whole game package, so none is a product workflow. `demo-games example export
   bellweather` checks each one against its runs and pins and writes it into the local example
-  store through the product's public `stage_gen.examples` contract. All four were made by this
+  store through the product's public `fx_games.examples` contract. All four were made by this
   game's earlier builder, before it ran on Grida FX, and are kept as records of it until one is
   imported from an FX run.
 

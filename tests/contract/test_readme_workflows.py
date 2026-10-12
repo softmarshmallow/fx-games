@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from stage_gen.workflows._registry import discover
+from fx_games.workflows._registry import discover
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 README = REPOSITORY_ROOT / "README.md"
@@ -27,7 +27,7 @@ def _table_rows() -> list[tuple[str, str, str]]:
     rows: list[tuple[str, str, str]] = []
     for line in table[2:]:
         title, identifier, promise = (cell.strip() for cell in line.strip("|").split("|"))
-        linked = re.fullmatch(r"\[(.+)\]\((src/stage_gen/workflows/\w+/page\.mdx)\)", title)
+        linked = re.fullmatch(r"\[(.+)\]\((src/fx_games/workflows/\w+/page\.mdx)\)", title)
         assert linked is not None, title
         assert (REPOSITORY_ROOT / linked.group(2)).is_file(), linked.group(2)
         rows.append((linked.group(1), identifier.strip("`"), promise))

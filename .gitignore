@@ -111,7 +111,7 @@ next-env.d.ts
 .fx/
 # Personal picks on the first-party sample workflows (by id from the root, or by path)
 /*.takes.yaml
-/src/stage_gen/workflows/**/*.takes.yaml
+/src/fx_games/workflows/**/*.takes.yaml
 codex-session-*.md
 /tmp/
 

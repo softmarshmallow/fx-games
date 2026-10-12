@@ -10,7 +10,7 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-COMPONENTS = Path(__file__).resolve().parents[2] / "src" / "stage_gen" / "components"
+COMPONENTS = Path(__file__).resolve().parents[2] / "src" / "fx_games" / "components"
 
 #: Node modules that declare types without the family's graph helper, with the card
 #: that owns closing the gap. Shrinks; never grows without a card. Empty since D9 closed

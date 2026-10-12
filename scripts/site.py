@@ -34,7 +34,7 @@ import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
-from stage_gen.provider_env import PROVIDER_ENV_KEYS
+from fx_games.provider_env import PROVIDER_ENV_KEYS
 
 REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
 SITE_ROOT = REPOSITORY_ROOT / "web" / "site"
@@ -77,7 +77,7 @@ def _inside(path: Path, root: Path, label: str) -> Path:
 
 
 def export_catalog(examples: Path, *, allow_missing_examples: bool) -> dict[str, object]:
-    from stage_gen.workflows._catalog import export
+    from fx_games.workflows._catalog import export
 
     if CATALOG_ROOT.exists():
         shutil.rmtree(CATALOG_ROOT)

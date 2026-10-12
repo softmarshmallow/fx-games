@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import TextIO
 
-from stage_gen.application import (
+from fx_games.application import (
     UsageError as CliUsageError,
 )
 from the_grain_pipeline.case import ResolvedCase, read_case_catalog, resolve_case

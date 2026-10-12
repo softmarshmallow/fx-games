@@ -1,5 +1,5 @@
 {
-  "name": "@stage-gen/site",
+  "name": "@fx-games/site",
   "private": true,
   "version": "0.0.0",
   "packageManager": "bun@1.4.0",

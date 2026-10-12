@@ -12,12 +12,12 @@ from typing import Any
 from grida.fx import Answer, RunResult, StandInCall, run_async
 from PIL import Image
 
-from stage_gen.workflows.universe import models
+from fx_games.workflows.universe import models
 from tests.unit._fx import caches, schema_of, scratch_project, verify
 from tests.unit.workflows.universe._universe_fixture import entity_direction
 
 REPOSITORY = Path(__file__).resolve().parents[4]
-LANTERN = REPOSITORY / "src/stage_gen/workflows/universe/inputs/lantern_ferry/inputs.yaml"
+LANTERN = REPOSITORY / "src/fx_games/workflows/universe/inputs/lantern_ferry/inputs.yaml"
 ADMITTED = json.loads(
     (
         REPOSITORY / "tests/contract/fixtures/universe/lantern_ferry.admitted-universe.json"

@@ -4,8 +4,8 @@ extends RefCounted
 ## Where a stopped case is kept, and where its ending goes.
 ##
 ## `genres/case/save.gd` decides what a save *is*; this decides where it lives.
-## The browser keeps both in `localStorage` under `stage_gen.case_save.<tag>` and
-## `stage_gen.case_result.<tag>`; a host keeps them in `user://`, which is the
+## The browser keeps both in `localStorage` under `fx_games.case_save.<tag>` and
+## `fx_games.case_result.<tag>`; a host keeps them in `user://`, which is the
 ## one directory a Godot game may write to and the only place in this project
 ## that is not a run directory.
 ##

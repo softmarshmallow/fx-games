@@ -10,8 +10,8 @@ from PIL import Image
 
 from demo_game_tools.kits.character_profile import canonical_character_profile_json
 from demo_game_tools.kits.ui_art.nodes import UI_SHEET_ROLES, sheet_family
-from stage_gen.image_prompting import load_image_style_resources, materialize_style_anchor
-from stage_gen.image_style import StyleModeSelection
+from fx_games.image_prompting import load_image_style_resources, materialize_style_anchor
+from fx_games.image_style import StyleModeSelection
 from tests.unit._ui_atlas_fixture import ui_sheet
 from the_grain_pipeline.dialogue_scene.identity import (
     canonical_json_bytes,

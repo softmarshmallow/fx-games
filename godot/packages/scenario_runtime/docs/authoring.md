@@ -11,7 +11,7 @@ python -m pip install ./godot/packages/scenario_runtime/authoring
 scenario-authoring --help
 ```
 
-This installs `stagegen-scenario` with Pydantic. It needs no Stage Gen, Grida FX,
+This installs `scenario-authoring` with Pydantic. It needs no FX Games, Grida FX,
 provider credentials or named game. Already compiled programs play without it.
 
 A normal edit changes `.scenario`, localized text or the game catalog, then runs

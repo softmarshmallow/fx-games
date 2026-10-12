@@ -13,12 +13,12 @@ from typing import Any
 from grida.fx import Ctx, node
 
 from demo_game_tools.kits.sideview_actor.motion_geometry import DEFAULT_MOTION_ATLAS_GEOMETRY
+from fx_games.media.sprite_sheets import AlphaComponentRepackContract, repack_alpha_components
 from iron_petal_unit_pipeline.admission import (
     admit_motion_candidate,
     admit_transparent_sprite,
     motion_source_facts,
 )
-from stage_gen.media.sprite_sheets import AlphaComponentRepackContract, repack_alpha_components
 
 #: The canvas an identity concept is drawn at.
 CONCEPT_SIZE = (1024, 1536)

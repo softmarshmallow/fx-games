@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from fx_games.components._game_input import AuthoredContractLoadError
 from iron_petal_unit_pipeline.fx import (
     CUT_IN_FRAME_LAYOUT,
     CUT_IN_PORTRAIT_LAYOUT,
@@ -12,7 +13,6 @@ from iron_petal_unit_pipeline.fx import (
     FX_RESERVED_MOMENTS,
     load_game_fx_bytes,
 )
-from stage_gen.components._game_input import AuthoredContractLoadError
 
 PACKAGE = Path(__file__).resolve().parents[3] / "godot/games/iron_petal_unit/inputs"
 

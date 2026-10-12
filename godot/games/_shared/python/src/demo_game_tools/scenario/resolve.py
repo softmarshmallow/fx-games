@@ -20,11 +20,11 @@ from demo_game_tools.authored_package import (
     read_digest_bound_member,
     read_package_member,
 )
-from scenario_authoring.compatibility.v2 import parse_scenario
-from stage_gen.components._game_input import (
+from fx_games.components._game_input import (
     parse_toml_contract,
     sha256_bytes,
 )
+from scenario_authoring.compatibility.v2 import parse_scenario
 
 from .compile import admit_scenario, compile_scenario
 from .models import (

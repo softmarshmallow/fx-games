@@ -28,7 +28,7 @@ def test_narrative_declarations_require_no_game_or_generation_metadata() -> None
 
 
 def test_source_dependency_closure_is_standalone() -> None:
-    forbidden = {"stage_gen", "grida", "demo_game_tools", "demo_game_collection"}
+    forbidden = {"fx_games", "grida", "demo_game_tools", "demo_game_collection"}
     for path in (PACKAGE / "src").rglob("*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
@@ -52,7 +52,7 @@ import json
 import sys
 sys.path.insert(0, sys.argv[1])
 sys.path.insert(1, sys.argv[2])
-for name in ("stage_gen", "grida", "demo_game_tools", "demo_game_collection"):
+for name in ("fx_games", "grida", "demo_game_tools", "demo_game_collection"):
     assert importlib.util.find_spec(name) is None, name
 import scenario_authoring
 from scenario_authoring.compatibility.v2 import (

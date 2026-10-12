@@ -7,7 +7,7 @@ Content contains data, never code or a story-specific callback implementation.
 
 Install this complete payload at `res://addons/scenario_runtime/`, together with
 `sdk.json`'s `game_presentation` and `content_io` dependencies. Preserve licenses,
-JSON schemas/catalogs, shader dependencies and source UIDs. No Python, Stage Gen,
+JSON schemas/catalogs, shader dependencies and source UIDs. No Python, FX Games,
 provider or named game is needed to play already compiled content. Version
 metadata describes the local source package and is not a published release.
 

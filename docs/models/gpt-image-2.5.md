@@ -246,7 +246,7 @@ Primary sources:
 
 ## Repository boundary
 
-Stage Gen's image routes are Sunburst only, at `quality: max`. Flare, bare
+FX Games' image routes are Sunburst only, at `quality: max`. Flare, bare
 `gpt-image-2.5`, dated aliases, and arbitrary model overrides are not routes.
 OpenAI is used only through the Images API; the Responses image tool is
 intentionally not a route because it rewrites prompts and has a different

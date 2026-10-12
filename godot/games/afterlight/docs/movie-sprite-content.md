@@ -9,7 +9,7 @@ runtime textures. A separately swappable facial base is not implemented here.
 
 Status: **Afterlight-local prepared content, version 1**. This is the content
 preparation boundary for the [local diagnostic](movie-sprite-diagnostic.md), not a public
-Stage Gen asset contract or promotion of the generation module. The existing
+FX Games asset contract or promotion of the generation module. The existing
 repaint pipeline and its `portrait-face-motion-v1` manifests remain unchanged.
 
 ## Preparation and ownership

@@ -111,7 +111,7 @@ What is deferred is where that Git history lives. About 160 MB of media per
 art round does not belong in the generator's history, so the Godot line, the
 presentation SDK with its template and games, is proposed to move to its own
 repository; the topology and the steps are in
-[issue #14](https://github.com/softmarshmallow/stage-gen/issues/14). Until
+[issue #14](https://github.com/softmarshmallow/fx-games/issues/14). Until
 that is settled, the media stays on the authoring machine and this repository
 tracks only code, catalogs and digests, with the storage policy unchanged.
 Only what a game reaches is tracked: `python3 godot/tools/unused_assets.py

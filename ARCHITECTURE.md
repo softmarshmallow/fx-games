@@ -1,17 +1,17 @@
 # Architecture
 
-Stage Gen provides asset-pipeline authoring, execution and inspection. Consumers own what
+FX Games provides asset-pipeline authoring, execution and inspection. Consumers own what
 those assets mean in a complete application. Dependencies point from consumers to workflows
 and components, then to Grida FX, the engine; the product never imports its example games.
 
 ## Two products in one repository
 
-Stage Gen is the main asset-generation product. The Godot example project is a separately
+FX Games is the main asset-generation product. The Godot example project is a separately
 owned consumer product, demonstrating asset use in complete games and developing its own
 runtime packages, templates and tools. Its continuing purpose and internal review criteria
 are defined in the [Godot project charter](godot/CHARTER.md).
 
-The Godot directory serves as engine-specific examples for Stage Gen. Internally, it can
+The Godot directory serves as engine-specific examples for FX Games. Internally, it can
 evolve as its own project: sharing game systems, extracting packages or reviewing
 visual-novel implementations does not expand the main product's scope. The asset product
 remains useful without Godot. It runs on Grida FX, a separate public product
@@ -21,7 +21,7 @@ ownership boundary. Co-location does not require common game formats or synchron
 ## Layers
 
 Each layer imports only the layers above it in this list, with one named exception: the glue
-reads the registry's declarations in `_registry.py` (`_fx.py` does, and `stage_gen.runview`
+reads the registry's declarations in `_registry.py` (`_fx.py` does, and `fx_games.runview`
 lazily, to find an installed workflow's file again). The import rules below are what the
 tests enforce; this ordering is not tested.
 
@@ -29,25 +29,25 @@ tests enforce; this ordering is not tested.
    pinned as a submodule. It owns the workflow file with its expander, planner, node host,
    store, runner and spending ceiling, the run record, the `python -m grida.fx` command, its
    built-in node types (`fx/<type>@1`), its route table, the provider adapters with their
-   retries, and the key loader. FX imports no Stage Gen package, workflow, game or brand, and
-   Stage Gen imports only its public names.
-2. **Glue** (`src/stage_gen/workflows/_fx.py`, `src/stage_gen/runview/`): Stage Gen reads FX
+   retries, and the key loader. FX imports no FX Games package, workflow, game or brand, and
+   FX Games imports only its public names.
+2. **Glue** (`src/fx_games/workflows/_fx.py`, `src/fx_games/runview/`): FX Games reads FX
    plans for its catalog and checks and writes the scratch projects its code plans in, and
-   projects FX run folders to run views (`stage-gen-run-view-v1`) for the examples store. It adds
+   projects FX run folders to run views (`fx-games-run-view-v1`) for the examples store. It adds
    no graph engine of its own: every workflow, game build and user project is an FX workflow
    file or Python builder.
-3. **Components** (`src/stage_gen/components/`): bounded building blocks, such as contracts,
+3. **Components** (`src/fx_games/components/`): bounded building blocks, such as contracts,
    prompts, validators and deterministic processing, that a workflow's node types call. A
    component never runs alone and never imports a workflow. Shared workflow-neutral media
-   inspection and transforms belong in `src/stage_gen/media/`. See the
-   [component contract](src/stage_gen/components/README.md).
+   inspection and transforms belong in `src/fx_games/media/`. See the
+   [component contract](src/fx_games/components/README.md).
 4. **Examples.** An example is a frozen export of real runs (`workflow-example-v1`), pinned
    by sha256 in its owner's manifest and kept in the local, gitignored store
-   `out/examples/<owner>/<id>/`; `stage_gen.examples` is its public contract, which reads FX
-   runs through `stage_gen.runview`, imports no workflow, and which workflow importers and
+   `out/examples/<owner>/<id>/`; `fx_games.examples` is its public contract, which reads FX
+   runs through `fx_games.runview`, imports no workflow, and which workflow importers and
    games use. `scripts/examples.py promote` refuses a stand-in run. `library/` holds
    committed, approved character-3d examples that the catalog builds from tracked files.
-5. **Workflows** (`src/stage_gen/workflows/<id>/`): the product unit. A workflow composes
+5. **Workflows** (`src/fx_games/workflows/<id>/`): the product unit. A workflow composes
    components into one named deliverable and owns its layout, generation and validation
    assumptions. Its folder holds `workflow.yaml` beside its own `fx.yaml` and `fx.lock`,
    `workflow.py` (the code facts read from the workflow file: typed steps over the real node
@@ -64,10 +64,10 @@ tests enforce; this ordering is not tested.
 6. **Runs.** A run is one FX run folder under `out/runs/<workflow id>/`: its plan
    (`plan.json`, `fx-graph-v1`), its record (`events.jsonl`) and its steps' files. Results live
    in the store (`out/fx-cache`), so deleting a run folder loses nothing.
-   `python -m grida.fx inspect` reads a run back, FX's viewer draws it, and `stage_gen.runview`
+   `python -m grida.fx inspect` reads a run back, FX's viewer draws it, and `fx_games.runview`
    projects it for the examples store.
 7. **Surfaces.** `python -m grida.fx` plans, runs and inspects every workflow by its id: the
-   root `fx.yaml` finds them (`workflows: [src/stage_gen/workflows]`), and
+   root `fx.yaml` finds them (`workflows: [src/fx_games/workflows]`), and
    `python -m grida.fx start` serves FX's viewer over their runs. The [site](docs/site.md)
    (`web/site`) is built from the catalog export and the example store. It is the one Bun
    package and the only Node boundary, and keeps its players and data contracts in
@@ -85,14 +85,14 @@ matched at least one file:
 
 - FX is imported only as `from grida.fx import X`, with `X` one of its public names, by the
   product, its tests and scripts, and the games' pipelines and tools.
-- Stage Gen's utilities (`contracts`, `fs`, `provenance`, `canonical`, `media`) import no
+- FX Games' utilities (`contracts`, `fs`, `provenance`, `canonical`, `media`) import no
   engine, and no Python source in the product names an image model: routes live in `fx.yaml`.
-- The retired modules (the old engine's packages, `stage_gen.orchestration`, the route-policy
+- The retired modules (the old engine's packages, `fx_games.orchestration`, the route-policy
   modules and the rest the test lists) are gone, and nothing imports them.
 - Workflows never import each other. A workflow may import its own package,
-  `stage_gen.workflows._registry` and `stage_gen.workflows._fx`.
+  `fx_games.workflows._registry` and `fx_games.workflows._fx`.
 - Components import no workflow; the registry, catalog, checks, `_fx.py`
-  and `stage_gen.examples` import no workflow either.
+  and `fx_games.examples` import no workflow either.
 - The product imports no game, and no optional consumer.
 
 ## Identity is frozen where it is persisted
@@ -141,7 +141,7 @@ require users to describe general-purpose computation or gameplay as YAML or TOM
 
 ## Consumers and optional tools
 
-Runs are seen in FX's viewer (`python -m grida.fx start`); Stage Gen keeps no viewer of its own
+Runs are seen in FX's viewer (`python -m grida.fx start`); FX Games keeps no viewer of its own
 ([decision 0075](docs/decisions/0075-runs-are-seen-in-fx.md)). The site never starts a run or
 implements a game's logic.
 
@@ -155,13 +155,13 @@ invocation framework. Its independent Python compiler and native Session executo
 data contract. A game owns and invokes a sequence, grants installed capabilities, and
 retains its world, camera, input, resource bindings and saves. Presentation mechanisms
 remain in the lower `game_presentation` package. This framework imposes no game contract or
-dependency on Stage Gen.
+dependency on FX Games.
 
 Each named game in `godot/games/` owns its authored inputs, optional Python preparation
 package, Godot project, gameplay and asset bindings. Existing TOML readers remain supported
 game formats; GDScript and resources can replace them when that game's needs warrant it. No
 repository-wide selected game exists. A game publishes what it made as examples through
-`stage_gen.examples` (`demo-games example export <game>`); output only a game can make is an
+`fx_games.examples` (`demo-games example export <game>`); output only a game can make is an
 example made by that game, not a workflow, until it has product-owned inputs, a standalone
 product graph and a real product run.
 
@@ -175,7 +175,7 @@ authoring contract.
 
 The current division between game-local code, private shared support and runtime packages
 may change through review within the Godot project. Reuse between games alone does not make
-a mechanism an asset SDK capability. Moving functionality to Stage Gen requires a separate,
+a mechanism an asset SDK capability. Moving functionality to FX Games requires a separate,
 game-independent asset-pipeline responsibility.
 
 `skills/` holds agent skills users install into their own folders (`npx skills add`). Each

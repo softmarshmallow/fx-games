@@ -35,7 +35,7 @@ from demo_game_tools.kits.painted_terrain.projection import (
     GroundProjection,
     GroundProjectionMode,
 )
-from stage_gen.components._game_input import (
+from fx_games.components._game_input import (
     GAME_ID_PATTERN,
     KEBAB_ID_PATTERN,
     SNAKE_ID_PATTERN,
@@ -45,7 +45,7 @@ from stage_gen.components._game_input import (
     sha256_bytes,
     unique_values,
 )
-from stage_gen.contracts import PersistedContractModel
+from fx_games.contracts import PersistedContractModel
 
 RUNNER_TRACK_SCHEMA_VERSION = 4
 

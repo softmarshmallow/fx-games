@@ -1,4 +1,4 @@
-// Parsers for the example contract (stage_gen.examples): `workflow-example-v1`
+// Parsers for the example contract (fx_games.examples): `workflow-example-v1`
 // (example.json) and the entry a game writes for an example it made
 // (`game-example-entry-v1`, entry.json). Wire fields are lower_snake_case; this adapter
 // is the one place they become camelCase runtime shapes.

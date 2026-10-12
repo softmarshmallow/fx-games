@@ -3,10 +3,10 @@
 > **Checked by:** `tests/contract/test_terrain_atlas_cell_reference.py`.
 
 This document explains the topology encoded by
-[`terrain_atlas_godot_topology_reference.png`](../../src/stage_gen/resources/fixtures/image_gen_templates/terrain_atlas_godot_topology_reference.png).
+[`terrain_atlas_godot_topology_reference.png`](../../src/fx_games/resources/fixtures/image_gen_templates/terrain_atlas_godot_topology_reference.png).
 It is a cell-by-cell companion to the image, not an alternative lookup contract.
 The authoritative machine-readable mapping is
-`src/stage_gen/resources/terrain/godot_3x3_minimal_lookup_v1.json`.
+`src/fx_games/resources/terrain/godot_3x3_minimal_lookup_v1.json`.
 
 The atlas uses the 47 reachable masks of Godot's historical **3x3 (minimal)**
 autotile mode. It is a 12-column by 4-row terrain atlas with 47 selectable
@@ -157,4 +157,4 @@ Sources:
 - <https://docs.godotengine.org/en/latest/tutorials/2d/using_tilesets.html>
 - `docs/spec/terrain-atlas.md`
 - `godot/games/_shared/python/src/demo_game_tools/kits/sideview_terrain/atlas.py`
-- `src/stage_gen/resources/terrain/godot_3x3_minimal_lookup_v1.json`
+- `src/fx_games/resources/terrain/godot_3x3_minimal_lookup_v1.json`

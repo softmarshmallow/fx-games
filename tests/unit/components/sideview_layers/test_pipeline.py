@@ -7,16 +7,16 @@ import io
 import pytest
 from PIL import Image, ImageDraw
 
-from stage_gen.components.sideview_layers.contract import resolve_layer_placement
-from stage_gen.components.sideview_layers.pipeline import (
+from fx_games.components.sideview_layers.contract import resolve_layer_placement
+from fx_games.components.sideview_layers.pipeline import (
     assemble_loop,
     construct_deterministic,
     loop_conditioning,
     loop_layer,
     validate_provider_image,
 )
-from stage_gen.media import LOOP_METHODS, LoopConstruction
-from stage_gen.media.layer_rasters import (
+from fx_games.media import LOOP_METHODS, LoopConstruction
+from fx_games.media.layer_rasters import (
     seal_offset_fraction,
     top_seal_offset_fraction,
     trim_layer_to_alpha_box,

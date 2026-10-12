@@ -495,8 +495,8 @@ def pinned_audio(package: Path, data: bytes) -> str:
     uses, so what the fixture pins is exactly what a person would pin.
     """
 
-    from stage_gen.contracts import BinaryArtifact
-    from stage_gen.provenance import (
+    from fx_games.contracts import BinaryArtifact
+    from fx_games.provenance import (
         ProvenanceInput,
         SoftwareIdentity,
         write_artifact_with_provenance,

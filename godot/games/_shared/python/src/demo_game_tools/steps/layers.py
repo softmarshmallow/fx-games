@@ -14,18 +14,18 @@ from typing import Any, cast
 
 from grida.fx import Ctx, Group, StepRef, node
 
-from stage_gen.components.sideview_layers.models import LayerRequest
-from stage_gen.components.sideview_layers.pipeline import loop_layer as construct_loop
-from stage_gen.components.sideview_layers.publish import (
+from fx_games.components.sideview_layers.models import LayerRequest
+from fx_games.components.sideview_layers.pipeline import loop_layer as construct_loop
+from fx_games.components.sideview_layers.publish import (
     LayerGate,
     admit_layer_candidate,
     bounded_repeat_preview,
 )
-from stage_gen.components.sideview_layers.publish import (
+from fx_games.components.sideview_layers.publish import (
     publish_layer as publish_loop_unit,
 )
-from stage_gen.media import LOOP_METHODS, LoopConstruction
-from stage_gen.media.loop_construction import SeamConditioning
+from fx_games.media import LOOP_METHODS, LoopConstruction
+from fx_games.media.loop_construction import SeamConditioning
 
 #: Takes a painted layer gets before the run stops on it.
 LAYER_TAKES = 6

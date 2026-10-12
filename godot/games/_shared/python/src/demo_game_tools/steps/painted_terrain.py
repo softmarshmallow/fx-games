@@ -32,7 +32,7 @@ from demo_game_tools.kits.painted_terrain.validate import (
     painted_terrain_join_discontinuity,
     validate_painted_terrain_source,
 )
-from stage_gen.media.codec import decode_rgba
+from fx_games.media.codec import decode_rgba
 
 #: Paintings a segment gets before the run stops on it.
 SEGMENT_TAKES = 6

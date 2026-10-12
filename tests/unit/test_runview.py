@@ -19,7 +19,7 @@ import pytest
 from grida.fx import Answer, RunResult, StandInCall, run
 from PIL import Image
 
-from stage_gen.runview import (
+from fx_games.runview import (
     find_file,
     is_fx_run,
     is_stand_in,
@@ -30,7 +30,7 @@ from stage_gen.runview import (
     store_of,
     verify_run,
 )
-from stage_gen.workflows._fx import write_project
+from fx_games.workflows._fx import write_project
 from tests.unit._fx import failures
 
 ROUTE = "gpt-image-2.5-sunburst@openai"
@@ -149,7 +149,7 @@ def test_the_run_view_names_every_file_where_fx_placed_it(flow: RunResult) -> No
     assert projected["draw#2"] == ["files/draw#2/image.png"]
     assert projected["words['lantern'].loud#1"] == ["files/words__lantern__.loud/text.txt"]
     assert verify_run(flow.run_dir) == []
-    assert view.kind == "stage-gen-run-view-v1" and view.schema_version == 4
+    assert view.kind == "fx-games-run-view-v1" and view.schema_version == 4
     assert view.run_state == "succeeded" and view.known_cost_usd == 0
     draw = next(node for node in view.nodes if node.node_id == "draw#1")
     assert (draw.operation, draw.model, draw.provider) == ("image.generate", *ROUTE.split("@"))

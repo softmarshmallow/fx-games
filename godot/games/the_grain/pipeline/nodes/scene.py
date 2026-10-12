@@ -15,7 +15,7 @@ from typing import Any
 
 from grida.fx import Ctx, node
 
-from stage_gen.media import probe_audio, validate_music_payload
+from fx_games.media import probe_audio, validate_music_payload
 from the_grain_pipeline.dialogue_scene.build import (
     canonical_sprite,
     check_scene_image,

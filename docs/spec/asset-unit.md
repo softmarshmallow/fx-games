@@ -61,7 +61,7 @@ defect, caught by proportion review rather than by scale admission.
   ladder, the floor, and validation that every declared class resolves.
 - `demo_game_tools.input_formats.sideview_content` owns the per-entity
   declaration fields and their bounds.
-- `stage_gen.media.comparison_plate` owns deterministic plate composition. It
+- `fx_games.media.comparison_plate` owns deterministic plate composition. It
   is provider-neutral, makes no call itself, and is shared with
   [Motion rebase](motion-rebase.md).
 - `bellweather_pipeline.asset_unit` owns resolution, subject

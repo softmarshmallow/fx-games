@@ -1,6 +1,6 @@
 ---
 name: asset-pipeline
-description: Author or extend an asset workflow on Grida FX (a workflow file or a Python builder, node types, built-in steps) with Stage Gen's components. Use for asset inputs, generation, judges, cache and takes; keep complete gameplay inside its consuming application.
+description: Author or extend an asset workflow on Grida FX (a workflow file or a Python builder, node types, built-in steps) with FX Games' components. Use for asset inputs, generation, judges, cache and takes; keep complete gameplay inside its consuming application.
 ---
 
 # Asset Pipeline Authoring
@@ -23,7 +23,7 @@ most six attempts) and records the run. Version a node type once it is stable, a
 `uv run python -m grida.fx lock`. TOML is optional asset configuration owned by that workflow
 or game. It never needs to describe combat, quests, camera controllers or complete gameplay.
 
-Study [looping-parallax](../../../src/stage_gen/workflows/looping_parallax/page.mdx) for a
+Study [looping-parallax](../../../src/fx_games/workflows/looping_parallax/page.mdx) for a
 provider-free end-to-end workflow, and the guide's
 [example projects](https://github.com/gridaco/fx/blob/main/docs/guide/README.md#example-projects) for the patterns. Keep
 runnable samples beside their owner. Plan before any spend

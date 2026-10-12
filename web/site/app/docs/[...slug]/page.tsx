@@ -19,7 +19,7 @@ export function generateStaticParams(): Params[] {
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { slug } = await params;
-  return { title: `${findDoc(slug).title} · Stage Gen docs` };
+  return { title: `${findDoc(slug).title} · FX Games docs` };
 }
 
 async function body(doc: DocPage) {

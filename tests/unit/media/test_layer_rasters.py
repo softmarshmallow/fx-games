@@ -5,7 +5,7 @@ import io
 import pytest
 from PIL import Image, ImageDraw
 
-from stage_gen.media import (
+from fx_games.media import (
     LayerRasterBoundsContract,
     measure_layer_raster_bounds,
     seal_offset_fraction,

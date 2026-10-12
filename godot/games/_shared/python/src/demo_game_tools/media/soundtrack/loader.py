@@ -12,7 +12,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from demo_game_tools.media.soundtrack.models import GameSoundtrack
-from stage_gen.components._secure_fs import SecurePathError, read_absolute_regular_file
+from fx_games.components._secure_fs import SecurePathError, read_absolute_regular_file
 
 
 class GameSoundtrackLoadError(ValueError):

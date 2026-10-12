@@ -2,8 +2,8 @@
 
 from pydantic import Field
 
-from stage_gen.components.sound_effect import SoundEffectRequest
-from stage_gen.components.speech import SpeechRequest
+from fx_games.components.sound_effect import SoundEffectRequest
+from fx_games.components.speech import SpeechRequest
 
 
 class GeneratedClipRealization(SoundEffectRequest):

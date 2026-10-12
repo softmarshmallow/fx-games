@@ -39,14 +39,14 @@ from ember_hollow_pipeline.shell.nodes import (
 from ember_hollow_pipeline.shell.nodes import (
     shell_review_schema as answer_schema,
 )
-from stage_gen.components.video_clip import (
+from fx_games.components.video_clip import (
     CLIP_REVIEW_CELL_WIDTH,
     CLIP_REVIEW_COLUMNS,
     admit_clip_bytes,
     admit_clip_file,
     clip_sample_times,
 )
-from stage_gen.media import (
+from fx_games.media import (
     contact_sheet,
     extract_frame_png,
     run_process,

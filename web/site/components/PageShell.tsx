@@ -55,7 +55,7 @@ function ProductionNotes({ page }: { page: Page }): ReactElement | null {
         Production notes
       </summary>
       <p className="mt-2 leading-relaxed">
-        Made with an earlier version of Stage Gen. The node graph shows the nodes its run had.
+        Made with an earlier version of FX Games. The node graph shows the nodes its run had.
       </p>
     </details>
   );
@@ -81,7 +81,7 @@ export default function PageShell({ page, body }: { page: Page; body: ReactNode 
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
           <nav className="flex items-center gap-2 text-sm text-zinc-500">
             <a className="hover:text-zinc-900 dark:hover:text-zinc-100" href={href("/")}>
-              Stage Gen
+              FX Games
             </a>{" "}
             <span>/</span>
             <span className="text-zinc-900 dark:text-zinc-100">{title}</span>

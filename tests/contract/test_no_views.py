@@ -1,6 +1,6 @@
 """Nothing here declares a view: runs are seen in FX's viewer (decision 0075).
 
-FX records a step's ``view:`` for views it may render later and renders none, and Stage Gen
+FX records a step's ``view:`` for views it may render later and renders none, and FX Games
 keeps no viewer of its own, so a ``view:`` in a workflow file, or a ``view=`` on ``@node(...)``,
 would be a declaration nothing reads.
 """

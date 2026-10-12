@@ -23,7 +23,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
-from stage_gen.components._game_input import sha256_bytes
+from fx_games.components._game_input import sha256_bytes
 from the_grain_pipeline.case import CaseRuntime
 from the_grain_pipeline.case_binding import BoundCase, bind_case
 

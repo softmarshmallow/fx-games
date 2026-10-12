@@ -1,6 +1,6 @@
 # Getting started
 
-Stage Gen runs from a source checkout. You need Python 3.12 or newer,
+FX Games runs from a source checkout. You need Python 3.12 or newer,
 [uv](https://docs.astral.sh/uv/) and, for the engine, cargo from [rustup.rs](https://rustup.rs).
 The site also needs [Bun](https://bun.sh).
 
@@ -21,7 +21,7 @@ that moves the pin.
 
 The installed workflows are listed in the [README](../README.md#workflows) and on the site, each
 with its page. Every workflow is an FX workflow file, and the root `fx.yaml` finds each by its
-id (`workflows: [src/stage_gen/workflows]`), so `python -m grida.fx` runs them all with the same
+id (`workflows: [src/fx_games/workflows]`), so `python -m grida.fx` runs them all with the same
 verbs: `plan`, `run` and `inspect`. `schema <id>` prints the inputs a workflow takes, as JSON
 Schema; each top-level scalar or file input is also a flag (`--medium live_action` for
 universe), and lists, maps and nested objects, such as universe's `census`, come from an
@@ -36,7 +36,7 @@ Looping parallax runs offline. A committed script writes two original layers and
 `inputs.yaml` that places them, and the run makes no provider calls:
 
 ```sh
-uv run python src/stage_gen/workflows/looping_parallax/inputs/supplied_layers/make_inputs.py out/looping-parallax-input
+uv run python src/fx_games/workflows/looping_parallax/inputs/supplied_layers/make_inputs.py out/looping-parallax-input
 uv run python -m grida.fx plan looping-parallax --inputs out/looping-parallax-input/inputs.yaml
 uv run python -m grida.fx run looping-parallax --inputs out/looping-parallax-input/inputs.yaml --deliver manifest=out/looping-parallax-try/manifest.json
 uv run python -m grida.fx inspect looping-parallax --verify

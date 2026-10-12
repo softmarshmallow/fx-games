@@ -10,7 +10,7 @@ import pytest
 
 from demo_game_tools.scenario import resolve_scenario, script_digest
 from demo_game_tools.scenario.resolve import read_scenario_declarations
-from stage_gen.components._secure_fs import SecurePathError
+from fx_games.components._secure_fs import SecurePathError
 
 from .package import DEFAULT_SCRIPT, write_scenario_package
 

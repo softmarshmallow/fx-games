@@ -10,7 +10,7 @@ import yaml
 from grida.fx import RunResult, run_async
 from PIL import Image
 
-from stage_gen.media.codec import encode_png
+from fx_games.media.codec import encode_png
 from tests.unit._fx import caches, scratch_project, verify
 
 

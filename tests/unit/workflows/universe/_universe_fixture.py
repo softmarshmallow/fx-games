@@ -7,8 +7,8 @@ meant to satisfy or break.
 
 from __future__ import annotations
 
-from stage_gen.workflows.universe import models
-from stage_gen.workflows.universe.ontology import CONCEPT_PURPOSES, DRY_WEATHER, MODES_BY_CLASS
+from fx_games.workflows.universe import models
+from fx_games.workflows.universe.ontology import CONCEPT_PURPOSES, DRY_WEATHER, MODES_BY_CLASS
 
 SYNOPSIS_IDS = {"synopsis_p01", "synopsis_p02"}
 REQUIREMENT_IDS = {"direction_extension_layer", "direction_visual_range"}

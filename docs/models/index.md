@@ -8,7 +8,7 @@ behavior before widening a route.
 
 ## Model records
 
-- [GPT Image 2.5](gpt-image-2.5.md) — the current Stage Gen image family:
+- [GPT Image 2.5](gpt-image-2.5.md) — the current FX Games image family:
   Sunburst routes at maximum quality through OpenAI Images, fal, or OpenRouter,
   the last without native alpha.
 - [GPT Image 2](gpt-image-2.md) — legacy provider capabilities and measured
@@ -34,5 +34,5 @@ behavior before widening a route.
   app features and local research models; checked 2026-09-09, without inference.
 
 Model records describe observed external capabilities. Each project's
-`fx.yaml` and the route tables it reads remain authoritative for what Stage Gen
+`fx.yaml` and the route tables it reads remain authoritative for what FX Games
 currently uses.

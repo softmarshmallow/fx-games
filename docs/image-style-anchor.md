@@ -25,7 +25,7 @@ Exclude: photorealistic rendering; semi-realistic rendering; live-action
 ```
 
 Everything after the author's first line comes from
-`stage_gen/resources/prompting/image_style_vocabulary_v1.json`, not from the
+`fx_games/resources/prompting/image_style_vocabulary_v1.json`, not from the
 model. Only the `Asset treatment` line varies across the eight asset kinds;
 medium, traits, and exclusions stay byte-identical across a whole run.
 
@@ -35,7 +35,7 @@ Four modes ship in v1: `cel_shaded_anime_2d`, `photorealistic_natural`,
 `gouache_illustration_2d`, and `flat_graphic_2d`. Each defines one medium
 keyword, four observable traits, per-asset treatments for the eight
 `ImageAssetKind` values, and an exclusion list. The selection skill is
-`stage_gen/resources/skills/anchor-image-style/SKILL.md`.
+`fx_games/resources/skills/anchor-image-style/SKILL.md`.
 
 Adding a mode is additive for validation — a persisted anchor naming an older
 mode still validates — but it rewrites `vocabulary_sha256` and the vocabulary
@@ -50,7 +50,7 @@ The Grain's room and scene builds
 one style for the whole room or scene, in three steps:
 
 1. a `structured.generate` step asks the selection question
-   (`stage_gen.image_prompting.image_style_question`): the skill and the
+   (`fx_games.image_prompting.image_style_question`): the skill and the
    vocabulary as the system prompt, the asset kinds and the creative brief as
    the prompt;
 2. a judge refuses a selection that names no approved mode or lacks a

@@ -33,7 +33,7 @@ The ruling is [0061](../../docs/decisions/0061-every-genre-runs-on-godot-and-web
 The browser gameplay retirement and named-game ownership moves are complete.
 Use the [current Godot roadmap](../docs/roadmap.md) for remaining organization work;
 the old promotion plan is historical evidence, not a fresh execution checklist.
-- [ ] Hosting is deliberately not in that plan: the upload, channel pointers, a catalogue, cache and CORS policy, and rights activation on published bytes stay in [issue 8](https://github.com/softmarshmallow/stage-gen/issues/8) until the export loop is proved end to end.
+- [ ] Hosting is deliberately not in that plan: the upload, channel pointers, a catalogue, cache and CORS policy, and rights activation on published bytes stay in [issue 8](https://github.com/softmarshmallow/fx-games/issues/8) until the export loop is proved end to end.
 - [ ] Three follow-ups the promotion defers by name, each provider-free with the cache-key golden as its proof: a per-block version table for the room manifest, the dialogue bundle and the survival manifest; the survival document's `schema_version`, which is pinned at 1 beside a kind that says v2; and the dialogue bundle's HTML `alt` fields, which become a host's accessibility names or leave.
 
 ## Runtime acceptance

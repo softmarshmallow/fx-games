@@ -24,7 +24,7 @@ from typing import Any
 from PIL import Image
 from pydantic import Field
 
-from stage_gen.examples import (
+from fx_games.examples import (
     ImportRequest,
     Media,
     RecordingReader,
@@ -34,7 +34,7 @@ from stage_gen.examples import (
     relative_to_base,
     source_run,
 )
-from stage_gen.media.sprite_sheets import AlphaComponentRepackContract, repack_alpha_components
+from fx_games.media.sprite_sheets import AlphaComponentRepackContract, repack_alpha_components
 
 from ._common import (
     Imported,

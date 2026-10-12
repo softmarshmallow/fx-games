@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 from typing import Never
 
-from stage_gen.application import (
+from fx_games.application import (
     UsageError as CliUsageError,
 )
 

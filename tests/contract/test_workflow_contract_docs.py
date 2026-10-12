@@ -1,10 +1,10 @@
 """Each workflow's contract.md carries the checked shape of its offline sample plan.
 
-The blocks live in src/stage_gen/workflows/character_3d/contract.md,
-src/stage_gen/workflows/looping_parallax/contract.md,
-src/stage_gen/workflows/movie_sprite/contract.md,
-src/stage_gen/workflows/portrait_motion/contract.md and
-src/stage_gen/workflows/universe/contract.md. The universe
+The blocks live in src/fx_games/workflows/character_3d/contract.md,
+src/fx_games/workflows/looping_parallax/contract.md,
+src/fx_games/workflows/movie_sprite/contract.md,
+src/fx_games/workflows/portrait_motion/contract.md and
+src/fx_games/workflows/universe/contract.md. The universe
 vocabulary they implement is ratified in docs/spec/universe/taxonomy-v0.md, which links the
 universe contract. `scripts/write_workflow_contracts.py --write` regenerates every block.
 """
@@ -66,7 +66,7 @@ def test_contract_block_is_rendered_canonically(block: ContractBlock) -> None:
 
 
 def test_every_sample_plan_workflow_has_a_block() -> None:
-    from stage_gen.workflows._registry import discover, load_code
+    from fx_games.workflows._registry import discover, load_code
 
     # A workflow without a sample plan says why; every other workflow has a block.
     planned = {
@@ -89,7 +89,7 @@ def test_a_block_carries_no_path_or_machine_fact() -> None:
 def test_build_refuses_a_plan_that_differs_between_scratch_folders() -> None:
     import dataclasses
 
-    from stage_gen.workflows._fx import SamplePlan
+    from fx_games.workflows._fx import SamplePlan
 
     plans: list[SamplePlan] = []
     original = next(block for block in BLOCKS if block.workflow_id == "universe")
@@ -109,7 +109,7 @@ def test_build_refuses_a_plan_that_differs_between_scratch_folders() -> None:
 
 def test_universe_block_holds_the_world_phase_the_plan_can_count() -> None:
     # The gallery's size is a result of the world phase, so it is priced when its list exists.
-    block = document_contract(REPOSITORY_ROOT / "src/stage_gen/workflows/universe/contract.md")
+    block = document_contract(REPOSITORY_ROOT / "src/fx_games/workflows/universe/contract.md")
     assert "universe/world/propose" in block["type_ids"]
     assert "universe/entity/draw" not in block["type_ids"]
 
@@ -117,5 +117,5 @@ def test_universe_block_holds_the_world_phase_the_plan_can_count() -> None:
 def test_universe_contract_is_discoverable_from_its_taxonomy_and_the_docs_index() -> None:
     docs_index = (REPOSITORY_ROOT / "docs/README.md").read_text(encoding="utf-8")
     taxonomy = (REPOSITORY_ROOT / "docs/spec/universe/taxonomy-v0.md").read_text(encoding="utf-8")
-    assert "src/stage_gen/workflows/universe/contract.md" in taxonomy
-    assert "stage_gen/workflows/universe/contract.md" in docs_index
+    assert "src/fx_games/workflows/universe/contract.md" in taxonomy
+    assert "fx_games/workflows/universe/contract.md" in docs_index

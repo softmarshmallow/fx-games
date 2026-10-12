@@ -1,6 +1,6 @@
 # Ember Hollow
 
-A maintained survival game that consumes Stage Gen asset runs.
+A maintained survival game that consumes FX Games asset runs.
 This project owns its gameplay, content interpretation and Godot composition.
 
 From the repository root, import the project once after cloning or moving scripts,

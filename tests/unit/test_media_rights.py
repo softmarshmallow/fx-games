@@ -18,7 +18,7 @@ FIXTURES = Path(__file__).parents[2] / "docs/check-fixtures"
 
 def _load_media_rights() -> ModuleType:
     path = Path(__file__).parents[2] / "scripts/media_rights.py"
-    spec = importlib.util.spec_from_file_location("stage_gen_media_rights", path)
+    spec = importlib.util.spec_from_file_location("fx_games_media_rights", path)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module

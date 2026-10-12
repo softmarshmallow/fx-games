@@ -20,8 +20,8 @@ from __future__ import annotations
 
 from pathlib import Path, PurePosixPath
 
-from stage_gen.components._game_input import portable_relative_path, sha256_bytes
-from stage_gen.components._secure_fs import open_absolute_directory, read_relative_regular_file
+from fx_games.components._game_input import portable_relative_path, sha256_bytes
+from fx_games.components._secure_fs import open_absolute_directory, read_relative_regular_file
 
 
 def read_package_member(root: Path, source: str, *, label: str) -> bytes:

@@ -6,7 +6,7 @@ import dataclasses
 
 import pytest
 
-from stage_gen.workflows.universe.medium import (
+from fx_games.workflows.universe.medium import (
     ANIME_2D,
     LIVE_ACTION,
     forbidden_terms_present,

@@ -11,7 +11,7 @@ from typing import Any
 
 from PIL import Image
 
-from stage_gen.components.character_3d.worker.rig_glb import read_glb
+from fx_games.components.character_3d.worker.rig_glb import read_glb
 from tests.contract.test_packaged_resources import _worktree_files
 
 

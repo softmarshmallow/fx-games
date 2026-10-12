@@ -11,7 +11,7 @@ from typing import Any, cast
 
 from grida.fx import Ctx, node
 
-from stage_gen.image_style import ImageAssetKind
+from fx_games.image_style import ImageAssetKind
 from the_grain_pipeline.style import style_anchor, style_clauses, style_schema
 
 _KINDS = {"asset_kinds": {"type": "array", "items": {"type": "string"}}}

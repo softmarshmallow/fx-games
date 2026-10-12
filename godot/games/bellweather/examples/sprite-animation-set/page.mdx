@@ -8,7 +8,7 @@
 A side-view game character needs a dozen animations, and every one of them has to be the same
 character, at the same size, with its feet on the same line. Drawn one at a time, by hand or by an
 image model, they drift: the run comes back smaller than the idle, one pose runs into the next, the
-feet sit at a different height in every frame. Stage Gen draws the character once as a concept from
+feet sit at a different height in every frame. FX Games draws the character once as a concept from
 the game's cover and a short brief, then draws each animation from that concept as one row of poses. A local gate cuts every pose out whole and stands it on one line. A vision model then compares
 all the strips on one plate and sets each one's size against idle, and a second pass checks the
 result. The game gets a strip per animation and the numbers to play it: its frames, its speed,
@@ -19,7 +19,7 @@ whether it loops, which way it faces, and its size.
 <Try>
 <Agent>
 
-Make a side-view platformer character from <Ref input="cover">this picture</Ref>, with Stage Gen's player animations described in `godot/games/bellweather/docs/generation-pipeline.md`. Start from a copy of the Bellweather package in `godot/games/bellweather/inputs/default`, use the picture as the player's reference, and write a short brief for the character in `content/player.toml`.
+Make a side-view platformer character from <Ref input="cover">this picture</Ref>, with FX Games' player animations described in `godot/games/bellweather/docs/generation-pipeline.md`. Start from a copy of the Bellweather package in `godot/games/bellweather/inputs/default`, use the picture as the player's reference, and write a short brief for the character in `content/player.toml`.
 
 Plan it first. Then build the content part live, and show me every animation playing at its published size, with the size corrections the run chose.
 

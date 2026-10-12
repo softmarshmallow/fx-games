@@ -8,14 +8,14 @@ from typing import Literal
 
 from pydantic import Field, ValidationInfo, field_validator, model_validator
 
-from stage_gen.components._game_input import (
+from fx_games.components._game_input import (
     SHA256_PATTERN,
     SNAKE_ID_PATTERN,
     normalized_text,
     portable_relative_path,
     unique_values,
 )
-from stage_gen.contracts import PersistedContractModel
+from fx_games.contracts import PersistedContractModel
 
 #: Licences whose terms permit redistributing the font file itself, which is what
 #: publishing a run does. A face under any other licence is refused offline rather than

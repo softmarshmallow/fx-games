@@ -25,7 +25,7 @@ from ember_hollow_pipeline.shell import (
     ShellPlate,
     load_game_shell_bytes,
 )
-from stage_gen.components._game_input import AuthoredContractLoadError
+from fx_games.components._game_input import AuthoredContractLoadError
 
 DIGEST = "a" * 64
 FONT_DIGEST = "b" * 64

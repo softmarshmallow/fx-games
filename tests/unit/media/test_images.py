@@ -7,7 +7,7 @@ from typing import Any, cast
 import pytest
 from PIL import Image
 
-from stage_gen.media import (
+from fx_games.media import (
     apply_chroma_transparency,
     decontaminate_magenta_edges,
     inspect_image,
@@ -294,7 +294,7 @@ def test_region_contrast_stats_measures_flatness_and_both_text_directions() -> N
 
     from PIL import ImageDraw
 
-    from stage_gen.media import REGION_CONTRAST_MIN, REGION_LUMA_STD_MAX, region_contrast_stats
+    from fx_games.media import REGION_CONTRAST_MIN, REGION_LUMA_STD_MAX, region_contrast_stats
 
     dark = Image.new("RGB", (200, 100), (20, 24, 30))
     stats = region_contrast_stats(dark, (0, 0, 200, 100))
@@ -313,7 +313,7 @@ def test_region_contrast_stats_measures_flatness_and_both_text_directions() -> N
 
 
 def test_region_contrast_stats_reads_only_the_box_it_is_given() -> None:
-    from stage_gen.media import region_contrast_stats
+    from fx_games.media import region_contrast_stats
 
     image = Image.new("RGB", (200, 100), (20, 24, 30))
     for x in range(100, 200):

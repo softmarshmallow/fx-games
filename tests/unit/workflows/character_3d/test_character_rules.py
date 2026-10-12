@@ -13,21 +13,21 @@ import jsonschema
 import pytest
 from PIL import Image
 
-from stage_gen.components.character_3d import quality_bar as qb
-from stage_gen.components.character_3d.atlas import AtlasCell, build_atlas, build_torso_strip
-from stage_gen.components.character_3d.io import digest
-from stage_gen.components.character_3d.partitions import (
+from fx_games.components.character_3d import quality_bar as qb
+from fx_games.components.character_3d.atlas import AtlasCell, build_atlas, build_torso_strip
+from fx_games.components.character_3d.io import digest
+from fx_games.components.character_3d.partitions import (
     CORE_REGIONS,
     apply_partition,
     partition_plan,
 )
-from stage_gen.components.character_3d.profiles import articulation, diagnostic_samples
-from stage_gen.components.character_3d.requirements import (
+from fx_games.components.character_3d.profiles import articulation, diagnostic_samples
+from fx_games.components.character_3d.requirements import (
     validate_export_space,
     validate_requirements,
 )
-from stage_gen.components.character_3d.worker_client import WorkerRefusal, worker_refusal
-from stage_gen.workflows.character_3d.harness import (
+from fx_games.components.character_3d.worker_client import WorkerRefusal, worker_refusal
+from fx_games.workflows.character_3d.harness import (
     REVIEW_SCHEMA,
     atlas_evidence,
     compile_profile,
@@ -36,7 +36,7 @@ from stage_gen.workflows.character_3d.harness import (
 )
 
 JsonObject = dict[str, Any]
-PACKAGE = Path(__file__).resolve().parents[4] / "src/stage_gen/workflows/character_3d"
+PACKAGE = Path(__file__).resolve().parents[4] / "src/fx_games/workflows/character_3d"
 PROFILE: JsonObject = json.loads((PACKAGE / "profiles/sd_human_fixed.json").read_text())
 
 

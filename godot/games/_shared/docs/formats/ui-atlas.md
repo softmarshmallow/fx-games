@@ -281,6 +281,6 @@ style reference rather than the geometry, which makes this a style lever as
 well as a density one, and worth considering for the 4x4 on its own merits.
 
 A lattice drawn in a guide colour and then *detected* in the output is the same
-technique [`media/guide_lattice.py`](../../../../../src/stage_gen/media/guide_lattice.py)
+technique [`media/guide_lattice.py`](../../../../../src/fx_games/media/guide_lattice.py)
 already uses for terrain atlases, so the density work would be adopting an
 existing repository idiom rather than inventing one.

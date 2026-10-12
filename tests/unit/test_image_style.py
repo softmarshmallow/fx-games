@@ -3,8 +3,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from stage_gen.image_prompting import load_image_style_resources, materialize_style_anchor
-from stage_gen.image_style import (
+from fx_games.image_prompting import load_image_style_resources, materialize_style_anchor
+from fx_games.image_style import (
     CanonicalStyleAnchor,
     StyleModeSelection,
     append_style_anchor_once,

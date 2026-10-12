@@ -1,6 +1,6 @@
 # The Grain
 
-A maintained investigation game with case, room and dialogue scenes that consumes Stage Gen asset runs.
+A maintained investigation game with case, room and dialogue scenes that consumes FX Games asset runs.
 This project owns its gameplay, content interpretation and Godot composition.
 
 From the repository root, import the project once after cloning or moving scripts,

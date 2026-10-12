@@ -1,4 +1,4 @@
-// Parser for `stage-gen-catalog-v1`, the catalog.json `scripts/catalog.py` writes
+// Parser for `fx-games-catalog-v1`, the catalog.json `scripts/catalog.py` writes
 // from the installed workflows and the example store. The site builds from it. Wire
 // fields are lower_snake_case; this adapter is the one place they become camelCase
 // runtime shapes.
@@ -34,7 +34,7 @@ import {
   textOrNull,
 } from "./wire";
 
-export const CATALOG_KIND = "stage-gen-catalog-v1";
+export const CATALOG_KIND = "fx-games-catalog-v1";
 export const CATALOG_SCHEMA_VERSION = 1;
 export const CATALOG_REFUSAL =
   `unsupported catalog: expected ${CATALOG_KIND} schema_version ${CATALOG_SCHEMA_VERSION}; ` +
@@ -72,7 +72,7 @@ export interface ExampleEntry {
   readonly steps: readonly GameExampleStep[];
 }
 
-/** workflow.toml (`stage-gen-workflow-v1`): what the code cannot know. */
+/** workflow.toml (`fx-games-workflow-v1`): what the code cannot know. */
 export interface WorkflowManifest {
   readonly id: string;
   readonly title: string;

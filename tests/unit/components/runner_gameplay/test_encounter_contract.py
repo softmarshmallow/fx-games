@@ -17,6 +17,7 @@ import dataclasses
 
 import pytest
 
+from fx_games.components._game_input import AuthoredContractLoadError
 from iron_petal_unit_pipeline.gameplay import (
     BOSS_PROFILES,
     MIN_ENCOUNTER_INTERVAL_COLUMNS,
@@ -30,7 +31,6 @@ from iron_petal_unit_pipeline.gameplay import (
     thrust_traverse_seconds,
 )
 from iron_petal_unit_pipeline.track import MAX_SEGMENT_COLUMNS
-from stage_gen.components._game_input import AuthoredContractLoadError
 
 ENCOUNTER = """
 [encounter]

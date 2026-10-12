@@ -1,0 +1,199 @@
+# Only what the workflow file cannot say. Steps, titles and the sample plan come from
+# workflow.yaml through FX.
+schema_version = 1
+kind = "fx-games-workflow-v1"
+id = "character-3d"
+title = "3D character"
+promise = "One written brief in. One rigged, reviewed character out."
+summary = """
+An agent draws reference views, a 3D service builds a textured mesh from them, and the mesh is \
+stood upright, rigged and given test clips. Independent reviewers judge every stage on renders \
+in the export's own finish, and the export is admitted only when numbers and pictures both pass."""
+
+[try]
+input = "The committed brief in inputs/sample, an original courier, and the inputs.yaml that names it. The run is paid: it needs OpenRouter and Tripo keys, Blender, and --live"
+commands = [
+  "uv run python -m grida.fx plan character-3d --inputs src/fx_games/workflows/character_3d/inputs/sample/inputs.yaml",
+  "uv run python -m grida.fx run character-3d --inputs src/fx_games/workflows/character_3d/inputs/sample/inputs.yaml --live --max-usd 30",
+  "uv run python -m grida.fx inspect character-3d",
+]
+
+[[tools]]
+name = "Blender"
+role = "Normalises, assembles, audits, renders and exports every mesh"
+
+# The types of the two examples made with the earlier implementation; the workflow file
+# titles its own steps.
+[labels]
+"3d/character/runtime_admit" = "Probe Blender"
+"3d/character/brief_preflight" = "Check the brief"
+"3d/character/reference_agent" = "Draw references"
+"3d/character/reference_review" = "Review references"
+"3d/character/references_admit" = "Admit references"
+"3d/character/generate_part" = "Generate mesh"
+"3d/character/part_review" = "Review mesh"
+"3d/character/part_admit" = "Admit mesh"
+"3d/character/parts_admit" = "Admit parts"
+"3d/character/assemble_agent" = "Orient and ground"
+"3d/character/assembly_review" = "Review orientation"
+"3d/character/assembly_admit" = "Admit orientation"
+"3d/character/provider_rig_submit" = "Submit for rigging"
+"3d/character/provider_rig_collect" = "Collect and audit rig"
+"3d/character/rig_review" = "Review rig"
+"3d/character/regenerate_whole" = "Regenerate mesh"
+"3d/character/recovery_part_review" = "Review mesh"
+"3d/character/recovery_part_admit" = "Admit mesh"
+"3d/character/recovery_assemble" = "Orient and ground"
+"3d/character/recovery_assembly_review" = "Review orientation"
+"3d/character/recovery_assembly_admit" = "Admit orientation"
+"3d/character/rig_admit" = "Admit export"
+"part_request/generate_part" = "Generate a part"
+"spike/character.runtime_admit" = "Probe Blender"
+"spike/character.normalize" = "Measure the part"
+"spike/character.assemble_agent" = "Fit the parts"
+"spike/character.assembly_review" = "Review the fit"
+"spike/character.assembly_admit" = "Admit the fit"
+"spike/character.rig_agent" = "Build the rig"
+"spike/character.rig_review" = "Review rig"
+"spike/character.rig_admit" = "Admit export"
+
+[[outputs]]
+artifact_ref = "outputs/character.glb"
+description = "The character: textured mesh, skeleton and short clips, at game scale"
+
+[[outputs]]
+artifact_ref = "outputs/result.json"
+description = "Accepted, or delivered unreviewed, with the findings that travel with it"
+
+[[outputs]]
+artifact_ref = "outputs/references.png"
+description = "The canonical reference picture the parts were drawn from"
+
+[[outputs]]
+artifact_ref = "outputs/atlas/"
+description = "The labeled pose rows and the face strip the rig reviewer judged"
+
+# Exports in the example store (out/examples/character-3d/<id>/), pinned by digest, and the
+# approved library characters, built from the tracked files their sd_3d.json binds.
+[[examples]]
+id = "wren-brief"
+title = "Wren, from a brief"
+status = "approved"
+source = "store"
+cover = true
+order = 7
+example_sha256 = "304d8a49365d4124976ba67698011ce893c15a6a8cc68a8219aa9bc27d8463b5"
+figures_sha256 = "4a576b22f2d95fbef7274ec31b1db23203500f735f42d0e7959c8b523e6e474c"
+
+# Made with an earlier version: a runner whose steps the workflow file no longer has, so the
+# example groups its own nodes. Its second takes were reused, not paid for again, and its
+# recovery never started.
+[[examples.steps]]
+label = "Before any spend"
+note = "Blender's required features and the brief were checked offline before anything was paid for."
+members = ["runtime_admit", "brief_preflight"]
+
+[[examples.steps]]
+label = "Reference sheet"
+note = "An agent drew a canonical sheet, then the front and back views the mesh service needs. A reviewer that did not draw them admitted the bundle."
+members = ["references_01", "references_review_01", "references_02", "references_review_02", "references_admit"]
+
+[[examples.steps]]
+label = "Textured mesh"
+note = "Tripo built one textured character from the views. The worker normalised it and rendered five views in the matte finish the export wears, for a reviewer."
+members = ["generate_character_01", "part_review_character_01", "generate_character_02", "part_review_character_02", "part_admit_character", "parts_admit"]
+
+[[examples.steps]]
+label = "Orientation"
+note = "The mesh was stood on the ground plane facing forward, measured, and reviewed again."
+members = ["assemble_01", "assembly_review_01", "assemble_02", "assembly_review_02", "assembly_admit"]
+
+[[examples.steps]]
+label = "Skeleton and clips"
+note = "Tripo added bones and weights. The worker proved the rigged mesh was still the admitted mesh, baked diagnostic clips and exported at profile height; a reviewer judged every pose."
+members = ["rig_submit_01", "rig_01", "rig_review_01", "rig_submit_02", "rig_02", "rig_review_02"]
+
+[[examples.steps]]
+label = "Bounded recovery"
+note = "Had the rig been refused, the mesh would have been drawn again from the same references and rigged once more. The rig passed, so none of this ran."
+members = ["regenerate_character_02", "recovery_part_review_02", "recovery_part_admit", "assemble_recovery_02", "assembly_review_03", "recovery_assembly_admit"]
+
+[[examples.steps]]
+label = "Admission"
+note = "Numbers and pictures both passed: a good picture cannot waive a numeric failure, and a clean report cannot waive a visible one."
+members = ["rig_admit"]
+
+[[examples]]
+id = "tavi-parts"
+title = "3D character from parts"
+promise = "One character drawn as separate parts in. One fitted, rigged, reviewed character out."
+status = "approved"
+source = "store"
+order = 8
+example_sha256 = "9e3161453464be9ec27c9c3782543d4f45ca837d26b5933442ab8c67d9ab7c68"
+figures_sha256 = "b07c95b15b869a2cd927be902e7a7b25ac372f0958971f04bcf7fed820e5b843"
+footer = "Every picture and model on this page comes from real runs: the three mesh requests, then the fit and rig run. The samba clip was added to the export afterwards."
+
+# Made with an earlier version: the meshes were requested before the graph started, and the
+# workflow's steps no longer describe this run, so the example groups its own node ids.
+[examples.labels]
+generate_body = "Generate the body"
+generate_head = "Generate the head"
+generate_hair = "Generate the hair"
+normalize_body = "Measure the body"
+normalize_head = "Measure the head"
+normalize_hair = "Measure the hair"
+
+[[examples.steps]]
+label = "Three meshes"
+note = "Made before the graph starts: one Tripo request per part, from the front and back drawings cut from the parts sheet. The graph picks the files up by digest."
+members = ["generate_body", "generate_head", "generate_hair"]
+
+[[examples.steps]]
+label = "Before the agent is paid"
+note = "Blender's required features are checked offline. The agent does not start until they pass."
+members = ["runtime_admit"]
+
+[[examples.steps]]
+label = "Measure"
+note = "Each mesh is converted and measured as it arrived. Nothing is moved or fitted yet."
+members = ["normalize_body", "normalize_head", "normalize_hair"]
+
+[[examples.steps]]
+label = "Fit"
+note = "An agent places the head on the body and the hair on the head. Each part gets one placement: a move, a turn and a size. A reviewer that did not fit them judges the exported result. Round two runs only after a refusal."
+members = ["assemble_01", "assembly_review_01", "assemble_02", "assembly_review_02", "assembly_admit"]
+
+[[examples.steps]]
+label = "Skeleton and clips"
+note = "The agent finds the joints on the fitted mesh, binds the skin and bakes the test clips. The reviewer sees every pose from five sides, with the hands enlarged."
+members = ["rig_01", "rig_review_01", "rig_02", "rig_review_02"]
+
+[[examples.steps]]
+label = "Admission"
+note = "The export is admitted only if the reviewer accepted this exact file and every skinned vertex carries weights."
+members = ["rig_admit"]
+
+[[examples]]
+id = "nami"
+title = "Nami"
+status = "approved"
+source = "library:library/characters/nami"
+example_sha256 = "7dac6492862b1310c71f40eb137578effabe6217207e4e75dcdc3721f17b090f"
+figures_sha256 = "ab33c5e7b7a1e88b75255a2b0b75465977c3d3618c87e709883bf8fee8484d96"
+
+[[examples]]
+id = "riko"
+title = "Riko"
+status = "approved"
+source = "library:library/characters/riko"
+example_sha256 = "27a5f74e310d8a310c89a70e22c3470703849f35a86b74bd279a3d1bdbf18976"
+figures_sha256 = "3d073ee2becca6cd59527a51860d6117e329bb4026aaaff97a89c73c52782998"
+
+[[examples]]
+id = "helix"
+title = "Helix"
+status = "approved"
+source = "library:library/characters/helix"
+example_sha256 = "c9035c0fd00569aabc6b5bbd3944f61127580450403666a206b3520f7f2d4f36"
+figures_sha256 = "af5925c6340398183c102945c9994d3acec42969303ebbf3b1b6e0eff1cc4a68"

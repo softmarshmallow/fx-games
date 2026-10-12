@@ -7,7 +7,7 @@ from pathlib import Path
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 REVIEWED = {
-    "stage_gen.components._game_input": {
+    "fx_games.components._game_input": {
         "AuthoredContractLoadError",
         "GAME_ID_PATTERN",
         "KEBAB_ID_PATTERN",
@@ -21,7 +21,7 @@ REVIEWED = {
         "sha256_bytes",
         "unique_values",
     },
-    "stage_gen.components._secure_fs": {
+    "fx_games.components._secure_fs": {
         "SecurePathError",
         "open_absolute_directory",
         "read_absolute_regular_file",
@@ -29,7 +29,7 @@ REVIEWED = {
     },
     # The one shared Grida FX glue: the graph-contract writer reads plans and declared
     # outputs through it, and a game's FX test writes its scratch project with it.
-    "stage_gen.workflows._fx": {
+    "fx_games.workflows._fx": {
         "declared_outputs",
         "instances",
         "write_project",
@@ -44,7 +44,7 @@ def test_godot_private_product_imports_have_an_explicit_review() -> None:
             if (
                 isinstance(node, ast.ImportFrom)
                 and node.module
-                and node.module.startswith("stage_gen")
+                and node.module.startswith("fx_games")
             ):
                 private_module = any(part.startswith("_") for part in node.module.split("."))
                 for alias in node.names:
@@ -57,7 +57,7 @@ def test_godot_private_product_imports_have_an_explicit_review() -> None:
                         )
             elif isinstance(node, ast.Import):
                 for alias in node.names:
-                    if alias.name.startswith("stage_gen.") and any(
+                    if alias.name.startswith("fx_games.") and any(
                         part.startswith("_") for part in alias.name.split(".")
                     ):
                         unreviewed.append(

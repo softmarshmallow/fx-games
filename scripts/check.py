@@ -20,7 +20,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from stage_gen.provider_env import PROVIDER_ENV_KEYS
+from fx_games.provider_env import PROVIDER_ENV_KEYS
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 if str(REPOSITORY_ROOT) not in sys.path:
@@ -71,7 +71,7 @@ def commands(
     )
 
 
-WORKFLOWS_ROOT = "src/stage_gen/workflows"
+WORKFLOWS_ROOT = "src/fx_games/workflows"
 #: Builds FX's engine from the submodule and puts it where ``python -m grida.fx`` finds it.
 ENGINE_BUILD = "third_party/fx/tools/build_engine.py"
 
@@ -92,7 +92,7 @@ def _scratch_project(python: str, project: Path) -> Step:
     """An FX project in the scratch folder that finds the first-party workflows by id; its runs
     and its store stay inside it. Written by the one project writer the product uses."""
     program = (
-        "import pathlib, sys; from stage_gen.workflows._fx import write_project; "
+        "import pathlib, sys; from fx_games.workflows._fx import write_project; "
         "write_project(pathlib.Path(sys.argv[1]))"
     )
     return Step((python, "-c", program, str(project)))
@@ -197,19 +197,19 @@ def _game_steps(python: str, *, scratch: Path) -> tuple[Step, ...]:
     return tuple(result)
 
 
-CHARACTER_SAMPLE = "src/stage_gen/workflows/character_3d/inputs/sample/inputs.yaml"
+CHARACTER_SAMPLE = "src/fx_games/workflows/character_3d/inputs/sample/inputs.yaml"
 
 
 def _asset_steps(python: str, *, scratch: Path) -> tuple[Step, ...]:
     """Run a real local workflow through FX (``python -m grida.fx``), check every workflow
     home's lock, and plan every workflow whose calls are all paid."""
-    from stage_gen.workflows._registry import discover
+    from fx_games.workflows._registry import discover
 
-    parallax = "src/stage_gen/workflows/looping_parallax/inputs/supplied_layers"
+    parallax = "src/fx_games/workflows/looping_parallax/inputs/supplied_layers"
     inputs = scratch / "parallax-inputs"
-    movie = "src/stage_gen/workflows/movie_sprite/inputs/supplied_clip"
+    movie = "src/fx_games/workflows/movie_sprite/inputs/supplied_clip"
     clip = scratch / "movie-sprite-inputs"
-    portrait = "src/stage_gen/workflows/portrait_motion/inputs/make_inputs.py"
+    portrait = "src/fx_games/workflows/portrait_motion/inputs/make_inputs.py"
     face = scratch / "portrait-inputs"
     # A scratch folder with its own fx.yaml: the runs and their store stay inside it.
     project = scratch / "workflow-project"
@@ -248,7 +248,7 @@ def _asset_steps(python: str, *, scratch: Path) -> tuple[Step, ...]:
                 "--inputs",
                 str(
                     REPOSITORY_ROOT
-                    / "src/stage_gen/workflows/universe/inputs/lantern_ferry/inputs.yaml"
+                    / "src/fx_games/workflows/universe/inputs/lantern_ferry/inputs.yaml"
                 ),
                 "--check",
             ),
@@ -399,7 +399,7 @@ def main() -> int:
     environment["PATH"] = (
         str(Path(sys.executable).parent) + os.pathsep + environment.get("PATH", "")
     )
-    with tempfile.TemporaryDirectory(prefix="stage-gen-gate-") as scratch:
+    with tempfile.TemporaryDirectory(prefix="fx-games-gate-") as scratch:
         outcomes = [
             run_step(step, environment)
             for step in steps(

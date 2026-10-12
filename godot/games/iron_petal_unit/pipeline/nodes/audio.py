@@ -14,10 +14,10 @@ from typing import Any
 
 from grida.fx import Ctx, node
 
+from fx_games.components.sound_effect import DURATION_TOLERANCE_SECONDS, admission_facts
+from fx_games.components.speech import speech_admission_facts
+from fx_games.media import measure_level_and_duration, measure_peak_dbfs, probe_audio
 from iron_petal_unit_pipeline.admission import listening_verdict
-from stage_gen.components.sound_effect import DURATION_TOLERANCE_SECONDS, admission_facts
-from stage_gen.components.speech import speech_admission_facts
-from stage_gen.media import measure_level_and_duration, measure_peak_dbfs, probe_audio
 
 _TIMEOUT_SECONDS = 120
 _LINE_CEILING: dict[str, Any] = {"type": ["number", "null"], "default": None}

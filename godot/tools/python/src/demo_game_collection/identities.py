@@ -141,7 +141,7 @@ def _owner_module(module: str) -> str:
     for prefix, owner in owners.items():
         if module == prefix or module.startswith(prefix + "."):
             return owner + module.removeprefix(prefix)
-    return f"stage_gen.{module}"
+    return f"fx_games.{module}"
 
 
 def _field(module: str, model: str, field: str = "kind") -> IdentitySource:

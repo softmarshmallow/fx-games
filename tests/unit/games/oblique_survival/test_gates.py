@@ -29,8 +29,8 @@ from ember_hollow_pipeline.preparation_media import (
     plate_gate_kwargs,
 )
 from ember_hollow_pipeline.survival_request import load_package
-from stage_gen.media import measure_alpha_ground_contact
-from stage_gen.media.guide_lattice import detect_guide_lattice
+from fx_games.media import measure_alpha_ground_contact
+from fx_games.media.guide_lattice import detect_guide_lattice
 
 PACKAGE: Final = Path("godot/games/ember_hollow/inputs")
 CANVAS: Final = (1024, 1024)

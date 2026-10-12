@@ -39,18 +39,18 @@ if __package__ in {None, ""}:
 
 from grida.fx import Answer, RunResult, StandInCall, plan, run
 
-import stage_gen
-from stage_gen.fs import atomic_write_text
-from stage_gen.runview import read_plan
-from stage_gen.workflows._fx import FxWorkflow, instances, write_project
-from stage_gen.workflows._registry import NodeType, discover, node_type_inventory
+import fx_games
+from fx_games.fs import atomic_write_text
+from fx_games.runview import read_plan
+from fx_games.workflows._fx import FxWorkflow, instances, write_project
+from fx_games.workflows._registry import NodeType, discover, node_type_inventory
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = REPOSITORY_ROOT / "tests/contract/fixtures"
 GOLDEN_PATH = FIXTURES / "workflow-identity.json"
 INPUTS_PATH = FIXTURES / "workflow-identity-inputs.json"
 
-PACKAGE_ROOT = Path(stage_gen.__file__).parent
+PACKAGE_ROOT = Path(fx_games.__file__).parent
 UNIVERSE_INPUTS = PACKAGE_ROOT / "workflows/universe/inputs/lantern_ferry/inputs.yaml"
 UNIVERSE_ANSWERS = FIXTURES / "universe/lantern_ferry.answers.json"
 

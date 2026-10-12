@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from stage_gen.components.portrait_motion.face_location import locator_schema, validate_location
+from fx_games.components.portrait_motion.face_location import locator_schema, validate_location
 
 
 def test_a_located_box_and_a_reasoned_refusal_are_both_answers() -> None:

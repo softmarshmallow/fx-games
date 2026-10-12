@@ -23,8 +23,8 @@ from typing import Final, cast
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 from demo_game_tools.kits.painted_terrain.projection import DEFAULT_GROUND_PROJECTION
-from stage_gen.media.codec import decode_rgba
-from stage_gen.media.guide_lattice import png_bytes
+from fx_games.media.codec import decode_rgba
+from fx_games.media.guide_lattice import png_bytes
 
 STRUCTURAL_GROUND_MODE: Final = "runner-structural-ground-v1"
 STRUCTURAL_GROUND_GUIDE_ID: Final = "runner-structural-ground-guide-v1"

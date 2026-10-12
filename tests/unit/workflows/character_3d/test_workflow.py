@@ -24,11 +24,11 @@ import pytest
 from grida.fx import Answer, CallRefused, InputFile, RunResult, StandInCall, plan_async, run_async
 from PIL import Image
 
-from stage_gen.workflows.character_3d import support
+from fx_games.workflows.character_3d import support
 from tests.unit._fx import failures, scratch_project
 from tests.unit.workflows.character_3d.stub_blender import glb, unglb
 
-PACKAGE = Path(__file__).resolve().parents[4] / "src/stage_gen/workflows/character_3d"
+PACKAGE = Path(__file__).resolve().parents[4] / "src/fx_games/workflows/character_3d"
 STUB = Path(__file__).with_name("stub_blender.py")
 EPISODES = {
     "draw": "plan_references.md",
@@ -496,7 +496,7 @@ async def test_support_binds_the_closure_and_the_settings(tmp_path: Path, blende
 def test_a_cohort_dry_run_plans_every_brief_under_one_target(
     tmp_path: Path, blender: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from stage_gen.workflows.character_3d import cohort
+    from fx_games.workflows.character_3d import cohort
 
     (tmp_path / "briefs").mkdir()
     for name in ("pell", "orrin"):

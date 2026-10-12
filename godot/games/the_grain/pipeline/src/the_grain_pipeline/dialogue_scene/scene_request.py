@@ -44,14 +44,14 @@ from demo_game_tools.scenario import (
     TrackDeclaration,
     resolve_scenario,
 )
-from stage_gen.components._secure_fs import read_absolute_regular_file
-from stage_gen.image_prompting import load_image_style_resources
-from stage_gen.media import (
+from fx_games.components._secure_fs import read_absolute_regular_file
+from fx_games.image_prompting import load_image_style_resources
+from fx_games.media import (
     CHROMA_MATTE_VERSION,
     MAGENTA_EDGE_DECONTAMINATION_VERSION,
     inspect_image,
 )
-from stage_gen.provenance import InputProvenance
+from fx_games.provenance import InputProvenance
 from the_grain_pipeline.dialogue_scene.identity import (
     canonical_json_bytes,
     canonical_sha256,

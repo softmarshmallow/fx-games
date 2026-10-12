@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from PIL import Image, ImageDraw
 
-from stage_gen.media.guide_lattice import detect_guide_lattice, extract_guided_cells
+from fx_games.media.guide_lattice import detect_guide_lattice, extract_guided_cells
 
 
 def _lattice(*, x_lines: tuple[int, ...], y_lines: tuple[int, ...]) -> Image.Image:

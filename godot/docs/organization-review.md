@@ -119,7 +119,7 @@ game from coverage. The root check command and CI can delegate to this coordinat
 
 Move game-only Python tests, fixtures and graph/cache evidence to their game or
 shared-support owner in subsequent changes. Cross-game tests belong under Godot;
-tests proving the Stage Gen/Godot boundary may remain at the repository root.
+tests proving the FX Games/Godot boundary may remain at the repository root.
 Package mechanism tests move with extracted code, while game integration and
 replay tests remain with the game.
 
@@ -142,7 +142,7 @@ admitted program + current state + action -> next state + events + view
 
 The interpreter owns no scene, input device, wall clock or content loader. That
 makes it independently useful inside Godot. The asset-side scenario contract and
-compiler can retain their own Stage Gen ownership; a Godot interpreter does not
+compiler can retain their own FX Games ownership; a Godot interpreter does not
 make scenario mandatory for either product.
 
 Before extraction, clarify admission. The current parser assumes some producer
@@ -189,7 +189,7 @@ dimensions, textures, anchors and scroll inputs instead of `HostRunDir`.
 
 Define invalid-anchor and non-finite-dimension behavior. Keep the chosen depth
 ladder, camera policy, world coordinates and HUD ordering with the consumer.
-Stage Gen may produce looping layers; this package owns their Godot rendering.
+FX Games may produce looping layers; this package owns their Godot rendering.
 
 [Sprite playback](../games/_shared/runtime/addons/demo_support/io/actor.gd) can
 follow as another module if its contract is independently useful. Frame timing,
@@ -267,7 +267,7 @@ contract. Similar dialogue screens are insufficient evidence for one engine.
   supported formats. Ember Hollow's complete shell has one current game consumer;
   it does not yet warrant its own framework package.
 - **Remove pure Python forwarding shims.** Some private modules only forward to
-  existing Stage Gen components. Import the established capability directly.
+  existing FX Games components. Import the established capability directly.
   Retain real format/prompt adapters: a seemingly cosmetic prompt change can
   alter cache identity and generation behavior.
 
@@ -291,12 +291,12 @@ belongs in their build. Keep source assembly distinct from media preparation;
 portable output needs real dependencies and license information, without caches,
 workspace symlinks or unintended content.
 
-The game Python packages also still import private Stage Gen modules for input
+The game Python packages also still import private FX Games modules for input
 handling, filesystem support and node construction. Installed-wheel success is
 useful evidence but does not turn those imports into supported APIs. Review each
 dependency: use an existing public surface, keep game-format policy in Godot, or
 propose a separately justified asset-side API. Wrapping a private import is not
-independence, and Godot reuse alone does not justify promotion into Stage Gen.
+independence, and Godot reuse alone does not justify promotion into FX Games.
 
 ## Keep current documentation separate from history
 

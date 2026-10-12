@@ -23,7 +23,7 @@ from pydantic import BaseModel, ConfigDict
 
 from demo_game_tools.media.ui import GameUi
 from ember_hollow_pipeline.shell import GameShell
-from stage_gen.canonical import content_sha256
+from fx_games.canonical import content_sha256
 
 MOTION_MODES: Final = frozenset({"hold", "loop", "once", "gameplay_driven"})
 MOTION_HINTS: Final = frozenset({"sway_top", "bob", "flicker", "none"})

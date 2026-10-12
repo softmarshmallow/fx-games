@@ -16,7 +16,7 @@ import yaml
 from grida.fx import Answer, Plan, RunResult, StandInCall, plan_async, run_async
 from PIL import Image
 
-from stage_gen.media.codec import decode_rgba, encode_png
+from fx_games.media.codec import decode_rgba, encode_png
 from tests.unit._fx import dispatch, finished, instances, problems, scratch_project
 
 WIDTH, HEIGHT = 2048, 512

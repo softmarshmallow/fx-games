@@ -68,7 +68,7 @@ describe("parseCatalog", () => {
   });
 
   test.each([
-    ["kind", "stage-gen-catalog-v2"],
+    ["kind", "fx-games-catalog-v2"],
     ["schema_version", 2],
   ])("refuses an unknown envelope (%s)", (field, value) => {
     expect(() => parseCatalog({ ...catalog(), [field]: value })).toThrow(CATALOG_REFUSAL);

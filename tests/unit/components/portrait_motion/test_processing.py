@@ -11,7 +11,7 @@ import pytest
 from PIL import Image
 from scipy.ndimage import gaussian_filter
 
-from stage_gen.components.portrait_motion.processing import (
+from fx_games.components.portrait_motion.processing import (
     composite,
     geometry_masks,
     heatmap,

@@ -39,7 +39,7 @@ library file server.
 
 | Route | Page |
 |---|---|
-| `/` | The landing: what Stage Gen is, the install lines and links into the docs and the FX guide, then one ordered list of cards, one per example with an `order` |
+| `/` | The landing: what FX Games is, the install lines and links into the docs and the FX guide, then one ordered list of cards, one per example with an `order` |
 | `/workflows/<id>/` | The workflow's `page.mdx`, bound to its cover example |
 | `/workflows/<id>/<example>/` | An example with its own `examples/<example>.mdx` |
 | `/workflows/<id>/contract/` | The workflow's `contract.md` |

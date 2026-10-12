@@ -21,10 +21,10 @@ from pathlib import Path
 
 import pytest
 
-from stage_gen.workflows._checks import FX_PROGRAM, fx_command_problems
+from fx_games.workflows._checks import FX_PROGRAM, fx_command_problems
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-WORKFLOWS = REPOSITORY_ROOT / "src/stage_gen/workflows"
+WORKFLOWS = REPOSITORY_ROOT / "src/fx_games/workflows"
 #: History describes what was true when it was written, so its commands are not held to today.
 HISTORY_ROOTS = ("docs/decisions/", "docs/plans/", "docs/research/", "docs/media/")
 FENCE = re.compile(

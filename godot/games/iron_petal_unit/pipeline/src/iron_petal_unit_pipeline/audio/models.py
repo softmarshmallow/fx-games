@@ -25,11 +25,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
 
-from iron_petal_unit_pipeline.audio.realizations import (
-    GeneratedClipRealization,
-    SpokenLineRealization,
-)
-from stage_gen.components._game_input import (
+from fx_games.components._game_input import (
     GAME_ID_PATTERN,
     SNAKE_ID_PATTERN,
     canonical_contract_json,
@@ -37,7 +33,11 @@ from stage_gen.components._game_input import (
     parse_toml_contract,
     sha256_bytes,
 )
-from stage_gen.contracts import PersistedContractModel
+from fx_games.contracts import PersistedContractModel
+from iron_petal_unit_pipeline.audio.realizations import (
+    GeneratedClipRealization,
+    SpokenLineRealization,
+)
 
 RUNNER_AUDIO_SCHEMA_VERSION = 4
 

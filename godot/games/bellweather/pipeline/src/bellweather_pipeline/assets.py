@@ -26,9 +26,9 @@ from demo_game_tools.kits.sideview_actor.motion_geometry import (
     MOTION_ATLAS_WIDTH,
 )
 from demo_game_tools.kits.sideview_terrain.atlas import compose_canonical_terrain
-from stage_gen.components.sideview_layers.pipeline import validate_provider_image
-from stage_gen.media import AlphaComponentRepackContract, repack_alpha_components
-from stage_gen.media.sprite_sheets import measure_alpha_subjects
+from fx_games.components.sideview_layers.pipeline import validate_provider_image
+from fx_games.media import AlphaComponentRepackContract, repack_alpha_components
+from fx_games.media.sprite_sheets import measure_alpha_subjects
 
 MapAsset = Literal["climbable", "portal"]
 

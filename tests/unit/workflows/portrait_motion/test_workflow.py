@@ -17,14 +17,14 @@ import pytest
 from grida.fx import Answer, RunResult, StandInCall, run_async
 from PIL import Image
 
-from stage_gen.examples import ImportRequest, MadeBy, currency, verify, write_example
-from stage_gen.workflows._registry import load_code
+from fx_games.examples import ImportRequest, MadeBy, currency, verify, write_example
+from fx_games.workflows._registry import load_code
 from tests.unit._fx import caches, schema_of, scratch_project
 
 MAKE = runpy.run_path(
     str(
         Path(__file__).resolve().parents[4]
-        / "src/stage_gen/workflows/portrait_motion/inputs/make_inputs.py"
+        / "src/fx_games/workflows/portrait_motion/inputs/make_inputs.py"
     )
 )
 

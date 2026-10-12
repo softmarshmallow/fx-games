@@ -1,0 +1,93 @@
+# Only what the workflow file cannot say. Steps, titles and the sample plan come from
+# workflow.yaml through FX.
+schema_version = 1
+kind = "fx-games-workflow-v1"
+id = "portrait-motion"
+title = "Portrait motion"
+promise = "One finished sprite in. Eyes and mouth a game can drive separately out."
+summary = """
+The face is found and cropped, a reviewer decides which eyes and mouth can safely change, and an \
+image model draws every new state in one sheet. Each drawing is aligned to the original, every \
+combination is reviewed, and the accepted patches go back on the sprite at full size."""
+related = ["movie-sprite"]
+
+[try]
+input = "An original geometric character, as a full sprite and as an opaque portrait, with the inputs that use them, written by uv run python src/fx_games/workflows/portrait_motion/inputs/make_inputs.py out/portrait-motion-input. The run is paid: it needs OpenRouter and OpenAI keys, and --live"
+commands = [
+  "uv run python -m grida.fx plan portrait-motion --inputs out/portrait-motion-input/face.yaml",
+  "uv run python -m grida.fx run portrait-motion --inputs out/portrait-motion-input/face.yaml --live --max-usd 5",
+  "uv run python -m grida.fx inspect portrait-motion",
+]
+
+[[outputs]]
+artifact_ref = "outputs/animation.webp"
+description = "The timeline at the sprite's full size, transparency kept"
+
+[[outputs]]
+artifact_ref = "outputs/states/"
+description = "Every eyes-and-mouth combination, as full-size PNGs"
+
+[[outputs]]
+artifact_ref = "outputs/patches/"
+description = "Each eye and the mouth in every state, as patches placed at one offset"
+
+[[outputs]]
+artifact_ref = "outputs/manifest.json"
+description = "Where the patches go, which feature each belongs to, and a sample timeline"
+
+[[outputs]]
+artifact_ref = "outputs/result.json"
+description = "Which features were accepted, or where the run refused and why"
+
+# Frozen exports in the example store (out/examples/portrait-motion/<id>/), pinned by digest.
+[[examples]]
+id = "yuzu-face"
+title = "Yuzu face"
+status = "approved"
+source = "store"
+cover = true
+order = 5
+footer = "Every picture on this page comes from one real run, made by the workflow of that time. Its source is the first frame of a Yuzu body loop."
+example_sha256 = "9633077caf605814ce6b9eaf376615628838f0f97c1c3c03eac4c96e51c0bc92"
+figures_sha256 = "b0a7a148b628d6efff7817769757eea45794c173948fe69406dba5caaa4bfce6"
+
+# Made with an earlier version: a pipeline whose steps the workflow file no longer has, so the
+# example groups and titles its own nodes. Its five paid answers were carried into the
+# workflow file's call cache, and running it again delivers the same bytes.
+[examples.labels]
+locator = "Find the face"
+face_crop = "Crop the face"
+admission = "Decide what can move"
+guide = "Lay out the sheet"
+atlas = "Draw the new states"
+registration = "Line them up"
+geometry = "Outline eyes and mouth"
+composition = "Build every combination"
+quality = "Review the result"
+terminal = "Keep what passed"
+face_reconstruction = "Put it back at full size"
+
+[[examples.steps]]
+label = "Find the face"
+note = "A vision model returned only a box around the face. The workspace was cut from the full sprite with padding on every side."
+members = ["locator", "face_crop"]
+
+[[examples.steps]]
+label = "Decide and draw"
+note = "A reviewer decided which eyes and mouth could safely change. The image model then drew every new state in one sheet, so they share one hand."
+members = ["admission", "guide", "atlas"]
+
+[[examples.steps]]
+label = "Fit"
+note = "Each new drawing was aligned to the original, and one that moved or changed scale would have been refused. A vision model outlined the eyes and mouth."
+members = ["registration", "geometry"]
+
+[[examples.steps]]
+label = "Compose and review"
+note = "Every eyes-and-mouth combination was built from those outlines, then judged by a reviewer that did not draw them."
+members = ["composition", "quality"]
+
+[[examples.steps]]
+label = "Deliver"
+note = "Only accepted features were kept. The patches went back on the original sprite at full size, with every pixel outside them checked unchanged."
+members = ["terminal", "face_reconstruction"]

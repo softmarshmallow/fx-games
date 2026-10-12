@@ -16,9 +16,9 @@ from demo_game_tools.kits.ui_art import (
     UiReference,
 )
 from demo_game_tools.kits.ui_art.nodes import document_roles
-from stage_gen.components.sound_effect import SoundEffectRequest
-from stage_gen.components.speech import SpeechRequest
-from stage_gen.media.codec import encode_png
+from fx_games.components.sound_effect import SoundEffectRequest
+from fx_games.components.speech import SpeechRequest
+from fx_games.media.codec import encode_png
 
 
 def test_one_ui_asset_is_an_independent_request() -> None:

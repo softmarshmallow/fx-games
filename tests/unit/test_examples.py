@@ -11,7 +11,7 @@ import pytest
 from grida.fx import Answer, StandInCall, run
 from PIL import Image
 
-from stage_gen.examples import (
+from fx_games.examples import (
     Delivered,
     ExamplePin,
     FiguresLedger,
@@ -34,7 +34,7 @@ from stage_gen.examples import (
     verify,
     write_example,
 )
-from stage_gen.workflows._fx import write_project
+from fx_games.workflows._fx import write_project
 from tests.unit._fx import failures
 
 

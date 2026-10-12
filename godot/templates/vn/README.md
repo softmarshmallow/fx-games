@@ -5,7 +5,7 @@ The game owns resources, layout, input, camera bindings and pause policy.
 `narrative/episode.scenario` owns its dialogue, choices, presentation direction,
 required contact and feedback timing. Scenario executes that content using
 Game Presentation's mechanisms. The assembled project plays without Python,
-Stage Gen, credentials, downloaded media or a sibling checkout.
+FX Games, credentials, downloaded media or a sibling checkout.
 
 ```sh
 Godot --path /path/to/this/project
@@ -28,7 +28,7 @@ The two replies reconverge. There is no autoplay or durable save format.
 - `main.gd`: resource bindings, UI, rendering and input. It reports actual contact
   completion; the scenario decides what follows and how long feedback lasts.
 
-With the standalone `stagegen-scenario` authoring distribution installed, run
+With the standalone `scenario-authoring` authoring distribution installed, run
 from this project:
 
 ```sh

@@ -20,7 +20,7 @@ Every scope first builds FX's engine from the pinned submodule
 (`uv run python third_party/fx/tools/build_engine.py`, which needs cargo and Rust 1.89 or
 newer); when `GRIDA_FX_BIN` names an engine, it only checks that one with `--version`. Beyond
 that, the default product gate requires Python tools only. Among its steps it checks each workflow
-home's `fx.lock` (`python -m grida.fx lock src/stage_gen/workflows/<folder> --check`), and in a
+home's `fx.lock` (`python -m grida.fx lock src/fx_games/workflows/<folder> --check`), and in a
 scratch project with its own `fx.yaml` it runs real offline looping-parallax and movie-sprite
 runs with `python -m grida.fx run` and their `inspect --verify` (movie-sprite finishes its
 supplied clip, and only plans its paid take, so the gate needs FFmpeg). It plans

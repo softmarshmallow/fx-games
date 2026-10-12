@@ -18,8 +18,8 @@ from typing import Any
 
 from grida.fx import Ctx, node
 
-from stage_gen.components.speech import speech_admission_facts
-from stage_gen.media import measure_level_and_duration
+from fx_games.components.speech import speech_admission_facts
+from fx_games.media import measure_level_and_duration
 
 LINE_ID = re.compile(r"^[a-z][a-z0-9_.]*$")
 DIGEST = re.compile(r"^[a-f0-9]{64}$")

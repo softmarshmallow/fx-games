@@ -11,12 +11,12 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
-from stage_gen.image_prompting import (
+from fx_games.image_prompting import (
     image_style_question,
     load_image_style_resources,
     materialize_style_anchor,
 )
-from stage_gen.image_style import (
+from fx_games.image_style import (
     CanonicalStyleAnchor,
     ImageAssetKind,
     StyleModeSelection,

@@ -8,6 +8,6 @@ runs: ../../../out/runs
 cache: ../../../out/fx-cache
 workflows: [tools]
 nodes: tools
-sources: [stage_gen]
+sources: [fx_games]
 routes: { speech.generate: eleven_v3@elevenlabs }
 route_tables: [tools/voice-routes.yaml]

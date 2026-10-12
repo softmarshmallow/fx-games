@@ -61,8 +61,8 @@ from demo_game_tools.kits.ui_art.models import (
     IconSetDirection,
     UiArtwork,
 )
-from stage_gen.components._game_input import SNAKE_ID_PATTERN
-from stage_gen.contracts import PersistedContractModel
+from fx_games.components._game_input import SNAKE_ID_PATTERN
+from fx_games.contracts import PersistedContractModel
 
 #: The generate node's cache contract: what the model is asked to paint. Bumping it
 #: re-bills every sheet, so measured facts that only the local gate reads live under

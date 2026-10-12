@@ -9,13 +9,13 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from stage_gen.components.portrait_motion.models import (
+from fx_games.components.portrait_motion.models import (
     MotionState,
     PlaybackSegment,
     PortraitMotionSpec,
 )
-from stage_gen.components.portrait_motion.playback import build_combinations, encode_preview
-from stage_gen.components.portrait_motion.processing import FloatArray, geometry_masks
+from fx_games.components.portrait_motion.playback import build_combinations, encode_preview
+from fx_games.components.portrait_motion.processing import FloatArray, geometry_masks
 
 
 def fixture() -> tuple[Image.Image, dict[str, FloatArray]]:

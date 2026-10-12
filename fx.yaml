@@ -1,7 +1,7 @@
-# Stage Gen's FX project. First-party workflows are found by id under src/stage_gen/workflows;
+# FX Games' FX project. First-party workflows are found by id under src/fx_games/workflows;
 # their runs and the store stay under out/, which is never committed. No routes here: the
 # planning project's routes override every workflow home's.
 fx: project/v1
 runs: out/runs
 cache: out/fx-cache
-workflows: [src/stage_gen/workflows]
+workflows: [src/fx_games/workflows]

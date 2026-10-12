@@ -14,11 +14,11 @@ from typing import TYPE_CHECKING
 from demo_game_tools.input_formats.sideview_content import projectile_silhouette_art
 from demo_game_tools.kits.sideview_actor.motion_geometry import DEFAULT_MOTION_ATLAS_GEOMETRY
 from demo_game_tools.kits.sideview_terrain import terrain_atlas_generation_prompt
+from fx_games.canonical import canonical_sha256
 from iron_petal_unit_pipeline.track import (
     RunnerStructuralGround,
     structural_ground_generation_prompt,
 )
-from stage_gen.canonical import canonical_sha256
 
 if TYPE_CHECKING:
     from iron_petal_unit_pipeline.content import RunnerAvatar, RunnerBoss

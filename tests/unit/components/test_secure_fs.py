@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from stage_gen.components._secure_fs import (
+from fx_games.components._secure_fs import (
     SecurePathError,
     open_absolute_directory,
     read_absolute_regular_file,

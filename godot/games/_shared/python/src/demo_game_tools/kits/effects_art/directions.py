@@ -21,7 +21,7 @@ from demo_game_tools.kits.effects_art.cut_in import (
 )
 from demo_game_tools.kits.effects_art.models import CutInPortraitSubject
 from demo_game_tools.kits.effects_art.sprite import canonicalize_dust_atlas, dust_atlas_contract
-from stage_gen.media import data_url
+from fx_games.media import data_url
 
 #: A plate's validation record, per role: the portrait's gained its placement, the
 #: frame's did not.

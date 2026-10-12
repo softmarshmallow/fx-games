@@ -5,13 +5,13 @@
 > **Contract maturity: ratified V0 target, documentation-only.**
 >
 > This document defines the first semantic contract for universe-oriented
-> generation in `stage-gen`: the minimal storyworld ontology, relationships,
+> generation in `fx-games`: the minimal storyworld ontology, relationships,
 > identity markers, narrative roles, entity concept obligations, and
 > ratification rules from which a future universe workflow may be built.
 >
 > That workflow now exists. This document remains the semantic authority over
 > classes, source roles, and ratification; the pipeline that implements it is
-> described in the [universe contract](../../../src/stage_gen/workflows/universe/contract.md).
+> described in the [universe contract](../../../src/fx_games/workflows/universe/contract.md).
 >
 > V0 deliberately starts with an agnostic core. It is not the permanent ceiling
 > of the taxonomy. Future genre profiles MAY widen the authored vocabulary with
@@ -848,7 +848,7 @@ profile, not to V0.
 
 Genre profiles MUST NOT redefine the meaning of an existing V0 class, make
 their vocabulary mandatory outside their declared scope, or push genre
-semantics into Grida FX or Stage Gen's generic components. They MUST NOT add
+semantics into Grida FX or FX Games' generic components. They MUST NOT add
 canonical non-entity visuals or relax the closed physical package boundary;
 rendered genre views remain in separate consumer-owned output roots.
 

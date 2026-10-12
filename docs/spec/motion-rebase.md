@@ -44,7 +44,7 @@ authored declaration.*
 
 ## Ownership
 
-- `stage_gen.media.comparison_plate` owns deterministic plate composition. It
+- `fx_games.media.comparison_plate` owns deterministic plate composition. It
   is provider-neutral and knows nothing about actors, states, or games.
 - `demo_game_tools.kits.sideview_actor.motion_rebase` owns the baseline rule,
   the judging atlas layout, admission, and the published rebase record.

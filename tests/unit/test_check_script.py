@@ -15,7 +15,7 @@ FX = ("python", "-m", "grida.fx")
 
 def load_check_script() -> ModuleType:
     path = Path(__file__).parents[2] / "scripts" / "check.py"
-    spec = importlib.util.spec_from_file_location("stage_gen_check", path)
+    spec = importlib.util.spec_from_file_location("fx_games_check", path)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     # Registered before execution: dataclasses resolve their annotations through
@@ -223,7 +223,7 @@ def test_product_gate_does_not_require_optional_consumers() -> None:
 
 
 def test_product_gate_runs_the_workflows_through_their_command_lines() -> None:
-    from stage_gen.workflows._registry import discover
+    from fx_games.workflows._registry import discover
 
     check = load_check_script()
     commands = check.commands("python")
@@ -238,7 +238,7 @@ def test_product_gate_runs_the_workflows_through_their_command_lines() -> None:
     for workflow in paid:
         assert (*FX, "plan", workflow) in {command[:5] for command in commands}
     # FX locks a folder, not an id: each workflow home's own lock.
-    homes = {f"src/stage_gen/workflows/{w.root.name}" for w in discover()}
+    homes = {f"src/fx_games/workflows/{w.root.name}" for w in discover()}
     assert {(*FX, "lock", home, "--check") for home in homes} <= set(commands)
     # The runs happen in a scratch project written by the product's one project writer, so FX
     # finds the workflows by id from outside the repository.

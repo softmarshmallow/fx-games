@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from stage_gen.components.character_3d.worker import contract as worker_contract
+from fx_games.components.character_3d.worker import contract as worker_contract
 
-PACKAGE = Path(__file__).resolve().parents[4] / "src/stage_gen/workflows/character_3d"
+PACKAGE = Path(__file__).resolve().parents[4] / "src/fx_games/workflows/character_3d"
 STUB = Path(__file__).with_name("stub_blender.py")
 
 

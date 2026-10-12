@@ -164,7 +164,7 @@ def test_survival_scope_table_agrees_with_the_plans_the_builder_makes() -> None:
 
     from grida.fx import plan
 
-    from stage_gen.workflows._fx import first_takes
+    from fx_games.workflows._fx import first_takes
 
     rows = _survival_scope_table_rows()
     assert [name for name, _ in rows] == ["minimal", "props", "actors", "full"]

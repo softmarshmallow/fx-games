@@ -47,4 +47,4 @@ not import another named game or the collection's developer CLI.
 
 See [the generation document](../docs/generation-v1.md) for the steps and the checked plan
 contract, and the [Python dependency review](../../../docs/python-dependencies.md) for the
-remaining private Stage Gen calls and their ownership decisions.
+remaining private FX Games calls and their ownership decisions.

@@ -5,7 +5,7 @@
 Scenario is owned by the [Godot example project](../../godot/CHARTER.md), as an
 embeddable VN-oriented presentation framework. Its compiler is independently
 installable from `godot/packages/scenario_runtime/authoring`; it is no longer a
-Stage Gen asset component. The game owns and invokes a scenario, supplies its
+FX Games asset component. The game owns and invokes a scenario, supplies its
 bindings/capabilities and keeps control of the world.
 
 - [Current package](../../godot/packages/scenario_runtime/README.md)

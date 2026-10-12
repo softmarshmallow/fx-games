@@ -12,10 +12,10 @@ from typing import Any
 import numpy as np
 import pytest
 
-from stage_gen.components.character_3d.worker import provider_rig as worker
-from stage_gen.components.character_3d.worker import provider_rig_cli as cli
-from stage_gen.components.character_3d.worker import rig_glb as glb
-from stage_gen.components.character_3d.worker import rig_metrics
+from fx_games.components.character_3d.worker import provider_rig as worker
+from fx_games.components.character_3d.worker import provider_rig_cli as cli
+from fx_games.components.character_3d.worker import rig_glb as glb
+from fx_games.components.character_3d.worker import rig_metrics
 
 JsonObject = dict[str, Any]
 

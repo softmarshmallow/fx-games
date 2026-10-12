@@ -6,7 +6,7 @@ semantics; the [Godot charter](../../../CHARTER.md) owns the product boundary.
 
 ```text
 godot/
-├── CHARTER.md                         # Maintained example project, separate from Stage Gen
+├── CHARTER.md                         # Maintained example project, separate from FX Games
 ├── packages/
 │   ├── scenario_runtime/
 │   │   ├── addons/scenario_runtime/
@@ -20,7 +20,7 @@ godot/
 │   │   │   ├── program.gd            # Retained v2 reader entry point
 │   │   │   ├── runtime.gd            # Retained v2 API facade over Session
 │   │   │   └── sdk.json              # Payload/dependency and execution-version inventory
-│   │   ├── authoring/                # Independent stagegen-scenario Python distribution
+│   │   ├── authoring/                # Independent scenario-authoring Python distribution
 │   │   │   ├── src/scenario_authoring/
 │   │   │   │   ├── syntax.py         # Concise source and bounded sequence expansion
 │   │   │   │   ├── compiler.py       # Stable IR, digests and source maps
@@ -85,7 +85,7 @@ godot/
 │   └── tests/                      # Freshness, two replies, contact and lifecycle behavior
 └── tools/, tests/, docs/            # Godot collection coordination and ownership
 
-src/stage_gen/                      # Asset product; no Scenario/compiler dependency
+src/fx_games/                      # Asset product; no Scenario/compiler dependency
 third_party/fx/                     # Grida FX engine (submodule); no Godot/game dependency
 ```
 

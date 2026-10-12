@@ -136,7 +136,7 @@ reconstructable active capabilities. It cannot rewind an unrelated game world or
 provide durable exactly-once delivery of game actions. The game persists outcome
 receipts and coordinates world state when that behavior is required.
 
-Already compiled content needs neither Python nor Stage Gen. Local content-package
+Already compiled content needs neither Python nor FX Games. Local content-package
 admission checks declared bytes, hashes, schemas and capabilities before replacing
 the selected revision. Activation does not replace running sessions or generate
 media. Network delivery and trust policy remain the application's responsibility.

@@ -4,7 +4,7 @@
 
 This is the recipe-specific contract for 2D side-view platformer media: what each
 prepared-package asset is, its dimensions, its reference and layout inputs, and
-its sheet grid. It is not the global definition of `stage-gen`. Reusable components remain
+its sheet grid. It is not the global definition of `fx-games`. Reusable components remain
 genre-, camera-, gameplay-, and engine-agnostic; this recipe supplies the
 side-view vocabulary explicitly.
 

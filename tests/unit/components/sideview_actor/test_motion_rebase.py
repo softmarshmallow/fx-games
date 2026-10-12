@@ -18,7 +18,7 @@ from demo_game_tools.kits.sideview_actor.motion_rebase import (
     motion_rebase_verification_prompt,
     parse_motion_rebase,
 )
-from stage_gen.media.comparison_plate import BandedComparisonPlate
+from fx_games.media.comparison_plate import BandedComparisonPlate
 
 STATES = ("idle", "run", "hurt", "death")
 

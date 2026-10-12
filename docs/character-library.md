@@ -64,7 +64,7 @@ that reader's filesystem policy. A reference has its own explicit rights
 statement; profile rights never silently grant rights to external bytes.
 
 Authored profiles are workspace content, not Python package data. The repository
-sample remains available in a source checkout; the public Stage Gen distribution
+sample remains available in a source checkout; the public FX Games distribution
 does not bundle Godot game inputs. An installed CLI receives the package
 directory explicitly with `--package-root PATH`. Profile-aware game graphs use the
 exact shared binding below; the source digest binds authored bytes while the

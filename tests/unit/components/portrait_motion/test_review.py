@@ -8,7 +8,7 @@ from typing import Any, cast
 
 import pytest
 
-from stage_gen.components.portrait_motion import review
+from fx_games.components.portrait_motion import review
 
 FEATURES: list[str] = list(review.FEATURE_IDS)
 STATES: list[dict[str, Any]] = [

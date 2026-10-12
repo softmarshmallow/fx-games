@@ -12,8 +12,8 @@ from urllib.parse import unquote
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from fx_games.provider_env import PROVIDER_ENV_KEYS
 from scripts.media_rights import check_generated_media_publication
-from stage_gen.provider_env import PROVIDER_ENV_KEYS
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 
@@ -91,7 +91,7 @@ CONSUMER_SPECS = (
 CHECKED_BY_PATTERN = re.compile(r"^> \*\*Checked by:\*\* (.+)$", re.MULTILINE)
 
 #: Where each workflow keeps its prose beside its code: page.mdx, contract.md, input notes.
-WORKFLOWS_SOURCE = "src/stage_gen/workflows"
+WORKFLOWS_SOURCE = "src/fx_games/workflows"
 
 # The words decision 0071 retired from product prose, and where the lint reads. A retired word
 # survives only where it is a frozen persisted string or a path: inside code spans and fenced
@@ -290,7 +290,7 @@ _USER_SKILL_REPOSITORY_PATH = re.compile(
     r"|\.claude)/[^`]*)`"
 )
 _USER_SKILL_REPOSITORY_NAME = re.compile(
-    r"stage[-_ ]gen|(?<![\w-])concept[-_]studio(?![\w-])", re.IGNORECASE
+    r"fx[-_ ]games|stage[-_ ]gen|(?<![\w-])concept[-_]studio(?![\w-])", re.IGNORECASE
 )
 
 
@@ -353,8 +353,8 @@ def run_docs_check(repo: Path = REPOSITORY_ROOT) -> DocsCheckResult:
         *_walk_files(repo / "skills", frozenset({".md"})),
         # Workflow prose lives beside its code, and a game's example pages beside the game.
         *_walk_files(repo / WORKFLOWS_SOURCE, frozenset({".md", ".mdx"})),
-        *_walk_files(repo / "src/stage_gen/components", frozenset({".md"})),
-        *_walk_files(repo / "src/stage_gen/pipeline", frozenset({".md"})),
+        *_walk_files(repo / "src/fx_games/components", frozenset({".md"})),
+        *_walk_files(repo / "src/fx_games/pipeline", frozenset({".md"})),
         *[
             path
             for game in sorted((repo / "godot/games").glob("*/examples"))

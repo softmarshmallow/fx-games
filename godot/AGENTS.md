@@ -4,10 +4,10 @@ Read [README.md](README.md) for the workspace and [CHARTER.md](CHARTER.md) for i
 continuing purpose, scope and ownership. Root repository policies still apply.
 
 - Treat this directory as a separately owned, maintained example project that
-  consumes Stage Gen. Its packages, games, templates and tools can evolve within
+  consumes FX Games. Its packages, games, templates and tools can evolve within
   this scope. The main asset product must remain independent of them.
 - Keep gameplay, engine integration and game-framework contracts here. Shared
-  runtime or visual-novel work does not become Stage Gen functionality merely
+  runtime or visual-novel work does not become FX Games functionality merely
   because more than one game uses it.
 - Review one responsibility at a time before changing its owner. Use private
   shared support for existing reuse, packages for independently usable contracts,

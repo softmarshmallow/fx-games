@@ -39,7 +39,7 @@ from bellweather_pipeline.examples.parallax_layers import GAME_SCRIPTS
 from demo_game_collection.parser import build_parser
 from demo_game_tools.kits.sideview_terrain.atlas import terrain_atlas_paint_target
 from demo_game_tools.kits.ui_art import ATLAS_ROLES, render_atlas_template
-from stage_gen.examples import (
+from fx_games.examples import (
     ENTRY_FILE,
     PAGE_FILE,
     GameExampleEntry,
@@ -51,9 +51,9 @@ from stage_gen.examples import (
     verify_game_example,
     write_example,
 )
-from stage_gen.media.sprite_sheets import AlphaComponentRepackContract, repack_alpha_components
-from stage_gen.resources import terrain_atlas_lookup_path, terrain_atlas_template_path
-from stage_gen.workflows._registry import discover
+from fx_games.media.sprite_sheets import AlphaComponentRepackContract, repack_alpha_components
+from fx_games.resources import terrain_atlas_lookup_path, terrain_atlas_template_path
+from fx_games.workflows._registry import discover
 
 REPOSITORY_ROOT = Path(__file__).parents[4]
 KIND_V2 = "sideview-platformer-execution-graph-v2"
