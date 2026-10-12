@@ -2,13 +2,10 @@
 from __future__ import annotations
 
 import importlib.util
-import shlex
 import sys
 import tomllib
 from pathlib import Path
 from types import ModuleType
-
-import yaml
 
 FX = ("python", "-m", "grida.fx")
 
@@ -147,53 +144,6 @@ def test_games_gate_exercises_local_defaults_variants_and_explicit_sources() -> 
     ) in commands
     assert ("demo-games", "case", "bundle", "--help") in commands
     assert all("legacy" not in command and "main.toml" not in command for command in commands)
-
-
-def test_ci_uses_the_same_typecheck_surface_as_the_aggregate_gate() -> None:
-    check = load_check_script()
-    commands = check.commands("python", scope="all")
-    typecheck = next(command for command in commands if command[0] == "mypy")
-    workflow = (Path(__file__).parents[2] / ".github/workflows/gate.yml").read_text()
-    body = workflow.split("      - name: Typecheck product and optional consumers\n", 1)[1]
-    lines = body.splitlines()[1:]
-    script_lines = []
-    for line in lines:
-        if not line.startswith("          "):
-            break
-        script_lines.append(line.strip())
-    assert tuple(shlex.split(" ".join(script_lines))) == ("uv", "run", "--all-groups", *typecheck)
-    games = [command for command in commands if command[0] == "mypy"][1:]
-    body = workflow.split("      - name: Typecheck game projects\n", 1)[1]
-    game_lines = []
-    for line in body.splitlines()[1:]:
-        if not line.startswith("          "):
-            break
-        game_lines.append(line.strip())
-    assert [tuple(shlex.split(line)) for line in game_lines] == [
-        ("uv", "run", "--all-groups", *command) for command in games
-    ]
-
-
-def test_ci_gates_on_the_engine_it_builds_once() -> None:
-    gate = yaml.safe_load((Path(__file__).parents[2] / ".github/workflows/gate.yml").read_text())
-    jobs = gate["jobs"]
-    built = [step for step in jobs["engine"]["steps"] if "run" in step]
-    assert any("third_party/fx/tools/build_engine.py" in step["run"] for step in built)
-    # Every job that runs the gate script plans, so it waits for the engine and downloads it.
-    gating = [
-        name
-        for name, job in jobs.items()
-        if any("scripts/check.py" in step.get("run", "") for step in job["steps"])
-    ]
-    assert set(gating) == {"product", "optional-python", "web", "godot"}
-    for name in gating:
-        job = jobs[name]
-        needs = job.get("needs", [])
-        assert "engine" in ([needs] if isinstance(needs, str) else needs), name
-        assert any(
-            step.get("uses", "").startswith("actions/download-artifact") for step in job["steps"]
-        ), name
-        assert any("GRIDA_FX_BIN=" in step.get("run", "") for step in job["steps"]), name
 
 
 def test_the_gate_reports_every_step_rather_than_stopping_at_the_first() -> None:

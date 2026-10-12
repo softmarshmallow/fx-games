@@ -27,7 +27,7 @@ fx-games/
 ├── tests/                             # Tests selected by product or consumer ownership
 ├── docs/                              # Cross-cutting guides, policy, specs and history
 ├── .agents/skills/                    # Skills for working on this repository
-├── .github/workflows/                # Separate product and consumer gates
+├── .githooks/                        # The pre-push gate (`core.hooksPath`)
 ├── pyproject.toml                     # Core distribution and local workspace metadata
 └── uv.lock                            # Repository development workspace lock
 ```

@@ -48,12 +48,14 @@ selecting old test directories directly.
 The pre-push hook checks each pushed commit in a temporary worktree, preserving the
 working checkout. It installs all groups, then runs the format and lint checks, the web tests
 and the contract tests, after building FX's engine for the pinned FX commit (needs cargo).
+The repository runs no hosted CI: this hook is the gate every pushed commit passes, and the
+full gate above is run locally.
 
 ## Live runs
 
 There are no live tests. A provider is reached only by a live run, `--live` with a ceiling
-(`--max-usd`), made with explicit task intent and the owner's go, never as part of CI or an
-offline check. Its FX run record keeps the route, cost, digests and attempts without
+(`--max-usd`), made with explicit task intent and the owner's go, never as part of a gate or
+an offline check. Its FX run record keeps the route, cost, digests and attempts without
 credentials. Visual output accepted as evidence still requires semantic review by a
 non-producer; audio quality review is separate from deterministic media validation.
 
