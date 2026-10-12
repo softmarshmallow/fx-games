@@ -184,7 +184,7 @@ games = [{ name = "demo-game-collection", editable = "godot/tools/python" }]
 
 [[package]]
 name = "grida"
-version = "0.2.0"
+version = "0.5.1"
 source = { editable = "third_party/fx/python" }
 dependencies = [
     { name = "pillow" },
